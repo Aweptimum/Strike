@@ -26,16 +26,21 @@ function Stable:pad_stack(n)
 end
 
 -- Clean a table and push it to the stack
--- TODO: Needs to handle nested tables; invoke clean_table() when a table only contains values
 function Stable:eat_table(table)
+	self:clean_table(table)
+	push( self.stack, table )
+end
+
+-- Clean a nested table and push it to the stack
+function Stable:eat_nested(table)
     -- Check for nested tables
     for key, value in pairs(table) do
         if type(value) == "table" then
-            self:eat_table(table)
+            self:eat_nested(value)
         end
     end
-	self:clean_table(table)
-	push( self.stack, table )
+
+    self:eat_table(table)
 end
 
 -- Pop a table from the stack or return a new one if the stack is empty
@@ -53,13 +58,5 @@ function Stable:fetch_table_n(n)
         return self:fetch_table(), self:fetch_table_n(n-1)
     end
 end
-
--- Test nested_eat_table
-local tbl = {
-    a = { a = {} },
-    b = { b = {} },
-    c = { c = {} }
-}
-Stable:eat_table( tbl )
 
 return Stable

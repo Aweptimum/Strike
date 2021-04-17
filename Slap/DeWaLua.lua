@@ -125,7 +125,7 @@ end
 -- Along specified axis ('x' or 'y')
 
 local function cutting_plane(vertices,points,axis)
-	local plane = Stable:fetch_table()
+	local plane = Stable:fetch()
 	local a = 0
 	for i = 1, #points do
 		a = (a + vertices[points[i]][axis])
@@ -142,7 +142,7 @@ local function points_partition(vertices,points, plane)
 	-- p_1 = subset of points left of a
 	-- p_2 = subset of points right of a
 	print("Points partition a is: " .. a)
-	local p_1, p_2 = Stable:fetch_table(), Stable:fetch_table()
+	local p_1, p_2 = Stable:fetch(), Stable:fetch()
 	for i = 1, #points do
 		if vertices[points[i]][axis] >= a then-- to the right, wins if x = a
 			push(p_2, points[i])
@@ -397,7 +397,7 @@ local function AFL_update(f, vertices,counter, AFL)
 			-- Already here, remove the edge using swapop
 			AFL[i], AFL[#AFL] = AFL[#AFL], AFL[i]
 			-- pop the last face and put it into the table pool
-			Stable:eat_table( pop(AFL) )
+			Stable:stow( pop(AFL) )
 			-- We can return now
 			print("\tRemoving: " .. p .. ", " .. q .. " because of: " .. r .. ", " ..s)
 			--tprint(AFL, 0, 2)
@@ -430,12 +430,12 @@ end
 -- counter = key corresponds to a vertex in polygon.vertices, value is a counter
 -- 		when a point in vertices becomes part of a new f, the counter increases by 1
 -- 		when a point's incident f is fed into make simplex, the counter decreases by 1
-local counter = Stable:fetch_table()
+local counter = Stable:fetch()
 local function dewall_triangulation(vertices,points, AFL_o, simplices, axis)
 	-- Init subsets of points
-	local AFL_a, AFL_1, AFL_2 = Stable:fetch_table_n(3)
+	local AFL_a, AFL_1, AFL_2 = Stable:fetch_n(3)
 	-- Init local temp vars
-	local f, f_prime, t = Stable:fetch_table_n(3)
+	local f, f_prime, t = Stable:fetch_n(3)
 	--local counter = {}
 
 	-- DeWall Begins!
@@ -546,7 +546,7 @@ local function dewall_triangulation(vertices,points, AFL_o, simplices, axis)
 	if #AFL_2 ~= 0 then simplices = dewall_triangulation(vertices,p_2, AFL_2, simplices, axis) end
 	-- Clear counter - it's a dedicated table for this function,
 	-- so adding it to the pool is a no-no
-	Stable:clean_table( counter )
+	Stable:clean( counter )
 	-- Return simplices
 	return simplices
 end
@@ -558,11 +558,11 @@ local function simplices_indices_vertices(vertices, simplices)
 	print("Simplices: ")
 	tprint(simplices)
 	-- Init triangles table of alternating x,y vals per triangle (6 vals each)
-	local triangles = Stable:fetch_table()
+	local triangles = Stable:fetch()
     -- Loop over simplices, convert the list of 3 indices to ccw vertices
     -- Use ipairs because we're not doing index-based baffoonery
     for iindex, simplex in ipairs(simplices) do
-		triangles[iindex] = Stable:fetch_table()
+		triangles[iindex] = Stable:fetch()
         for jindex, vertex in ipairs(simplex) do
             triangles[iindex][jindex*2-1] = vertices[vertex].x
 			triangles[iindex][jindex * 2] = vertices[vertex].y
@@ -576,13 +576,13 @@ end
 
 local function unconstrained_delaunay(vertices)
     local points = vertices
-    local AFL = Stable:fetch_table() -- {}
+    local AFL = Stable:fetch() -- {}
     -- Pass args to triangulation function
     local simplices = dewall_triangulation(vertices, points, AFL, {} )
     -- Use simplices to index into vertices and generate list of triangles
     local triangles = simplices_indices_vertices(vertices, simplices)
     -- well, simplices has served its purpose
-    Stable:eat_table(simplices)
+    Stable:stow(simplices)
     -- Create concave polygon per triangle, store in triangles list?
     print("Creating triangle polygons")
     return triangles
@@ -592,8 +592,8 @@ end
 -- Takes a vertex list where values are of the form: {x=val, y=val}
 local function constrained_delaunay(vertices)
 	-- Init points (index list of vertices) and Active-Face List (list of index-pairs that make edges)
-	local points = Stable:fetch_table() -- {}
-	local AFL = Stable:fetch_table() -- {}
+	local points = Stable:fetch() -- {}
+	local AFL = Stable:fetch() -- {}
 	-- Init point indices with last key of vertices
 	points[#vertices] = #vertices
 	-- Init AFL list with last entry, edge containing last and first vertex indices
@@ -610,7 +610,7 @@ local function constrained_delaunay(vertices)
 	-- Use simplices to index into vertices and generate list of triangles
 	local triangles = simplices_indices_vertices(vertices, simplices)
 	-- well, simplices has served its purpose
-	Stable:eat_table(simplices)
+	Stable:stow(simplices)
 	-- Create concave polygon per triangle, store in triangles list?
 	print("Creating triangle polygons")
 	return triangles
