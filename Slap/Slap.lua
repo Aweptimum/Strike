@@ -1,8 +1,8 @@
-local Pool		= _Require_relative( ... , "Pool" )
+local Stable		= _Require_relative( ... , "Stable" )
 local Vec		= _Require_relative( ... , "vector-light")
 local DeWall	= _Require_relative( ... , "DeWaLua")
 
-local t1, t2, t3 = Pool:fetch_table_n(3)
+local t1, t2, t3 = Stable:fetch_table_n(3)
 print(t1)
 t1.hi = 'hi'
 t2.hi = 'no'
@@ -168,7 +168,7 @@ end ]]
 
 -- Declare read-only proxy table function for .config
 local function read_only (t)
-	local proxy = Pool:fetch_table()
+	local proxy = Stable:fetch_table()
 	local mt = {       -- create metatable
 		__index = t,
 		__newindex = function (t,k,v)
@@ -205,9 +205,9 @@ end
 -- Shallow copy table (depth-of-1) into re-usable table
 -- Modified from lua-users wiki (http://lua-users.org/wiki/CopyTable)
 local function shallow_copy_table(orig, copy)
-	-- If a table isn't manually given, grab one from the Pool
+	-- If a table isn't manually given, grab one from the Stable
 	if not copy then
-		copy = Pool:fetch_table()
+		copy = Stable:fetch_table()
 	end
 	local orig_type, copy_type = type(orig), type(copy)
     if orig_type == 'table' and copy_type == 'table' then
@@ -267,7 +267,7 @@ end
 -- Remove vertices that are collinear
 local function trim_collinear_points(vertices)
 
-	local trimmed = Pool:fetch_table() -- {}
+	local trimmed = Stable:fetch_table() -- {}
 	-- Initialize vars for fancy wrap-around loop (⌐■_■)
 	local i, j = #vertices-1, #vertices
 	for k = 1, #vertices do
@@ -305,7 +305,7 @@ end
 
 -- Do graham scan using p_i as an index to p_ref
 -- Init re-usable vertex pool table for sorting
-local vertices_indices = Pool:fetch_table() -- {}
+local vertices_indices = Stable:fetch_table() -- {}
 local function order_points_ccw_i(vertices)
 
 	-- Find reference point to calculate cw/ccw from (left-most x, lowest y)
@@ -408,7 +408,7 @@ end
 
 -- Enforce counter-clockwise points order
 -- using graham scan algorithm to return the ordered hull.
-local vertices_clone = Pool:fetch_table() -- {}
+local vertices_clone = Stable:fetch_table() -- {}
 local function order_points_ccw(vertices)
 
 	-- Find reference point to calculate cw/ccw from (left-most x, lowest y)
@@ -470,7 +470,7 @@ local function order_points_ccw(vertices)
 	local good_sort = is_convex(vertices_clone)
 
 	-- Now we can clear table for re-use
-	Pool:clean_table(vertices_clone)
+	Stable:clean_table(vertices_clone)
 
 	-- And return our investigation
     if good_sort then
@@ -749,7 +749,7 @@ local function create_ellipse(a, b, segments, x_pos, y_pos, angle_rads)
 	local angle 	= angle_rads or 0
 
 	-- Init vertices list
-	local vertices = Pool:fetch_table() -- {}
+	local vertices = Stable:fetch_table() -- {}
 	-- Init delta-angle between vertices lying on ellipse hull
 	local d_rads = 2*pi / segs
 	-- For # of segs, compute vertex coordinates using
@@ -791,7 +791,7 @@ local function create_regular_polygon(n, radius, x_pos, y_pos, angle_rads)
 	local angle 	= angle_rads or 0
 	-- Initalize our dummy point vars to put into the vertices list
 	local x, y
-	local vertices = Pool:fetch_table() -- {}
+	local vertices = Stable:fetch_table() -- {}
 
     -- Print easter-egg warning
     --if n == 1000 then print("OH NO, NOT A CHILIAGON! YOU MANIAC! HOW COULD YOU!?\n") end
@@ -1037,7 +1037,7 @@ end
 -- Return a polygon's list of vertices as an unpacked table
 local function get_polygon_vertices(polygon)
 
-    local v = Pool:fetch_table() -- List to return
+    local v = Stable:fetch_table() -- List to return
 	for i = 1, #polygon.vertices do
 		v[2*i-1] = polygon.vertices[i].x
 		v[2*i]   = polygon.vertices[i].y
@@ -1074,7 +1074,7 @@ end
 -- share a coordinate pair (and are thus incident to one another)
 local function get_incident_edge(poly_1, poly_2)
     -- Define hash table
-    local p_map = Pool:fetch_table()
+    local p_map = Stable:fetch_table()
     -- Iterate over poly_1's vertices
     -- Place in p using x/y coords as keys
     local v_1 = poly_1.vertices
@@ -1097,7 +1097,7 @@ local function get_incident_edge(poly_1, poly_2)
         i = j
     end
     -- Well, we looped through and got nothing, so eat p_map and return nil
-	Pool:eat_table(p_map)
+	Stable:eat_table(p_map)
     return nil, nil, nil, nil
 end
 
@@ -1123,7 +1123,7 @@ local function merge_convex_incident(poly_1, poly_2)
         -- Ref both polygons' vertices
         local v_1, v_2 = poly_1, poly_2
         -- Init new verts table
-        local union = Pool:fetch_table()
+        local union = Stable:fetch_table()
         -- Loop through the vertices of poly_1 and add applicable points to the union
         for i = 1, #v_1 do
             -- Skip the vertex if it's part of the poly_2's half of the incident edge
@@ -1461,7 +1461,7 @@ local function load_slap(config_flag, value, ...)
 		-- Util functions
 		new						= load_slap, -- Get new slap isntance
 		configure				= configure, -- config function
-		pool					= Pool,
+		pool					= Stable,
 		-- Creation functions
 		create_circle			= create_circle,
 		create_edge				= create_edge,
@@ -1514,7 +1514,7 @@ slap:configure( {IDIOT_PROOF = true} )
 print("slap:load with given table:  " .. tostring( slap.config.IDIOT_PROOF ) )
 --slap.config.IDIOT_PROOF = false
 
--- Test Slap.Pool
+-- Test Slap.Stable
 local test_tbl = slap.pool:fetch_table()
 print("test table worked: "..tostring(test_tbl))
 -- [[--- Test Functions for Bugs ---]] --
