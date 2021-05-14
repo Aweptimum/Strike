@@ -1386,6 +1386,9 @@ local function load_slap(config_flag, value, ...)
 
 		-- Collision functions
 		slaps					= slaps,
+
+		-- Love functions
+		draw_polygon			= draw_polygon
 	}
 	-- This is where the flag variables ACTUALLY live
 	-- these are modifed through slap:configure
