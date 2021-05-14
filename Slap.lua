@@ -1,36 +1,10 @@
 local Stable	= _Require_relative( ... , "DeWallua.Stable" )
 local Vec		= _Require_relative( ... , "DeWallua.vector-light")
-local DeWall	= _Require_relative( ... , "DeWallua")
-
-local t1, t2, t3 = Stable:fetch_n(3)
-print(t1)
-t1.hi = 'hi'
-t2.hi = 'no'
-print("hi: "..t1.hi.." no: "..t2.hi)
+local Dewall 	= require "DeWallua"
 
 --local _PACKAGE = (...):match("^(.+)%.[^%.]+")
-function tprint (tbl, height, indent)
-	if not tbl then return end
-	if not height then height = 0 end
-	if not indent then indent = 0 end
-	for k, v in pairs(tbl) do
-		height = height+1
-		local formatting = string.rep("  ", indent) .. k .. ": "
-		if type(v) == "table" then
-			print(formatting, indent*8, 16*height)
-			tprint(v, height+1, indent+1)
-		elseif type(v) == 'function' then
-			print(formatting .. "function", indent*8, 16*height)
-		elseif type(v) == 'boolean' then
-			print(formatting .. tostring(v), indent*8, 16*height)
-		else
-			print(formatting .. v, indent*8, 16*height)
-		end
-	end
-end
 
 -- Polygon module for creating shapes to slap each other
-package.path = package.path .. ';C:/Users/Sam/Documpolygons/GitHub/Anachronism/Anachronism'
 
 -- [[---------------------]] Declaration of Spelling Collinear [[---------------------]] --
 
@@ -71,18 +45,25 @@ end
 
 -- [[---------------------]]         Table Utilities         [[---------------------]] --
 
--- Declare read-only proxy table function for .config
-local function read_only (t)
-	local proxy = Stable:fetch()
-	local mt = {       -- create metatable
-		__index = t,
-		__newindex = function (t,k,v)
-		error("attempt to update a read-only table", 2)
+-- Print table w/ formatting
+function tprint (tbl, height, indent)
+	if not tbl then return end
+	if not height then height = 0 end
+	if not indent then indent = 0 end
+	for k, v in pairs(tbl) do
+		height = height+1
+		local formatting = string.rep("  ", indent) .. k .. ": "
+		if type(v) == "table" then
+			print(formatting, indent*8, 16*height)
+			tprint(v, height+1, indent+1)
+		elseif type(v) == 'function' then
+			print(formatting .. "function", indent*8, 16*height)
+		elseif type(v) == 'boolean' then
+			print(formatting .. tostring(v), indent*8, 16*height)
+		else
+			print(formatting .. v, indent*8, 16*height)
 		end
-	}
-	setmetatable(t, mt)
-	setmetatable(proxy, mt)
-	return proxy
+	end
 end
 
 -- For slap.config, need an unpacking function that returns BOTH keys and values
@@ -146,6 +127,20 @@ local function deepcopy(o, seen)
 	return no
 end
 
+
+-- Declare read-only proxy table function for .config
+local function read_only (t)
+	local proxy = Stable:fetch()
+	local mt = {       -- create metatable
+		__index = t,
+		__newindex = function (t,k,v)
+		error("attempt to update a read-only table", 2)
+		end
+	}
+	setmetatable(t, mt)
+	setmetatable(proxy, mt)
+	return proxy
+end
 
 -- [[---------------------]]    Polygon Utility Functions    [[---------------------]] --
 
@@ -411,7 +406,7 @@ end
 -- there's no intersection!
 -- a-b are endpoints of line 1, c-d are endpoints of line 2
 local function are_lines_intersecting_inf(a,b, c,d)
-    -- print(tostring(is_ccw(a,b,c)) .. tostring(is_ccw(a,b,d)) .. tostring(is_ccw(c,d,a)) .. tostring(is_ccw(c,d,b)))
+    
 	-- In each condition, if both are ccw, then points a and b lie on the same side of line cd
 	-- To return true ("Yes, there is an intersection bucko"), we need to negate the whoooole condition.
 	-- Feels illegal.
@@ -479,59 +474,56 @@ local function point_in_polygn(polygon, point)
 	return winding ~= 0
 end
 
--- Calculate signed area of polygon using shoelace algorithm
-local function calc_signed_area(vertices)
+-- Calculate area of polygon using shoelace algorithm
+local function calc_area(vertices)
 
 	-- Initialize p and q so we can wrap around in the loop
 	local p, q = vertices[#vertices], vertices[1]
 	-- a is the signed area of the triangle formed by the two legs of p.x-q.x and p.y-q.y - it is our weighting
 	local a = Vec.det(p.x,p.y, q.x,q.y)
 	-- signed_area is the total signed area of all triangles
-	local signed_area = a
+	local area = a
 
 	for i = 2, #vertices do
 		-- Now assign p to q, q to next
 		p, q = q, vertices[i]
 		a = Vec.det(p.x,p.y, q.x,q.y)
-		signed_area = signed_area + a
-
-
+		area = area + a
 	end
 
-	signed_area = signed_area * 0.5
-	return signed_area--, area
+	area = area * 0.5
+	return area--, area
 
 end
 
--- Calculate centroid and signed area of the polygon at the _same_ time
+-- Calculate centroid and area of the polygon at the _same_ time
+-- using the shoe-lace algorithm
 local function calc_area_centroid(vertices)
 
 	-- Initialize p and q so we can wrap around in the loop
 	local p, q = vertices[#vertices], vertices[1]
 	-- a is the signed area of the triangle formed by the two legs of p.x-q.x and p.y-q.y - it is our weighting
 	local a = Vec.det(p.x,p.y, q.x,q.y)
-	-- signed_area is the total signed area of all triangles
-	local signed_area = a
-	local centroid	  = {x = (p.x+q.x)*a, y = (p.y+q.y)*a}
+	-- area is the total area of all triangles
+	local area = a
+	local centroid = {x = (p.x+q.x)*a, y = (p.y+q.y)*a}
 
 	for i = 2, #vertices do
 		-- Now cycle p to q, q to next vertex
 		p, q = q, vertices[i]
 		a = Vec.det(p.x,p.y, q.x,q.y)
 		centroid.x, centroid.y = centroid.x + (p.x+q.x)*a, centroid.y + (p.y+q.y)*a
-		signed_area = signed_area + a
-
+		area = area + a
 	end
 
-	signed_area = signed_area * 0.5
-	centroid.x	= centroid.x / (6.0*signed_area);
-    centroid.y	= centroid.y / (6.0*signed_area);
-	return centroid, signed_area--, area
+	area = area * 0.5
+	centroid.x	= centroid.x / (6.0*area);
+    centroid.y	= centroid.y / (6.0*area);
+	return centroid, area--, area
 
 end
 
 local function polygon_bounding_radius(vertices, centroid)
-
 	local radius = 0
 
 	for i = 1,#vertices do
@@ -572,6 +564,7 @@ local function create_edge(x1,y1, x2,y2)
 		centroid	= centroid,
 		norm		= norm,
 	}
+	return edge
 end
 -- Create rectangle.
 -- It's not a regular polygon, but it's the most common, so it gets it's own function.
@@ -592,7 +585,7 @@ local function create_rectangle(dx, dy, x_pos, y_pos, angle_rads)
 
 	local centroid  	= {x = x_offset+dx/2, y = y_offset+dy/2}
 	local area 			= dx*dy
-	local signed_area	= calc_signed_area(vertices)
+	local signed_area	= calc_area(vertices)
 	local radius		= Vec.len(dx, dy)
 
 	-- Put everything into polygon table and then return it
@@ -669,14 +662,14 @@ local function create_ellipse(a, b, segments, x_pos, y_pos, angle_rads)
 			y = y_offset + b * sin(angle),
 		}
 	end
-	-- Put everything into circle table and then return it
+	-- Put everything into poly table and then return it
 	local ellipse = {
 
         vertices 		= vertices,     				-- list of {x,y} coords
 		convex      	= true,       					-- boolean
 		centroid   		= {x = x_offset, y = y_offset},	-- {x, y} coordinate pair
 		radius			= a,							-- radius of circumscribed circle
-		area			= pi*a*b,						-- absolute/unsigned area of polygon
+		area			= pi*a*b,						-- absolute/unsigned area of approx ellipse
 
 	}
 
@@ -707,7 +700,7 @@ local function create_regular_polygon(n, radius, x_pos, y_pos, angle_rads)
 
 	-- Calculate the signed area of our polygon.
 	-- Since it's regular, the centroid is the origin of the circumscribed circle
-	local signed_area = calc_signed_area(vertices)
+	local signed_area = calc_area(vertices)
 
 	-- Put everything into polygon table and then return it
 	local polygon = {
@@ -783,7 +776,7 @@ local function create_concave(...)
 	assert(#vertices >= 3, "Need at least 3 non collinear points to build polygon (got "..#vertices..")")
     local convex = false
     -- Triangulation!
-    local triangles = DeWall.constrained(vertices)
+    local triangles = Dewall.constrained(vertices)
 	-- Convert triangles to polygons
 	for i = 1, #triangles do
 		triangles[i] = create_convex((triangles[i]))
@@ -826,7 +819,7 @@ local function create_polygon(...) -- ... is a vararg; so user supplies 1,2,3,4,
 			-- TODO: DO SOMETHING MAN COME ON
 			-- Ok, triangulate and merge?
 			-- Triangulation!
-            local triangles = DeWall.constrained(vertices)
+            local triangles = Dewall.constrained(vertices)
 			-- Convert triangles to polygons
 			for i = 1, #triangles do
 				triangles[i] = create_convex((triangles[i]))
@@ -921,7 +914,7 @@ end
 local function get_polygon_bbox(polygon)
 
 	local min_x, max_x, min_y, max_y = polygon.vertices[1].x,polygon.vertices[1].x, polygon.vertices[1].y, polygon.vertices[1].y
-	local x, y, bbox
+	local x, y--, bbox
 	for __, vertex in ipairs(polygon.vertices) do
 		x, y = vertex.x, vertex.y
 		if x < min_x then min_x = x end
