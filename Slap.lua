@@ -572,8 +572,7 @@ end
 -- Specify width height first? Is that more convenient? idk. whatevs.
 local function create_rectangle(dx, dy, x_pos, y_pos, angle_rads)
 	if not ( dx and dy ) then return false end
-	local x_offset	= x_pos or 0
-	local y_offset 	= y_pos or 0
+	local x_offset, y_offset = x_pos or 0, y_pos or 0
 	local angle 	= angle_rads or 0
 
 	local vertices = {
@@ -871,24 +870,24 @@ local function translate_polygon(polygon, dx, dy)
 		dx, dy = dx:unpack()
 	end
 	-- Could still have a nil value, so default to 0
-	dx = dx or 0
-	dy = dy or 0
-	-- Move all the points
+	dx, dy = dx or 0, dy or 0
+	-- Translate each vertex by dx, dy
 	for i = 1, #polygon.vertices do
 		polygon.vertices[i].x = polygon.vertices[i].x + dx
 		polygon.vertices[i].y = polygon.vertices[i].y + dy
 	end
-	-- Move centroid
+	-- Translate centroid
 	polygon.centroid.x = polygon.centroid.x + dx
 	polygon.centroid.y = polygon.centroid.y + dy
 end
 
 -- Rotate polygon about reference point specified by user
 local function rotate_polygon(polygon, angle, ref_x, ref_y)
+	-- Default to centroid as ref-point
     if not (ref_x and ref_y) then
         ref_x, ref_y = polygon.centroid.x, polygon.centroid.y
     end
-
+	-- Rotate each vertex about ref-point
     for i = 1, #polygon.vertices do
         local v = polygon.vertices[i]
         v.x, v.y = Vec.add(ref_x, ref_y, Vec.rotate(angle, v.x-ref_x, v.y - ref_y))
@@ -897,10 +896,11 @@ end
 
 -- Scale polygon in relation to reference point
 local function scale_polygon(polygon, sf, ref_x, ref_y)
+	-- Default to centroid as ref-point
     if not (ref_x and ref_y) then
         ref_x, ref_y = polygon.centroid.x, polygon.centroid.y
     end
-
+	-- Push each vertex out from the ref point by scale-factor
     for i = 1, #polygon.vertices do
         local v = polygon.vertices[i]
         v.x, v.y = Vec.add(ref_x, ref_y, Vec.mul(sf, v.x-ref_x, v.y - ref_y))
@@ -923,8 +923,7 @@ local function get_polygon_bbox(polygon)
 		if y > max_y then max_y = y end
 	end
 
-    --return bbox
-	-- Return rect info as separate values (don't create a table!)
+    -- Return rect info as separate values (don't create a table!)
 	-- If the bbox is constantly being re-calculated every frame for broadphase, that's a lot of garbage.
 	return min_x, min_y, max_x-min_x, max_y-min_y
 
@@ -944,22 +943,18 @@ end
 
 -- Copy polygon with optional {x,y} coordinates to place it at
 local function copy_polygon(polygon, x, y, angle_rads)
-
 	-- Create new polygon - maybe just do deepcopy since we don't need to re-calc everything
 	local copy = create_polygon( get_polygon_vertices(polygon) )
-
 	-- if origin specified, then translate_polygon
 	if x or y then
 		local dx = x and x - polygon.centroid.x or 0 -- amount to translate in x if x specified
     	local dy = y and y - polygon.centroid.y or 0 -- amount to translate in y if y specified
 		translate_polygon(copy, dx, dy)
 	end
-
 	-- If rotation specified, then rotate_polygon
 	if angle_rads then
 		rotate_polygon(copy, angle_rads)
     end
-
 	-- Return copy
 	return copy
 end
@@ -1051,7 +1046,7 @@ end
 -- [[--- Masking functions ---]] --
 
 -- Mask layer - objects will only check for collisions if they're in the same layer
-local function layer_mask_polygon(polygon, bit)
+local function mask_polygon_layer(polygon, bit)
 	polygon.layer_mask = bit
 end
 
@@ -1059,7 +1054,7 @@ end
 -- Like: Wing affects particle = true, particle affects wing = false
 -- https://stackoverflow.com/questions/39063949/cant-understand-how-collision-bit-mask-works
 -- Mask collisions - polygons will only collide if their masks AND'd = true
-local function collision_mask_polygon(polygon, bit)
+local function mask_polygon_collision(polygon, bit)
 	polygon.collision_mask = bit
 end
 
@@ -1090,7 +1085,13 @@ local function aabb_collision(shape_1, shape_2)
 end
 
 -- Narrow-phase functions
+-- Edge-Edge, Edge-Circle, Edge-Poly
+-- Circle-Circle, Circle-Poly,
+-- Poly-Poly
+-- Slaps function that checks types and orders the function inputs.
 
+
+-- Circle - Poly
 -- Expand the edges of a polygon by the radius of the circle
 -- Then! Check if the center of the circle is within those bounds
 -- Two phases:
@@ -1117,7 +1118,7 @@ local function circle_poly(circle, polygon)
 		-- Project that line onto the normal - if the projection
 		-- is less than the radius, then the circle is overlapping the polygon
 		cx, cy = circle.centroid.x - nx, circle.centroid.y - ny
-		overlap = dot_prod(cx,cy, dx,dy)
+		overlap = Vec.dot(cx,cy, dx,dy)
 		if overlap < radius then
 			if overlap < minimum or not minimum then
 				-- Set our MTV to the smol vector
