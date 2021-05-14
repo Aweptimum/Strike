@@ -1,5 +1,5 @@
-local Stable	= _Require_relative( ... , "Stable" )
-local Vec		= _Require_relative( ... , "vector-light")
+local Stable	= _Require_relative( ... , "DeWallua.Stable" )
+local Vec		= _Require_relative( ... , "DeWallua.vector-light")
 local DeWall	= _Require_relative( ... , "DeWallua")
 
 local t1, t2, t3 = Stable:fetch_table_n(3)
