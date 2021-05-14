@@ -51,32 +51,11 @@ local function sign(number)
     return number > 0 and 1 or (number == 0 and 0 or -1)
 end
 
-local function ray_prod(v1, v2)
-	local prod = 0
-	local half = #v1/2
-	for i = half + 1, #v1 do
-		prod = prod + v1[i] * v2[i]
-	end
-	return prod
-end
-
--- Return slope given ray:{x1,y1,dx,dy}
-local function get_slope(ray)
-	local slope = atan2(ray[3], ray[4])
-	return slope
-end
-
--- Return pythagorean distance between two points
-local function dist(x1,y1, x2,y2)
-	return Vec.len(x1-x2, y1-y2)
-end
-
-
 -- Given two x, y points, calculate ccw normal at their midpoint
 local function normal_vec_ccw(x1,y1, x2,y2)
     local x = (x1+x2)/2
     local y = (y1+y2)/2
-    local dy, dx = normalize(x2-x1, y2-y1)
+    local dy, dx = Vec.normalize(x2-x1, y2-y1)
     return x, y, -dx, dy -- dx of the normal vector is the -dy of the given vec, dy of the normal vector is the dx of the vector
 end
 
@@ -84,7 +63,7 @@ end
 local function normal_vec_cw(x1,y1, x2,y2)
     local x = (x1+x2)/2
     local y = (y1+y2)/2
-    local dy, dx = normalize(x2-x1, y2-y1)
+    local dy, dx = Vec.normalize(x2-x1, y2-y1)
     return x, y, dx, -dy
 	-- x/y are the vector origin (midpoint of line)
 	-- dx of the normal vector is the dy of the given vec, dy of the normal vector is the -dx of the vector
@@ -311,8 +290,8 @@ local function order_points_ccw_i(vertices)
 		if a1 < a2 then
             return true -- true means first arg wins the sort (v1 in our case)
         elseif a1 == a2 then -- points have same angle, so choose the point furthest from p_ref
-            local m1 = dist(vertices[v1].x,vertices[v1].y, p_ref.x,p_ref.y)
-            local m2 = dist(vertices[v2].x,vertices[v2].y, p_ref.x,p_ref.y)
+            local m1 = Vec.dist(vertices[v1].x,vertices[v1].y, p_ref.x,p_ref.y)
+            local m2 = Vec.dist(vertices[v2].x,vertices[v2].y, p_ref.x,p_ref.y)
             if m1 > m2 then
                 return true -- v1 is further away, so it wins the sort
             end
@@ -412,8 +391,8 @@ local function order_points_ccw(vertices)
             return true -- true means first arg wins the sort (v1 in our case)
         elseif a1 == a2 then -- points have same angle, so choose the point furthest from p_ref
 			-- Compute points' distances
-			local m1 = dist(v1.x,v1.y, p_ref.x,p_ref.y)
-            local m2 = dist(v2.x,v2.y, p_ref.x,p_ref.y)
+			local m1 = Vec.dist(v1.x,v1.y, p_ref.x,p_ref.y)
+            local m2 = Vec.dist(v2.x,v2.y, p_ref.x,p_ref.y)
             if m1 > m2 then -- Pick the furthest point to win
                 return true -- v1 is fatrther, so it wins the sort
             end
@@ -597,7 +576,7 @@ local function polygon_bounding_radius(vertices, centroid)
 	local radius = 0
 
 	for i = 1,#vertices do
-		radius = max(radius, dist(vertices[i].x,vertices[i].y, centroid.x, centroid.y))
+		radius = max(radius, Vec.dist(vertices[i].x,vertices[i].y, centroid.x, centroid.y))
 	end
 	return radius
 end
