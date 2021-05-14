@@ -69,45 +69,6 @@ local function normal_vec_cw(x1,y1, x2,y2)
 	-- dx of the normal vector is the dy of the given vec, dy of the normal vector is the -dx of the vector
 end
 
---[[ local function to_vertices(vertices, x, y, ...)
-    -- points can be {x1,y1,x2,y2}, {{x1,y1},{x2,y2}}, {{x1,y1,dx,dy},{x2,y2,dx,dy}}
-    -- Convert all inputs to last representation
-    if not (x) then return vertices end
-
-	if type(x) == "number" then -- HC style definition
-		if not (y) then print("Odd number of x/y coordinates") return vertices end
-        --print('x is numbers!: ') print(x)
-        vertices[#vertices + 1] = {x = x, y = y, dx = 0, dy = 0}   -- set vertex
-        return to_vertices(vertices, ...)
-
-    elseif type(x) == "table" then
-        print('x is table!: ')print(#x)
-        -- Check if next element is table
-        if type(y) == "table" then
-			vertices[#vertices+1] = {x = x[1], y = x[2], dx = x[3] or (x[1]-y[1]) or 0, dy = x[4] or (x[2]-y[2]) or 0}
-			if (y) then vertices[#vertices+1] = {x = y[1], y = y[2], dx = x[3] or 0, dy = x[4] or 0} end
-			print('this weird thing is running')
-            return to_vertices(vertices, ...)
-        -- Check if inner elempolygons are tables
-
-        elseif type(x[1]) == "number" or type(x[1]) == "table" then
-
-            return to_vertices(vertices, unpack(x))
-
-        end
-    end
-end ]]
---verts = to_vertices({}, {1,1,2,1,2,2,1,2})
---tprint(verts)
---verts = to_vertices({}, {1,1},      {2,1},     {2,2},     {1,2} )
---tprint(verts)
---verts = to_vertices({},{{1,1},      {2,1},     {2,2},     {1,2}})
---tprint(verts)
---verts = to_vertices({},{{1,-1,1,0}, {2,-1,0,1}, {2,2,-1,0}, {1,2,0,-1},{90,90,90,90}})
---tprint(verts)
---verts = to_vertices({}, 1,1,2,1,2,2,1,2)
-
-
 -- [[---------------------]]         Table Utilities         [[---------------------]] --
 
 -- Declare read-only proxy table function for .config
@@ -191,8 +152,6 @@ end
 -- Recursive function that returns a list of {x,y} coordinates given a variable amount of
 -- Procedural x/y values.
 local function to_vertices(vertices, x, y, ...)
-    -- points can be {x1,y1,x2,y2}, {{x1,y1},{x2,y2}}, {{x1,y1,dx,dy},{x2,y2,dx,dy}}
-    -- Convert all inputs to last representation
     if not (x and y) then return vertices end
 	vertices[#vertices + 1] = {x = x, y = y} -- , dx = 0, dy = 0}   -- set vertex
 	return to_vertices(vertices, ...)
