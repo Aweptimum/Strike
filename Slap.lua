@@ -51,27 +51,6 @@ local function sign(number)
     return number > 0 and 1 or (number == 0 and 0 or -1)
 end
 
--- Add two "vectors"
-local function add(x1,y1, x2,y2)
-	return x1+x2, y1+y2
-end
-
--- Multiply vector by scalar
-local function scale(s, x,y)
-	return s*x, s*y
-end
-
--- Rotate a "vector"
-local function rotate(phi, x,y)
-	local c, s = cos(phi), sin(phi)
-	return c*x - s*y, s*x + c*y
-end
-
--- Dot product of two "vectors"
-local function dot_prod(x1,y1, x2,y2)
-	return x1*x2 + y1*y2
-end
-
 local function ray_prod(v1, v2)
 	local prod = 0
 	local half = #v1/2
@@ -87,25 +66,11 @@ local function get_slope(ray)
 	return slope
 end
 
--- Return magnitude of dx/dy or {x,y} from origin
-local function len(x,y)
-	return sqrt(x*x + y*y)
-end
-
 -- Return pythagorean distance between two points
 local function dist(x1,y1, x2,y2)
-	return len(x1-x2, y1-y2)
+	return Vec.len(x1-x2, y1-y2)
 end
 
-local function normalize(x, y)
-    local m = len(x, y)
-    return x/m, y/m
-end
-
--- Return i,j,k vector determinant, 0 means x1,y1 is parallel to x2,y2
-local function k_determinant(x1, y1, x2, y2)
-	return x1*y2 - y1*x2
-end
 
 -- Given two x, y points, calculate ccw normal at their midpoint
 local function normal_vec_ccw(x1,y1, x2,y2)
@@ -256,12 +221,12 @@ end
 
 -- Test if 3 points are collinear (do they not make a triangle?)
 local function is_collinear_points(a, b, c)
-	return abs(k_determinant(a.x-c.x, a.y-c.y, b.x-c.x,b.y-c.y)) <= 1e-32
+	return abs(Vec.det(a.x-c.x, a.y-c.y, b.x-c.x,b.y-c.y)) <= 1e-32
 end
 
 -- Test if 3 points make a ccw turn (same as collinear function, but checks for >= 0)
 local function is_ccw(p, q, r)
-	return k_determinant(q.x-p.x, q.y-p.y,  r.x-p.x, r.y-p.y) >= 0
+	return Vec.det(q.x-p.x, q.y-p.y,  r.x-p.x, r.y-p.y) >= 0
 end
 
 -- Remove vertices that are collinear
@@ -582,14 +547,14 @@ local function calc_signed_area(vertices)
 	-- Initialize p and q so we can wrap around in the loop
 	local p, q = vertices[#vertices], vertices[1]
 	-- a is the signed area of the triangle formed by the two legs of p.x-q.x and p.y-q.y - it is our weighting
-	local a = k_determinant(p.x,p.y, q.x,q.y)
+	local a = Vec.det(p.x,p.y, q.x,q.y)
 	-- signed_area is the total signed area of all triangles
 	local signed_area = a
 
 	for i = 2, #vertices do
 		-- Now assign p to q, q to next
 		p, q = q, vertices[i]
-		a = k_determinant(p.x,p.y, q.x,q.y)
+		a = Vec.det(p.x,p.y, q.x,q.y)
 		signed_area = signed_area + a
 
 
@@ -606,7 +571,7 @@ local function calc_area_centroid(vertices)
 	-- Initialize p and q so we can wrap around in the loop
 	local p, q = vertices[#vertices], vertices[1]
 	-- a is the signed area of the triangle formed by the two legs of p.x-q.x and p.y-q.y - it is our weighting
-	local a = k_determinant(p.x,p.y, q.x,q.y)
+	local a = Vec.det(p.x,p.y, q.x,q.y)
 	-- signed_area is the total signed area of all triangles
 	local signed_area = a
 	local centroid	  = {x = (p.x+q.x)*a, y = (p.y+q.y)*a}
@@ -614,7 +579,7 @@ local function calc_area_centroid(vertices)
 	for i = 2, #vertices do
 		-- Now cycle p to q, q to next vertex
 		p, q = q, vertices[i]
-		a = k_determinant(p.x,p.y, q.x,q.y)
+		a = Vec.det(p.x,p.y, q.x,q.y)
 		centroid.x, centroid.y = centroid.x + (p.x+q.x)*a, centroid.y + (p.y+q.y)*a
 		signed_area = signed_area + a
 
@@ -690,7 +655,7 @@ local function create_rectangle(dx, dy, x_pos, y_pos, angle_rads)
 	local centroid  	= {x = x_offset+dx/2, y = y_offset+dy/2}
 	local area 			= dx*dy
 	local signed_area	= calc_signed_area(vertices)
-	local radius		= len(dx, dy)
+	local radius		= Vec.len(dx, dy)
 
 	-- Put everything into polygon table and then return it
 	local polygon = {
@@ -995,7 +960,7 @@ local function rotate_polygon(polygon, angle, ref_x, ref_y)
 
     for i = 1, #polygon.vertices do
         local v = polygon.vertices[i]
-        v.x, v.y = add(ref_x, ref_y, rotate(angle, v.x-ref_x, v.y - ref_y))
+        v.x, v.y = Vec.add(ref_x, ref_y, Vec.rotate(angle, v.x-ref_x, v.y - ref_y))
     end
 end
 
@@ -1007,7 +972,7 @@ local function scale_polygon(polygon, sf, ref_x, ref_y)
 
     for i = 1, #polygon.vertices do
         local v = polygon.vertices[i]
-        v.x, v.y = add(ref_x, ref_y, scale(sf, v.x-ref_x, v.y - ref_y))
+        v.x, v.y = Vec.add(ref_x, ref_y, Vec.mul(sf, v.x-ref_x, v.y - ref_y))
     end
     -- Recalculate radius while we're here
     polygon.radius = polygon.radius * sf
