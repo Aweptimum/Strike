@@ -1,6 +1,7 @@
-local Vec = require "Slap.DeWallua.vector-light"
+local Vec	= require "Slap.DeWallua.vector-light"
 local Shape = require "Slap.shapes.shape"
-local abs = math.abs
+local abs	= math.abs
+local atan2 = math.atan2
 
 -- Create polygon object
 local ConvexPolygon = {
@@ -62,6 +63,83 @@ local function is_self_intersecting(vertices)
 	return false
 end
 
+-- Check if points are convex by verifying all groups of 3 points make a ccw winding
+local function is_convex(vertices)
+	local i, j = #vertices-1, #vertices
+	for k = 1, #vertices do
+		-- Convex polygons always make a ccw turn
+		-- If we don't, then this is not a convex polygon and we return false.
+		if not is_ccw(vertices[i], vertices[j], vertices[k]) then
+			return false
+		end
+		-- Cycle i to j, j to k
+		i,j = j,k
+	end
+	-- Made it out, so it must be convex
+	return true
+end
+
+-- Enforce counter-clockwise points order
+-- using graham scan algorithm to return the ordered hull.
+local function order_points_ccw(vertices)
+	-- Find reference point to calculate cw/ccw from (left-most x, lowest y)
+	local p_ref = vertices[1]
+	for i = 2, #vertices do
+		-- if vertices[i].x < ref.x    then ref.x = vertices[i].x else ref.x = ref.x
+		--p_ref.x = (vertices[i].x < p_ref.x) and vertices.x or p_ref.x;
+		if vertices[i].y < p_ref.y then
+			p_ref = vertices[i]
+		elseif vertices[i].y == p_ref.y then
+			if vertices[i].x < p_ref.x then
+				p_ref = vertices[i]
+			end
+		end
+	end
+	-- Declare table.sort function
+	-- p_ref is an upvalue (within scope), so it can be accessed from table.sort
+	local function sort_ccw(v1,v2)
+		-- if v1 is p_ref, then it should win the sort automatically
+		if v1.x == p_ref.x and v1.y == p_ref.y then
+			return true
+		elseif v2.x == p_ref.x and v2.y == p_ref.y then
+		-- if v2 is p_ref, then v1 should lose the sort automatically
+			return false
+		end
+		-- Else compare polar angles
+		local a1 = atan2(v1.y - p_ref.y, v1.x - p_ref.x) -- angle between x axis and line from p_ref to v1
+		local a2 = atan2(v2.y - p_ref.y, v2.x - p_ref.x) -- angle between x axis and line from p_ref to v1
+		if a1 < a2 then
+            return true -- true means first arg wins the sort (v1 in our case)
+        elseif a1 == a2 then -- points have same angle, so choose the point furthest from p_ref
+			-- Compute points' distances
+			local m1 = Vec.dist(v1.x,v1.y, p_ref.x,p_ref.y)
+            local m2 = Vec.dist(v2.x,v2.y, p_ref.x,p_ref.y)
+            if m1 > m2 then -- Pick the furthest point to win
+                return true -- v1 is fatrther, so it wins the sort
+            end
+        end
+	end
+
+    -- Creat table of indices, sort the indices by corresponding vertex, then check if index order is_convex.
+	-- If is_convex, apply order to vertices, then return vertices, return false if not convex (triangulation time).
+	local vertices_clone = {}
+    -- Shallow copy vertices
+	shallow_copy_table(vertices, vertices_clone)
+	-- Sort table
+	table.sort(vertices_clone, sort_ccw)
+	-- Check if convex
+	local good_sort = is_convex(vertices_clone)
+
+	-- And return our investigation
+    if good_sort then
+        table.sort(vertices, sort_ccw)
+		return true --- true means the list is convex after all
+    else
+        return false -- false means not convex, treat it as concave
+    end
+
+end
+
 function ConvexPolygon:calc_area()
 	local vertices = self.vertices
 	-- Initialize p and q so we can wrap around in the loop
@@ -90,21 +168,21 @@ function ConvexPolygon:calc_area_centroid()
 	-- a is the signed area of the triangle formed by the two legs of p.x-q.x and p.y-q.y - it is our weighting
 	local a = Vec.det(p.x,p.y, q.x,q.y)
 	-- area is the total area of all triangles
-	local area = a
-	local centroid = {x = (p.x+q.x)*a, y = (p.y+q.y)*a}
+	self.area = a
+	self.centroid = {x = (p.x+q.x)*a, y = (p.y+q.y)*a}
 
 	for i = 2, #vertices do
 		-- Now cycle p to q, q to next vertex
 		p, q = q, vertices[i]
 		a = Vec.det(p.x,p.y, q.x,q.y)
-		centroid.x, centroid.y = centroid.x + (p.x+q.x)*a, centroid.y + (p.y+q.y)*a
-		area = area + a
+		self.centroid.x, self.centroid.y = self.centroid.x + (p.x+q.x)*a, self.centroid.y + (p.y+q.y)*a
+		self.area = self.area + a
 	end
-
-	self.area = area * 0.5
-	self.centroid.x	= centroid.x / (6.0*area);
-    self.centroid.y	= centroid.y / (6.0*area);
-	return centroid, area
+	self.area = self.area * 0.5
+	print('area is: '..self.area)
+	self.centroid.x	= self.centroid.x / (6*self.area);
+    self.centroid.y	= self.centroid.y / (6*self.area);
+	return self.centroid, self.area
 end
 
 function ConvexPolygon:get_bbox()
@@ -136,6 +214,13 @@ end
 function ConvexPolygon:new(...)
 	print('constructing polygon')
     self.vertices = to_vertices({},...)
+	if not is_convex(self.vertices) then
+		print('not convex!')
+		assert(order_points_ccw(self.vertices), 'Points cannot be ordered into a convex shape')
+	else
+		print('convex')
+	end
+	tprint(self.vertices)
 	self:calc_area_centroid()
 end
 
@@ -152,15 +237,21 @@ function ConvexPolygon:translate(dx, dy)
     return self.centroid.x, self.centroid.y
 end
 
+function ConvexPolygon:translate_to(x, y)
+	local dx, dy = x - self.centroid.x, y - self.centroid.y
+	return self:translate(dx,dy)
+end
+
 function ConvexPolygon:rotate(angle, ref_x, ref_y)
 	-- Default to centroid as ref-point
     ref_x = ref_x or self.centroid.x
-	ref_y = ref_y and ref_x or self.centroid.y
+	ref_y = ref_y or self.centroid.y
 	-- Rotate each vertex about ref-point
-    for i = 1, self.vertices do
+    for i = 1, #self.vertices do
         local v = self.vertices[i]
         v.x, v.y = Vec.add(ref_x, ref_y, Vec.rotate(angle, v.x-ref_x, v.y - ref_y))
     end
+	self.centroid.x, self.centroid.y = Vec.add(ref_x, ref_y, Vec.rotate(angle, self.centroid.x-ref_x, self.centroid.y-ref_y))
 end
 
 function ConvexPolygon:scale(sf, ref_x, ref_y)
@@ -173,7 +264,7 @@ function ConvexPolygon:scale(sf, ref_x, ref_y)
         v.x, v.y = Vec.add(ref_x, ref_y, Vec.mul(sf, v.x-ref_x, v.y - ref_y))
     end
     -- Recalculate centroid, area, and radius while we're here
-    self.centroid, self.area = self:calc_area_centroid()
+    self:calc_area_centroid()
     self.radius = self.radius * sf
 end
 
@@ -197,10 +288,12 @@ function ConvexPolygon:project(nx,ny)
 	return min_dot, max_dot
 end
 
+ConvexPolygon._get_verts = ConvexPolygon.unpack
+
 function ConvexPolygon:draw(mode)
 	-- default fill to "line"
 	mode = mode or "line"
-	love.graphics.polygon("line", self:unpack())
+	love.graphics.polygon("line", self:_get_verts())
 end
 
 return ConvexPolygon
