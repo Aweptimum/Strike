@@ -28,11 +28,20 @@ function RegularPolygon:new(x_pos, y_pos, n, radius, angle_rads)
     self.convex      	= true      		-- boolean
     self.centroid       = {x = x_pos, y = y_pos}	-- {x, y} coordinate pair
     -- Calculate the area of our polygon.
-    self.calc_area()
+    self:calc_area()
 end
 
 function RegularPolygon:unpack()
     return self.centroid.x, self.centroid.y, self.n, self.radius, self.angle
+end
+
+function RegularPolygon:_get_verts()
+	local v = {}
+	for i = 1,#self.vertices do
+		v[2*i-1] = self.vertices[i].x
+		v[2*i]   = self.vertices[i].y
+	end
+	return unpack(v)
 end
 
 return RegularPolygon
