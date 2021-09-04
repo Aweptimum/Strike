@@ -1,6 +1,6 @@
 local Vec = require "Slap.DeWallua.vector-light"
 local cos, sin = math.cos, math.sin
-local polygon = require 'Slap.shapes.ConvexPolygon'
+local Polygon = require 'Slap.shapes.ConvexPolygon'
 
 local Rect = {
     vertices 		= {},              -- list of {x,y} coords
@@ -11,7 +11,7 @@ local Rect = {
 }
 -- Set metatable so we can override polygon methods
 --Rect.__index = Rect
-Rect = polygon:extend()
+Rect = Polygon:extend()
 
 Rect.name = 'rect'
 function Rect:new(x_pos, y_pos, dx, dy, angle_rads)
@@ -21,10 +21,10 @@ function Rect:new(x_pos, y_pos, dx, dy, angle_rads)
     self.dx, self.dy = dx, dy
 	self.angle = angle_rads or 0
 	self.vertices = {
-		{x = x_offset					, y = y_offset					},
-		{x = x_offset + dx*cos(angle)	, y = y_offset					},
-		{x = x_offset + dx*cos(angle)	, y = y_offset + dy*sin(angle)	},
-		{x = x_offset					, y = y_offset + dy*sin(angle)	}
+		{x = x_offset						, y = y_offset					},
+		{x = x_offset + dx*cos(self.angle)	, y = y_offset					},
+		{x = x_offset + dx*cos(self.angle)	, y = y_offset + dy*sin(self.angle)	},
+		{x = x_offset						, y = y_offset + dy*sin(self.angle)	}
 	}
 	self.centroid  	= {x = x_offset+dx/2, y = y_offset+dy/2}
 	self.area 		= dx*dy
