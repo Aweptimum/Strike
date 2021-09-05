@@ -1,6 +1,6 @@
 local Vec	= require "Slap.DeWallua.vector-light"
 local Shape = require "Slap.shapes.shape"
-local abs	= math.abs
+local abs, max	= math.abs, math.max
 local atan2 = math.atan2
 
 -- Create polygon object
@@ -184,6 +184,14 @@ function ConvexPolygon:calc_area_centroid()
 	return self.centroid, self.area
 end
 
+function ConvexPolygon:calc_radius()
+	local vertices, radius = self.vertices, 0
+	for i = 1,#vertices do
+		radius = max(radius, Vec.dist(vertices[i].x,vertices[i].y, self.centroid.x, self.centroid.y))
+	end
+	return radius
+end
+
 function ConvexPolygon:get_bbox()
 
 	local min_x, max_x, min_y, max_y = self.vertices[1].x,self.vertices[1].x, self.vertices[1].y, self.vertices[1].y
@@ -215,7 +223,10 @@ function ConvexPolygon:new(...)
 	if not is_convex(self.vertices) then
 		assert(order_points_ccw(self.vertices), 'Points cannot be ordered into a convex shape')
 	end
+	trim_collinear_points(self.vertices)
+	assert(not is_self_intersecting(self.vertices), 'Ordered points still self-intersecting')
 	self:calc_area_centroid()
+	self:calc_radius()
 end
 
 function ConvexPolygon:translate(dx, dy)
@@ -257,7 +268,7 @@ function ConvexPolygon:scale(sf, ref_x, ref_y)
         local v = self.vertices[i]
         v.x, v.y = Vec.add(ref_x, ref_y, Vec.mul(sf, v.x-ref_x, v.y - ref_y))
     end
-    -- Recalculate centroid, area, and radius while we're here
+    -- Recalculate centroid, area, and radius
     self:calc_area_centroid()
     self.radius = self.radius * sf
 end
