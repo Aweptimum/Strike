@@ -8,8 +8,12 @@ local Shapes = {}
 function Shapes:Create_Definition(name, object)
     print('Creating definition for:' .. name)
     --Check that the object implements new
-    assert(object.new, "\tnew is null for shape: ".. name)
-
+    assert(object.new, "\tnew is null for shape: ".. name..'\n Make sure to :extend() it')
+    -- Add "private" _copy method for each object
+    function object:_copy()
+        print('self is:'..self.name)
+        return object(self:unpack())
+    end
     self[name] = object
 end
 

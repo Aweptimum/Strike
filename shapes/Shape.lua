@@ -37,16 +37,16 @@ function Shape:scale()
 end
 
 function Shape:copy(x, y, angle_rads)
-    local copy = self( self:unpack() )
-	-- if origin specified, then translate_polygon
+    local copy = self:_copy()
+	-- if origin specified, then translate
 	if x or y then
 		local dx = x and x - self.centroid.x or 0 -- amount to translate in x if x specified
     	local dy = y and y - self.centroid.y or 0 -- amount to translate in y if y specified
-		copy:_translate(dx, dy)
+		copy:translate(dx, dy)
 	end
 	-- If rotation specified, then rotate_polygon
 	if angle_rads then
-		copy:_rotate(angle_rads)
+		copy:rotate(angle_rads)
     end
 	-- Return copy
 	return copy
