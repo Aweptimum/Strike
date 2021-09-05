@@ -15,6 +15,7 @@ local ConvexPolygon = {
 ConvexPolygon = Shape:extend()
 ConvexPolygon.name = 'convex'
 
+-- Recursive function that returns a list of {x=#,y=#} coordinates given a list of procedural, ccw coordinate pairs
 local function to_vertices(vertices, x, y, ...)
     if not (x and y) then return vertices end
 	vertices[#vertices + 1] = {x = x, y = y} -- , dx = 0, dy = 0}   -- set vertex
@@ -268,8 +269,9 @@ function ConvexPolygon:scale(sf, ref_x, ref_y)
         local v = self.vertices[i]
         v.x, v.y = Vec.add(ref_x, ref_y, Vec.mul(sf, v.x-ref_x, v.y - ref_y))
     end
-    -- Recalculate centroid, area, and radius
-    self:calc_area_centroid()
+	self.centroid.x, self.centroid.y = Vec.add(ref_x, ref_y, Vec.mul(sf, self.centroid.x-ref_x, self.centroid.y - ref_y))
+    -- Recalculate area, and radius
+    self:calc_area()
     self.radius = self.radius * sf
 end
 
