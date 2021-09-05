@@ -1,9 +1,14 @@
 local Vec = require "Slap.DeWallua.vector-light"
-local pi, cos, sin = math.pi, math.cos, math.sin
+local pi, cos, sin, tan = math.pi, math.cos, math.sin, math.tan
 
 local Polygon = require 'Slap.shapes.ConvexPolygon'
 
 local RegularPolygon = Polygon:extend()
+
+function RegularPolygon:calc_area()
+    local n, r = self.n, self.radius*cos(pi/self.n)
+    self.area = n*r*r*tan(pi/n)
+end
 
 function RegularPolygon:new(x_pos, y_pos, n, radius, angle_rads)
     -- Initialize our polygon's origin and rotation
