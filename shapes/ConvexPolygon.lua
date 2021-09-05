@@ -293,6 +293,25 @@ function ConvexPolygon:project(nx,ny)
 	return min_dot, max_dot
 end
 
+-- Need this to test if a shape is completely inside
+function ConvexPolygon:point_inside(point)
+	local vertices = self.vertices
+	local winding = 0
+	local p, q = vertices[#vertices], vertices[1]
+	for i = 1, #vertices do
+		if p.y < point.y then
+			if q.y > point.y and is_ccw(p,q, point) then
+				winding = winding + 1
+			end
+		else
+			if q.y < point.y and not is_ccw(p,q, point) then
+				winding = winding - 1
+			end
+		end
+	end
+	return winding ~= 0
+end
+
 ConvexPolygon._get_verts = ConvexPolygon.unpack
 
 function ConvexPolygon:draw(mode)
