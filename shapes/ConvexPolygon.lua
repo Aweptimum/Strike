@@ -179,7 +179,6 @@ function ConvexPolygon:calc_area_centroid()
 		self.area = self.area + a
 	end
 	self.area = self.area * 0.5
-	print('area is: '..self.area)
 	self.centroid.x	= self.centroid.x / (6*self.area);
     self.centroid.y	= self.centroid.y / (6*self.area);
 	return self.centroid, self.area
@@ -212,15 +211,10 @@ end
 
 -- Create new Polygon object
 function ConvexPolygon:new(...)
-	print('constructing polygon')
     self.vertices = to_vertices({},...)
 	if not is_convex(self.vertices) then
-		print('not convex!')
 		assert(order_points_ccw(self.vertices), 'Points cannot be ordered into a convex shape')
-	else
-		print('convex')
 	end
-	tprint(self.vertices)
 	self:calc_area_centroid()
 end
 
