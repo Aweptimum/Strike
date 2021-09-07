@@ -11,7 +11,6 @@ function Shapes:Create_Definition(name, object)
     assert(object.new, "\tnew is null for shape: ".. name..'\n Make sure to :extend() it')
     -- Add "private" _copy method for each object
     function object:_copy()
-        print('self is:'..self.name)
         return object(self:unpack())
     end
     self[name] = object
@@ -19,7 +18,6 @@ end
 
 local function load_shapes(cwd)
     local shape_files = scandir('shapes')
-    tprint(shape_files)
     for _, filename in ipairs(shape_files) do
         local name = filename:sub(1,filename:len()-4)
         local s = _Require_relative(cwd, 'shapes.'..name)
