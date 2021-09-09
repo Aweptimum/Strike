@@ -28,7 +28,7 @@ function Rect:new(x_pos, y_pos, dx, dy, angle_rads)
 	}
 	self.centroid  	= {x = x_offset+dx/2, y = y_offset+dy/2}
 	self.area 		= dx*dy
-	self.radius		= Vec.len(dx, dy)
+	self.radius		= Vec.len(dx, dy)/2
 end
 
 function Rect:unpack()
