@@ -190,6 +190,7 @@ function ConvexPolygon:calc_radius()
 	for i = 1,#vertices do
 		radius = max(radius, Vec.dist(vertices[i].x,vertices[i].y, self.centroid.x, self.centroid.y))
 	end
+	self.radius = radius
 	return radius
 end
 
@@ -228,6 +229,19 @@ function ConvexPolygon:new(...)
 	assert(not is_self_intersecting(self.vertices), 'Ordered points still self-intersecting')
 	self:calc_area_centroid()
 	self:calc_radius()
+end
+
+local function iter_edges(shape, i)
+	i = i + 1
+	local v = shape.vertices
+	if i <= #v then
+		local j = i < #v and i+1 or 1
+		return i, {v[i].x, v[i].y, v[j].x, v[j].y}
+	end
+end
+
+function ConvexPolygon:ipairs()
+    return iter_edges, self, 0
 end
 
 function ConvexPolygon:translate(dx, dy)
