@@ -3,6 +3,8 @@ local Object = require 'Slap.classic.classic'
 
 local Shape = Object:extend()
 
+Shape.type = 'shape'
+
 function Shape:get_area()
     return self.area
 end
@@ -39,10 +41,8 @@ end
 function Shape:copy(x, y, angle_rads)
     local copy = self:_copy()
 	-- if origin specified, then translate
-	if x or y then
-		local dx = x and x - self.centroid.x or 0 -- amount to translate in x if x specified
-    	local dy = y and y - self.centroid.y or 0 -- amount to translate in y if y specified
-		copy:translate(dx, dy)
+	if x and y then
+		copy:translate_to(x, y)
 	end
 	-- If rotation specified, then rotate_polygon
 	if angle_rads then
