@@ -14,10 +14,11 @@ local function to_vertices(vertices, x, y, ...)
 end
 
 function Concave:new(...)
-	if type(...) == "table" then return self:new(unpack(...)) end
+	if ... and type(...) == "table" then return self:new(unpack(...)) end
     local vertices = to_vertices({}, ...)
 	assert(#vertices >= 3, "Need at least 3 non collinear points to build polygon (got "..#vertices..")")
     -- Triangulation!
+    self.shapes = {}
     local triangles = Dewall.constrained(vertices)
 	-- Convert triangles to polygons and add to self.shapes
 	for i = #triangles, 1, -1 do
