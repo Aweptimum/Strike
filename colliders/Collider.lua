@@ -2,9 +2,14 @@
 local push, pop = table.insert, table.remove
 local Vec = require "Slap.DeWallua.vector-light"
 local Object = require 'Slap.classic.classic'
+
 local Collider = Object:extend()
+
+Collider.type = 'collider'
+
 -- A collider is an object composed of one or more shapes (or colliders!)
 Collider.shapes = {}
+
 -- Add shape(s) to collider
 function Collider:add(shape, ...)
     if not shape then return end
@@ -29,8 +34,23 @@ local function iter_method(method, col, i)
     end
 end
 
+local function shapes(collider)
+    for i, shape in ipairs(collider.shapes) do
+        if shape.type == 'shape' then
+            coroutine.yield(collider, shape)
+        elseif shape.type == 'collider' then
+            print(shape.name)
+            shapes(shape)
+        end
+    end
+end
+
 function Collider:ipairs()
     return iter_shapes, self, 0
+end
+
+function Collider:ipairs()
+    return coroutine.wrap( function() shapes(self) end )
 end
 
 function Collider:calc_area()
@@ -63,17 +83,29 @@ function Collider:calc_area_centroid()
 end
 
 function Collider:new(...)
+    self.shapes = {}
     self:add(...)
     self.centroid  = {x = 0, y = 0}
+    self.area = 0
     self:calc_area_centroid()
 end
 
-function Collider:copy()
+function Collider:unpack()
+    return unpack(self.shapes)
+end
+
+function Collider:copy(x, y, angle_rads)
     local copy = self:_copy()
-    for _, shape in self:ipairs() do
-        self:add(shape)
+	-- if origin specified, then translate
+	if x and y then
+		copy:translate_to(x, y)
+	end
+	-- If rotation specified, then rotate_polygon
+	if angle_rads then
+		copy:rotate(angle_rads)
     end
-    return copy
+	-- Return copy
+	return copy
 end
 
 -- Translate collider
@@ -91,6 +123,7 @@ end
 
 -- Rotate collider
 function Collider:rotate(angle, ref_x, ref_y)
+    angle = angle or 0
     ref_x, ref_y = ref_x or self.centroid.x, ref_y or self.centroid.y
     for _, shape in self:ipairs() do
         -- Rotate about ref wrt the collider; per shape would rotate each in-place
@@ -98,6 +131,16 @@ function Collider:rotate(angle, ref_x, ref_y)
     end
     self.centroid.x, self.centroid.y = Vec.add(ref_x, ref_y, Vec.rotate(angle, self.centroid.x-ref_x, self.centroid.y - ref_y))
     --self:calc_centroid()
+end
+
+function Collider:scale(sf, ref_x, ref_y)
+    for _, shape in self:ipairs() do
+        shape:scale(sf, ref_x, ref_y)
+    end
+	self.centroid.x, self.centroid.y = Vec.add(ref_x, ref_y, Vec.mul(sf, self.centroid.x-ref_x, self.centroid.y - ref_y))
+    -- Recalculate area, and radius
+    self:calc_area()
+    --self.radius = self.radius * sf
 end
 
 -- Remove shape(s) from collider
