@@ -81,19 +81,31 @@ function Collider:calc_area_centroid()
     end
     self.centroid.x, self.centroid.y = self.centroid.x/self.area, self.centroid.y/self.area
 end
+-- Calc radius by finding shape with: largest sum of centroidal difference + radius
+function Collider:calc_radius()
+    self.radius = 0
+    local cx,cy = self.centroid.x, self.centroid.y
+    for _, shape in self:ipairs() do
+        local r = Vec.len(cx - shape.centroid.x, cy - shape.centroid.y) + shape.radius
+        self.radius = self.radius > r and self.radius or r
+    end
+    return self.radius
+end
 
 function Collider:new(...)
     self.shapes = {}
     self:add(...)
     self.centroid  = {x = 0, y = 0}
     self.area = 0
+    self.radius = 0
     self:calc_area_centroid()
+    self:calc_radius()
 end
 
 function Collider:unpack()
     return unpack(self.shapes)
 end
-
+-- Turn this into a recursive copy - each shape in the new collider still references the old one.
 function Collider:copy(x, y, angle_rads)
     local copy = self:_copy()
 	-- if origin specified, then translate
