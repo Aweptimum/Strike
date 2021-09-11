@@ -1,5 +1,5 @@
 -- "Abstract" base object, provides some generic methods.
-local Object = require 'Slap.classic.classic'
+local Object = require 'Strike.classic.classic'
 
 local Shape = Object:extend()
 

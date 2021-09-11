@@ -1,8 +1,8 @@
 local Dewall = require "DeWallua"
 local pop = table.remove
 local cos, sin = math.cos, math.sin
-local Collider = require 'Slap.colliders.Collider'
-local Convex = require 'Slap.shapes.ConvexPolygon'
+local Collider = require 'Strike.colliders.Collider'
+local Convex = require 'Strike.shapes.ConvexPolygon'
 
 -- A concave shape must be decomposed into a collection of convex shapes
 local Concave = Collider:extend()

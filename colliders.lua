@@ -1,5 +1,5 @@
 local scandir 	= _Require_relative(..., 'fileloader')
-local Collider     = require 'Slap.colliders.Collider'
+local Collider     = require 'Strike.colliders.Collider'
 -- Two kinds of shapes:
 -- circles and polygons
 

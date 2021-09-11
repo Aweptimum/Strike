@@ -1,5 +1,5 @@
-local Vec = require "Slap.DeWallua.vector-light"
-local Polygon = require 'Slap.shapes.ConvexPolygon'
+local Vec = require "Strike.DeWallua.vector-light"
+local Polygon = require 'Strike.shapes.ConvexPolygon'
 
 local Edge = Polygon:extend()
 

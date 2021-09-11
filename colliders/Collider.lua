@@ -1,7 +1,7 @@
 -- Base collider object
 local push, pop = table.insert, table.remove
-local Vec = require "Slap.DeWallua.vector-light"
-local Object = require 'Slap.classic.classic'
+local Vec = require "Strike.DeWallua.vector-light"
+local Object = require 'Strike.classic.classic'
 
 local Collider = Object:extend()
 

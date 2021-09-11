@@ -1,5 +1,5 @@
-local Vec	= require "Slap.DeWallua.vector-light"
-local Shape = require "Slap.shapes.shape"
+local Vec	= require "Strike.DeWallua.vector-light"
+local Shape = require "Strike.shapes.shape"
 local abs, max	= math.abs, math.max
 local atan2 = math.atan2
 

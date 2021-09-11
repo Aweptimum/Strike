@@ -1,5 +1,5 @@
 local scandir 	= _Require_relative(..., 'fileloader')
-local Shape     = require 'Slap.shapes.Shape'
+local Shape     = require 'Strike.shapes.Shape'
 -- Two kinds of shapes:
 -- circles and polygons
 

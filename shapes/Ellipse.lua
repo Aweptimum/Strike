@@ -1,8 +1,8 @@
-local Vec = require "Slap.DeWallua.vector-light"
 local pi, cos, sin = math.pi, math.cos, math.sin
 local floor, max = math.floor, math.max
 
-local Polygon = require 'Slap.shapes.ConvexPolygon'
+local Vec = require "Strike.DeWallua.vector-light"
+local Polygon = require 'Strike.shapes.ConvexPolygon'
 
 local Ellipse = Polygon:extend()
 

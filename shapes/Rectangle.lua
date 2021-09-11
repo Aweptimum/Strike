@@ -1,6 +1,6 @@
-local Vec = require "Slap.DeWallua.vector-light"
+local Vec = require "Strike.DeWallua.vector-light"
 local cos, sin = math.cos, math.sin
-local Polygon = require 'Slap.shapes.ConvexPolygon'
+local Polygon = require 'Strike.shapes.ConvexPolygon'
 
 local Rect = {
     vertices 		= {},              -- list of {x,y} coords

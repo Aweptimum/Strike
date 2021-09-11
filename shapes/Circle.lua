@@ -1,6 +1,6 @@
-local Vec = require "Slap.DeWallua.vector-light"
+local Vec = require "Strike.DeWallua.vector-light"
 local pi = math.pi
-local Shape = require "Slap.shapes.shape"
+local Shape = require "Strike.shapes.shape"
 
 -- Create circle object
 local Circle = {
