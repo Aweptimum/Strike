@@ -15,7 +15,7 @@ local push, pop = table.insert, table.remove
 --tprint(Shapes)
 --local _PACKAGE = (...):match("^(.+)%.[^%.]+")
 
--- Polygon module for creating shapes to slap each other
+-- Polygon module for creating shapes to strike each other
 
 -- [[---------------------]] Declaration of Spelling Collinear [[---------------------]] --
 
@@ -72,7 +72,7 @@ function tprint (tbl, height, indent)
 	end
 end
 
--- For slap.config, need an unpacking function that returns BOTH keys and values
+-- For S.ettings, need an unpacking function that returns BOTH keys and values
 -- Modified from this: https://stackoverflow.com/a/60731121/12135804
 -- Basically returns new_key in addition to the value
 local function unpack_unordered_recursive(tbl, key)
@@ -495,7 +495,7 @@ end
 
 -- Collision function that handles calling the right method
 -- on all pairs of shapes in polygons
-local function slaps(shapes)
+local function strike(shapes)
 	local type_1, type_2
 	local shape_1, shape_2
 
@@ -522,8 +522,8 @@ local function slaps(shapes)
 end
 
 
--- [[---------------------]] Slap2D API Table [[---------------------]] --
--- Slap table
+-- [[---------------------]] Strike API Table [[---------------------]] --
+-- Strike table
 local S = {}
 
 -- Config table
@@ -554,16 +554,16 @@ S.lappers = Colliders
 -- Add collisions table
 S.laps = {}
 
--- Config flags for slap
+-- Config flags for Strike
 local default_config = {
 	IDIOT_PROOF = true,		-- If false, turns off all checks in create_polygon - assumes only convex polygons
 	CONVEX_ONLY = false,	-- All vertex lists in create_polygon should be convex - does not turn off checks
 	BROAD_PHASE = 'none'	-- Specify broad_phase function to use w/ spatial hash
 }
 
--- Edit the configuration for slap to change some behavior using rawset
+-- Edit the configuration for Strike to change some behavior using rawset
 -- Takes a series of flag + value where flag is a string corresponding to the key
--- in slap.config to change, and value is a valid value for that flag
+-- in S.ettings to change, and value is a valid value for that flag
 -- flag-values can also be passed as a table containing key-value pairs
 local function configure(self, config_flag, value, ...)
 
@@ -579,7 +579,7 @@ local function configure(self, config_flag, value, ...)
 	-- Need to sandbox each config var so it's locked to appropriate options
 	if		config_flag == 'IDIOT_PROOF' or config_flag == 'CONVEX_ONLY' then
 		-- Assert if value is not bool
-		assert(type(value) == "boolean", "In: slap:load() - IDIOT_PROOF must be of type boolean")
+		assert(type(value) == "boolean", "In: strike:load() - IDIOT_PROOF must be of type boolean")
 	elseif	config_flag == 'BROAD_PHASE' then
 		local good =  value ~= 'none' or value ~= 'aabb' or value ~= 'radii'
 		assert(good, "BROAD_PHASE must be (aabb/radii/none")
@@ -590,11 +590,11 @@ local function configure(self, config_flag, value, ...)
 	return configure(self, ...)
 end
 
-local function load_slap(config_flag, value, ...)
+local function load_strike(config_flag, value, ...)
 	-- Create API table
-	local slap = {
+	local strike = {
 		-- Util functions
-		new						= load_slap, -- Get new slap isntance
+		new						= load_strike, -- Get new strike isntance
 		configure				= configure, -- config function
 		pool					= Stable,
 
@@ -603,22 +603,22 @@ local function load_slap(config_flag, value, ...)
 		circle_collision		= circle_circle,
 
 		-- Collision functions
-		slaps					= slaps,
+		strike					= strike,
 
 		-- Love functions
 		draw_polygon			= draw_polygon
 	}
 	-- This is where the flag variables ACTUALLY live
-	-- these are modifed through slap:configure
-	slap.__instance_config = deepcopy(default_config)
-	-- Init read-only proxy table, add to slap
+	-- these are modifed through strike:configure
+	strike.__instance_config = deepcopy(default_config)
+	-- Init read-only proxy table, add to strike
 	-- This is to prevent the user from accidentally setting flags to the wrong type.
 	-- If you're reading this, just edit the __instance_config table yourself, I trust you.
-	slap.config = read_only(slap.__instance_config)
+	strike.config = read_only(strike.__instance_config)
 
 	-- Config using args
-	slap:configure(config_flag, value, ...)
-	return slap
+	strike:configure(config_flag, value, ...)
+	return strike
 end
 
 
@@ -668,5 +668,5 @@ for i = 1, 1000 do tbl[i] = i end
 --benchmark_function('seconds', 5, 100000, 'create_regular_polygon', create_regular_polygon, 1000, 50)
 
 
--- Actually return Slap!
+-- Actually return Strike!
 return S

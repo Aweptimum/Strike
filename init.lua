@@ -9,6 +9,6 @@ function _Require_relative(PATH, file)
 	return require(table.concat({path, file}, "."))
 end
 
-local Slap = _Require_relative(...,'Slap')
+local Strike = _Require_relative(...,'Strike')
 
-return Slap
+return Strike
