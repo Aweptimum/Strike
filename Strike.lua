@@ -1,6 +1,7 @@
 local bit 		= require'bit' --https://luajit.org/extensions.html
 local Stable	= _Require_relative( ... , "DeWallua.Stable" )
 local Vec		= _Require_relative( ... , "DeWallua.vector-light")
+local Object	= require 'Strike.classic.classic'
 local Shapes 	= _Require_relative( ... , "shapes")
 local Collider	= _Require_relative( ... , "colliders.Collider")
 local Colliders	= _Require_relative( ... , "colliders")
@@ -47,6 +48,19 @@ local function normal_vec_cw(x1,y1, x2,y2)
     return x, y, dx, -dy
 	-- x/y are the vector origin (midpoint of line)
 	-- dx of the normal vector is the dy of the given vec, dy of the normal vector is the -dx of the vector
+end
+
+-- Create MTV object
+local mtv = Object:extend()
+
+function mtv:new(collider, collided, dx, dy)
+	self.collider = collider
+	self.collided = collided
+	self.dx, self.dy = dx, dy
+end
+
+function mtv:magnitude()
+	return Vec.len(self.dx, self.dy)
 end
 
 -- [[---------------------]]         Table Utilities         [[---------------------]] --
@@ -227,13 +241,6 @@ local function merge_convex_incident(poly_1, poly_2)
     end
 end
 
--- Love2d Specific Draw Function
-local function draw_polygon(polygon, fill)
-	-- default fill to "line"
-	fill = fill or "line"
-	love.graphics.polygon("line", get_polygon_vertices(polygon))
-end
-
 -- [[--- Masking functions ---]] --
 
 -- Mask layer - objects will only check for collisions if they're in the same layer
@@ -275,153 +282,11 @@ local function aabb_collision(shape_1, shape_2)
 	)
 end
 
--- Narrow-phase functions
--- Edge-Edge, Edge-Circle, Edge-Poly
--- Circle-Circle, Circle-Poly,
--- Poly-Poly
--- Slaps function that checks types and orders the function inputs.
-
-
--- Circle - Poly
--- Expand the edges of a polygon by the radius of the circle
--- Then! Check if the center of the circle is within those bounds
--- Two phases:
---		1) Solve for rects directly extruded from sides, check for point
---		2) Else, solve for radial regions at points of polygon
-
-local function circle_poly(circle, polygon)
-	-- Init normal vars
-	local nx, ny, dx, dy
-	local overlap, minimum, mtv_dx, mtv_dy
-	local cx, cy
-	-- Get geometry info
-	local radius = circle.radius
-	local verts = polygon.vertices
-	-- For each edge, get the normal, build a rectangle where the height = circle radius
-	-- Init starting points
-	local p, q = verts[#verts], verts[1]
-
-	-- Now lööp through verts
-	for i = 1, #verts do
-		-- Get edge normal
-		nx, ny, dx, dy = normal_vec_cw(p.x,p.y, q.x.qy)
-		-- Get the line segment from the normal origin to the circle center
-		-- Project that line onto the normal - if the projection
-		-- is less than the radius, then the circle is overlapping the polygon
-		cx, cy = circle.centroid.x - nx, circle.centroid.y - ny
-		overlap = Vec.dot(cx,cy, dx,dy)
-		if overlap < radius then
-			if overlap < minimum or not minimum then
-				-- Set our MTV to the smol vector
-				minimum = overlap
-				mtv_dx, mtv_dy = nx, ny
-			end
-		else
-			-- Found a separating axis
-			return false
-		end
-		-- Cycle p to q, q to next point
-		p, q = q, verts[i]
-	end
-
-	-- Welp. We made it here. So they're colliding, I guess. Hope it's consensual :(
-	return minimum, mtv_dy, mtv_dy
-end
-
 -- SAT alg for polygon-polygon collision
 -- Only tests half the edges of even polygons (parallel edges are redundant)
 -- Two convex polygons are intersecting when all edge normal projects have been checked and no gap found
 -- If intersecting, push the MTV onto the stack of the polygon being looped over
 -- If not intersecting, exit early and return false - found a separating axis
-local function poly_poly(poly_1, poly_2)
-	local verts_1, verts_2 = poly_1, poly_2
-
-	-- Minimum magnitude of mtv vector
-	local n
-	local overlap, minimum, mtv_dx, mtv_dy
-	local nx, ny, dx, dy
-	local verts_1_min_dot, verts_1_max_dot, verts_2_min_dot, verts_2_max_dot
-
-	-- Init starting points
-	local p, q = verts_1[#verts_1], verts_1[1]
-
-	-- if verts_1 has even edges, we only need to iterate through half of the edges ( n/2 + 1 points)
-	-- Use bitwise AND operator to test for even/odd
-	-- n = (#verts_1 and 1) == 0 and #verts_1/2 or #verts_1
-	n = #verts_1 % 2 == 0 and #verts_1 / 2 or #verts_1
-
-	-- Now lööp through verts_1
-	for i = 1, n do
-		-- For each edge in verts_1 get the normal
-		nx, ny, dx, dy = normal_vec_cw(p.x,p.y, q.x.qy)
-		-- Then project verts_1 onto its normal, and verts_2 onto the normal to compare shadows
-		verts_1_min_dot, verts_1_max_dot = project_polygon(verts_1, nx, ny)
-		verts_2_min_dot, verts_2_max_dot = project_polygon(verts_2, nx, ny)
-
-		-- We've now reduced it to ranges intersecting on a number line,
-		-- Compare verts_2 bounds to verts_1's lower bound
-		if verts_1_min_dot < verts_2_max_dot and verts_1_min_dot > verts_2_min_dot then
-			-- Not a separating axis
-			-- Find the overlap, which is equal to the magnitude of the MTV
-			-- Overlap = difference between max of min's and min of max's
-			overlap = max(verts_1_min_dot, verts_2_max_dot) - min(verts_1_max_dot, verts_2_max_dot)
-			-- Check if it's less than minimum
-			if overlap < minimum or not minimum then
-				-- Set our MTV to the smol vector
-				minimum = overlap
-				mtv_dx, mtv_dy = nx, ny
-			end
-		else
-			-- separating axis
-			return false -- WE FOUND IT BOIS, TIME TO GO HOME
-		end
-		-- Cycle p to q, q to next point
-		p, q = q, verts_1[i]
-	end
-
-	-- Ok, we didn't find a separating axis on verts_1,
-	-- Now need to check verts_2
-	-- Re-Init starting points
-	p, q = verts_2[#verts_2], verts_2[1]
-
-	-- if verts_2 has even edges, we only need to iterate through half of the edges ( n/2 + 1 points)
-	-- Use bitwise AND operator to test for even/odd
-	-- n = (#verts_2 and 1) ~= 0 and #verts_2/2 or #verts_2
-	n = verts_2 % 2 == 0 and #verts_2 / 2 or #verts_2
-
-	-- Now lööp
-	for i = 1, n do
-		-- For each edge in verts_2 get the normal
-		nx, ny, dx, dy = normal_vec_cw(p.x,p.y, q.x.qy)
-		-- Then project verts_2 onto its normal, and verts_1 onto the normal to compare shadows
-		verts_1_min_dot, verts_1_max_dot = project_polygon(verts_1, nx, ny)
-		verts_2_min_dot, verts_2_max_dot = project_polygon(verts_2, nx, ny)
-
-		-- We've now reduced it to ranges intersecting on a number line,
-		-- Compare verts_2 bounds to verts_1's lower bound
-		if verts_1_min_dot < verts_2_max_dot and verts_1_min_dot > verts_2_min_dot then
-			-- Not a separating axis
-			-- Find the overlap, which is equal to the magnitude of the MTV
-			-- Overlap = difference between max of min's and min of max's
-			overlap = max(verts_1_min_dot, verts_2_max_dot) - min(verts_1_max_dot, verts_2_max_dot)
-			-- Check if it's less than minimum
-			if overlap < minimum then
-				-- Set our MTV to the smol vector
-				minimum = overlap
-				mtv_dx, mtv_dy = nx, ny
-			end
-		else
-			-- separating axis
-			return false -- WE FOUND IT BOIS, TIME TO GO HOME
-		end
-		-- Cycle p to q, q to next point
-		p, q = q, verts_1[i]
-	end
-
-	-- Welp. We made it here. So they're colliding, I guess. Hope it's consensual :(
-	return minimum, mtv_dy, mtv_dy
-	-- TODO: WHERE DO I STORE THE MTV'S AHHH
-end
 
 local function project(shape1, shape2)
 	local n
@@ -433,20 +298,20 @@ local function project(shape1, shape2)
 		-- get the normal
 		nx, ny, dx, dy = normal_vec_cw(edge[1],edge[2], edge[3], edge[4])
 		-- Then project verts_1 onto its normal, and verts_2 onto the normal to compare shadows
-		shape1_min_dot, shape1_max_dot = shape1:project(nx, ny)
-		shape2_min_dot, shape2_max_dot = shape2:project(nx, ny)
+		shape1_min_dot, shape1_max_dot = shape1:project(dx, dy)
+		shape2_min_dot, shape2_max_dot = shape2:project(dx, dy)
 		-- We've now reduced it to ranges intersecting on a number line,
 		-- Compare verts_2 bounds to verts_1's lower bound
-		if shape1_min_dot < shape2_max_dot and shape1_min_dot > shape2_min_dot then
+		if shape1_max_dot > shape2_min_dot and shape2_max_dot > shape1_min_dot then
 			-- Not a separating axis
 			-- Find the overlap, which is equal to the magnitude of the MTV
 			-- Overlap = difference between max of min's and min of max's
-			overlap = max(shape1_min_dot, shape2_max_dot) - min(shape1_max_dot, shape2_max_dot)
+			overlap = max(shape1_min_dot, shape2_min_dot) - min(shape1_max_dot, shape2_max_dot)
 			-- Check if it's less than minimum
-			if overlap < minimum or not minimum then
+			if not minimum or overlap < minimum then
 				-- Set our MTV to the smol vector
 				minimum = overlap
-				mtv_dx, mtv_dy = nx, ny
+				mtv_dx, mtv_dy = dx, dy
 			end
 		else
 			-- separating axis
@@ -458,39 +323,52 @@ local function project(shape1, shape2)
 end
 
 local function SAT(shape1, shape2)
-	print('SAT!')
 	local mtv1 = project(shape1, shape2)
-	local mtv2 =  mtv1.mag ~= 0 and project(shape2, shape1) or {mag=0, x=0, y=0}
-	if mtv1.mag < mtv2.mag then -- false if both equal 0
+	local mtv2
+	--local mtv2 =  mtv1.mag ~= 0 and project(shape2, shape1) or {mag=inf, x=0, y=0}
+	if mtv1.mag == 0 then -- don't bother calculating mtv2
+		print('separating axis 1')
+		return false, nil
+	end
+	mtv2 = project(shape2, shape1)
+	if mtv2.mag == 0 then
+		print('separating axis 2')
+		return false, nil
+	end
+	-- Else, return the min
+	--tprint(mtv1) tprint(mtv2)
+	if mtv1.mag < mtv2.mag then
 		return 1, mtv1
-	elseif mtv2.mag > 0 then
-		return 2, mtv2
 	else
-		return false, nil -- no collision
+		return 2, mtv2
 	end
 end
 
 function collision(collider1, collider2)
-	local mtvx, mtvy, contactx, contacty
+	local mmtv = {mag = 0, x = 0, y = 0}
+	local from
+	local contactx, contacty
 	local i, j = 0,0
-	print('collider1 ipairs: '..tostring(collider1.ipairs))
+	--print('collider1 ipairs: '..tostring(collider1.ipairs))
 	for _, shape1 in collider1:ipairs() do
 		i = i +1
-		print('i: '..i)
-		print('collider2 ipairs: '..tostring(collider2.ipairs))
+		--print('collider2 ipairs: '..tostring(collider2.ipairs))
+		j = 0
 		for _, shape2 in collider2:ipairs() do
 			j = j +1
-			print('j: '..j)
+			--print('i: '..i..', j: '..j)
 			-- skip shape2 if their radii don't intersect
-			if circle_circle(shape1, shape2) then
-				local from, mtv = SAT(shape1, shape2)
-				if from then
-					return mtv
+			--if circle_circle(shape1, shape2) then
+				from, mtv = SAT(shape1, shape2)
+				if from then 
+					print('hit! '.. mtv.mag)
+					mmtv = Vec.len(mtv.x,mtv.y) > Vec.len(mmtv.x, mtv.y) and mtv or mmtv
 				end
-			end
+			--end
 		end
 	end
-	return false
+	print('mmtv: ') tprint(mmtv)
+	return mmtv.mag ~= 0 and mmtv or false
 end
 
 -- Collision function that handles calling the right method
@@ -549,10 +427,10 @@ for name, shape in pairs(Shapes) do
 	end
 end
 -- Add colliders
-S.lappers = Colliders
+S.trikers = Colliders
 
 -- Add collisions table
-S.laps = {}
+S.trikes = {}
 
 -- Config flags for Strike
 local default_config = {
