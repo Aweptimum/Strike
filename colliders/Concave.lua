@@ -29,6 +29,7 @@ function Concave:new(...)
     -- Then, for each polygon, calc area/centroid
     -- Figure out how to store several sub-polygons in a consistent way
     self:calc_area_centroid()
+    self:calc_radius()
 end
 
 return Concave
