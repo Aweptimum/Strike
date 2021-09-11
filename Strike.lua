@@ -1,6 +1,8 @@
+local bit 		= require'bit' --https://luajit.org/extensions.html
 local Stable	= _Require_relative( ... , "DeWallua.Stable" )
 local Vec		= _Require_relative( ... , "DeWallua.vector-light")
 local Shapes 	= _Require_relative( ... , "shapes")
+local Collider	= _Require_relative( ... , "colliders.Collider")
 local Colliders	= _Require_relative( ... , "colliders")
 
 local pi , cos, sin, atan2 = math.pi, math.cos, math.sin, math.atan2
@@ -10,17 +12,6 @@ local inf = math.huge
 -- Push/pop
 local push, pop = table.insert, table.remove
 
-local c = Shapes.Circle(5,5,5)
-local r = Shapes.Rectangle(5,5,5,5)
-print("circle object")
-print(c:get_area_centroid())
-c:scale(5)
-r:scale(10)
-print(c:get_area_centroid())
-
-local mt1, mt2 = {mag = inf}, {mag = inf}
-local test = mt1.mag < mt2.mag and mt1 or (mt2.mag ~= inf and mt2 or not true)
-print('not true is: '..tostring(test))
 --tprint(Shapes)
 --local _PACKAGE = (...):match("^(.+)%.[^%.]+")
 
@@ -440,7 +431,7 @@ local function project(shape1, shape2)
 	-- loop through shape1 geometry
 	for _, edge in shape1:ipairs() do
 		-- get the normal
-		nx, ny, dx, dy = normal_vec_cw(edge[1].x,edge[1].y, edge[2].x, edge[2].y)
+		nx, ny, dx, dy = normal_vec_cw(edge[1],edge[2], edge[3], edge[4])
 		-- Then project verts_1 onto its normal, and verts_2 onto the normal to compare shadows
 		shape1_min_dot, shape1_max_dot = shape1:project(nx, ny)
 		shape2_min_dot, shape2_max_dot = shape2:project(nx, ny)
@@ -467,21 +458,39 @@ local function project(shape1, shape2)
 end
 
 local function SAT(shape1, shape2)
+	print('SAT!')
 	local mtv1 = project(shape1, shape2)
 	local mtv2 =  mtv1.mag ~= 0 and project(shape2, shape1) or {mag=0, x=0, y=0}
-	return mtv1.mag < mtv2.mag and mtv1 or (mtv2.mag > 0 and mtv2 or not true)
+	if mtv1.mag < mtv2.mag then -- false if both equal 0
+		return 1, mtv1
+	elseif mtv2.mag > 0 then
+		return 2, mtv2
+	else
+		return false, nil -- no collision
+	end
 end
 
-local function collision(collider1, collider2)
+function collision(collider1, collider2)
 	local mtvx, mtvy, contactx, contacty
+	local i, j = 0,0
+	print('collider1 ipairs: '..tostring(collider1.ipairs))
 	for _, shape1 in collider1:ipairs() do
+		i = i +1
+		print('i: '..i)
+		print('collider2 ipairs: '..tostring(collider2.ipairs))
 		for _, shape2 in collider2:ipairs() do
+			j = j +1
+			print('j: '..j)
 			-- skip shape2 if their radii don't intersect
 			if circle_circle(shape1, shape2) then
-				SAT(shape1, shape2)
+				local from, mtv = SAT(shape1, shape2)
+				if from then
+					return mtv
+				end
 			end
 		end
 	end
+	return false
 end
 
 -- Collision function that handles calling the right method
@@ -520,20 +529,27 @@ local S = {}
 -- Config table
 S.ettings = {}
 
+-- Add table for collider instances
+S.tash = {}
+
+function S:tow(collider)
+end
+
+function S:hed(collider)
+	return nil
+end
+
 -- Add shapes
 S.hapes = Shapes
 
--- Add colliders
-S.lappers = Colliders
 -- Add collider definition for each shape
 for name, shape in pairs(Shapes) do
-	S.lappers[name] = function(...)
-		return Colliders.Collider( shape(...) )
+	Colliders[name] = function(...)
+		return Collider( shape(...) )
 	end
 end
-
--- Add table for collider instances
-S.tash = {}
+-- Add colliders
+S.lappers = Colliders
 
 -- Add collisions table
 S.laps = {}
@@ -581,28 +597,6 @@ local function load_slap(config_flag, value, ...)
 		new						= load_slap, -- Get new slap isntance
 		configure				= configure, -- config function
 		pool					= Stable,
-		-- Creation functions
-		circle			= create_circle,
-		edge			= create_edge,
-		rect			= create_rectangle,
-		ellipse			= create_ellipse,
-		regular_polygon	= create_regular_polygon,
-		convex			= create_convex,
-		concave			= create_convex,
-		polygon			= create_polygon,
-
-		-- Union Functions
-		merge_convex_incident	= merge_convex_incident,
-
-		-- Transform functions
-		translate_polygon		= translate_polygon,
-		rotate_polygon			= rotate_polygon,
-		scale_polygon			= scale_polygon,
-		copy_polygon			= copy_polygon,
-
-		-- Query polygons
-		get_polygon_bbox		= get_polygon_bbox,
-		get_polygon_vertices	= get_polygon_vertices,
 
 		-- Broadphase/hash-table here
 		aabb_collision			= aabb_collision,
@@ -675,4 +669,4 @@ for i = 1, 1000 do tbl[i] = i end
 
 
 -- Actually return Slap!
-return slap
+return S
