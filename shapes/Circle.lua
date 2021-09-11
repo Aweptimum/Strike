@@ -34,6 +34,20 @@ function Circle:get_bbox()
     return self.centroid.x - self.radius, self.centroid.y - self.radius, self.radius, self.radius
 end
 
+-- We can't actually iterate over circle geometry, but we can return a single edge
+-- from the circle centroid to its radius for consistency and quick iteration.
+local function iter_edges(circle, i)
+	i = i + 1
+    local c, r = circle.centroid, circle.radius
+	if i <= 1 then
+		return i, {c.x, c.y, c.x + r, c.y + r}
+	end
+end
+
+function Circle:ipairs()
+    return iter_edges, self, 0
+end
+
 function Circle:translate(dx, dy)
     self.x, self.y = self.x + dx, self.y + dy
 end
