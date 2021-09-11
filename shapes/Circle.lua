@@ -49,7 +49,7 @@ function Circle:scale(sf)
 end
 
 function Circle:unpack()
-    return self.centroid.x, self.centroid.y, self.radius, self.angle
+    return self.centroid.x, self.centroid.y, self.radius
 end
 
 function Circle:draw(mode)
