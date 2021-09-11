@@ -21,14 +21,15 @@ function Rect:new(x_pos, y_pos, dx, dy, angle_rads)
     self.dx, self.dy = dx, dy
 	self.angle = angle_rads or 0
 	self.vertices = {
-		{x = x_offset						, y = y_offset					},
-		{x = x_offset + dx*cos(self.angle)	, y = y_offset					},
-		{x = x_offset + dx*cos(self.angle)	, y = y_offset + dy*sin(self.angle)	},
-		{x = x_offset						, y = y_offset + dy*sin(self.angle)	}
+		{x = x_offset		, y = y_offset     },
+		{x = x_offset + dx	, y = y_offset     },
+		{x = x_offset + dx	, y = y_offset + dy},
+		{x = x_offset		, y = y_offset + dy}
 	}
 	self.centroid  	= {x = x_offset+dx/2, y = y_offset+dy/2}
 	self.area 		= dx*dy
 	self.radius		= Vec.len(dx, dy)/2
+	self:rotate(self.angle)
 end
 
 function Rect:unpack()
