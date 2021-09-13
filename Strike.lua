@@ -381,14 +381,24 @@ local function striking(collider1, collider2)
 	return mmtv:mag() ~= inf and from, mmtv or false
 end
 
+local function settle(mtv)
+	mtv.collider:translate( Vec.mul(-.5, mtv.x, mtv.y))
+	mtv.collided:translate( Vec.mul(0.5, mtv.x, mtv.y))
+end
+
 local function show_mtv(mtv)
 	local c = mtv.collider.centroid
 	love.graphics.line(c.x, c.y, c.x+mtv.x, c.y+mtv.y)
 end
 
-local function settle(mtv)
-	mtv.collider:translate( Vec.mul(-.5, mtv.x, mtv.y))
-	mtv.collided:translate( Vec.mul(0.5, mtv.x, mtv.y))
+local function show_norms(collider)
+	for _, shape in collider:ipairs() do
+        for _, edge in shape:ipairs() do
+            local  x,  y = Vec.div(2, Vec.add(edge[1], edge[2], edge[3], edge[4]) )
+            local nx, ny = Vec.perpendicular( Vec.sub(edge[4], edge[3], edge[2], edge[1]) )
+	        love.graphics.line(x, y, x+nx, y+ny)
+        end
+    end
 end
 
 -- Collision function that handles calling the right method
@@ -450,8 +460,10 @@ S.trikers = Colliders
 
 -- Add collison function
 S.triking = striking
-S.howMTV = show_mtv
 S.ettle = settle
+-- Functions to draw collision info
+S.howMTV = show_mtv
+S.howNorms = show_norms
 -- Add collisions table
 S.trikes = {}
 
