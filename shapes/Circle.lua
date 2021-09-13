@@ -2,15 +2,6 @@ local Vec = require "Strike.DeWallua.vector-light"
 local pi = math.pi
 local Shape = require "Strike.shapes.shape"
 
--- Create circle object
-local Circle = {
-    --vertices 		= nil,              -- list of {x,y} coords
-    convex      	= true,             -- boolean
-    centroid   		= {x = 0, y = 0},	-- {x, y} coordinate pair
-    radius			= 0,				-- radius of circumscribed circle
-    area			= 0					-- absolute/unsigned area of polygon
-}
---Circle.__index = Circle
 Circle = Shape:extend()
 
 function Circle:new(x_pos, y_pos, radius,  angle_rads)
@@ -49,7 +40,7 @@ function Circle:ipairs()
 end
 
 function Circle:translate(dx, dy)
-    self.x, self.y = self.x + dx, self.y + dy
+    self.centroid.x, self.centroid.y = self.x + dx, self.y + dy
 end
 
 function Circle:rotate(angle, ref_x, ref_y)
