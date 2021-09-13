@@ -32,6 +32,11 @@ end
 function Shape:translate()
 end
 
+function Shape:translate_to(x, y)
+	local dx, dy = x - self.centroid.x, y - self.centroid.y
+	return self:translate(dx,dy)
+end
+
 function Shape:rotate()
 end
 
