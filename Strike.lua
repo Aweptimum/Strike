@@ -299,30 +299,31 @@ local function get_overlap(min1, max1, min2, max2)
 	return max(0, min(max1, max2) - max(min1, min2))
 end
 local function project(shape1, shape2)
-	local minimum, mtv_dx, mtv_dy = inf, 0 ,0
+	local minimum, mtv_dx, mtv_dy = inf, 0, 0
 	local overlap, dx, dy
 	local shape1_min_dot, shape1_max_dot, shape2_min_dot, shape2_max_dot
 	-- loop through shape1 geometry
 	for _, edge in shape1:ipairs() do
 		-- get the normal
-		dx, dy = Vec.perpendicular( Vec.normalize( Vec.sub(edge[3],edge[4], edge[1], edge[2]) ))
-		if dx < 0 or dy <0 then
-			print(dx..', '..dy)
-		end
+		dx, dy = Vec.normalize( Vec.sub(edge[3],edge[4], edge[1], edge[2]) )
+		dx, dy = dy, -dx
 		--print('dx, dy: '..dx..', '..dy)
 		-- Then project verts_1 onto its normal, and verts_2 onto the normal to compare shadows
 		shape1_min_dot, shape1_max_dot = shape1:project(dx, dy)
 		shape2_min_dot, shape2_max_dot = shape2:project(dx, dy)
+		--print('shape 1 min/max: '..shape1_min_dot..', '..shape1_max_dot)
+		--print('shape 2 min/max: '..shape2_min_dot..', '..shape2_max_dot)
 		-- We've now reduced it to ranges intersecting on a number line,
 		-- Compare verts_2 bounds to verts_1's lower bound
 		if not ( shape1_max_dot > shape2_min_dot and shape2_max_dot > shape1_min_dot ) then
 			-- WE FOUND IT BOIS, TIME TO GO HOME
-			return MTV()
+			return MTV(0,0)
 		else
 			-- Not a separating axis
 			-- Find the overlap, which is equal to the magnitude of the MTV
 			-- Overlap = difference between max of min's and min of max's
 			overlap = min(shape1_max_dot, shape2_max_dot) - max(shape1_min_dot, shape2_min_dot)
+			--print('overlap: '..overlap)
 			-- Check if it's less than minimum
 			if overlap < minimum then
 				-- Set our MTV to the smol vector
@@ -331,14 +332,15 @@ local function project(shape1, shape2)
 			end
 		end
 	end
-	--print('normalized: '..Vec.normalize(mtv_dx, mtv_dy))
+	-- Flip it?
+	local ccx, ccy = shape2.centroid.x - shape1.centroid.x, shape2.centroid.y - shape1.centroid.y
+	local s = sign( Vec.dot(mtv_dx, mtv_dy, ccx, ccy) )
 	-- Welp. We made it here. So they're colliding, I guess. Hope it's consensual :(
-	return MTV( Vec.mul(minimum, mtv_dx, mtv_dy) )
+	return MTV( Vec.mul(s*minimum, mtv_dx, mtv_dy) )
 end
 
 local function SAT(shape1, shape2)
 	local mtv1 = project(shape1, shape2)
-	--local mtv2 =  mtv1:mag() ~= 0 and project(shape2, shape1) or {mag=inf, x=0, y=0}
 	if mtv1:mag() == 0 then -- don't bother calculating mtv2
 		return false, nil
 	end
@@ -347,7 +349,6 @@ local function SAT(shape1, shape2)
 		return false, nil
 	end
 	-- Else, return the min
-	--tprint(mtv1) tprint(mtv2)
 	if mtv1:mag() < mtv2:mag() then
 		return 1, mtv1
 	else
@@ -356,29 +357,27 @@ local function SAT(shape1, shape2)
 end
 
 local function striking(collider1, collider2)
-	local mmtv, c = MTV(inf, inf)
+	local max_mtv, c = MTV(0, 0), 0
 	local from, mtv
 	local contactx, contacty
 	local i, j = 0,0
 	for _, shape1 in collider1:ipairs() do
 		for _, shape2 in collider2:ipairs() do
 			c, mtv = SAT(shape1, shape2)
-			if c then
-				if mtv:mag() < mmtv:mag() then
-					from = c
-					mmtv = mtv
-				end
+			if c and mtv:mag() > max_mtv:mag() then
+				from = c
+				max_mtv = mtv
 			end
 		end
 	end
 	if from == 1 then
-		mmtv:setCollider(collider1)
-		mmtv:setCollided(collider2)
+		max_mtv:setCollider(collider1)
+		max_mtv:setCollided(collider2)
 	elseif from == 2 then
-		mmtv:setCollider(collider2)
-		mmtv:setCollided(collider1)
+		max_mtv:setCollider(collider2)
+		max_mtv:setCollided(collider1)
 	end
-	return mmtv:mag() ~= inf and from, mmtv or false
+	return max_mtv:mag() ~= 0 and from, max_mtv or false
 end
 
 local function settle(mtv)
@@ -395,9 +394,21 @@ local function show_norms(collider)
 	for _, shape in collider:ipairs() do
         for _, edge in shape:ipairs() do
             local  x,  y = Vec.div(2, Vec.add(edge[1], edge[2], edge[3], edge[4]) )
-            local nx, ny = Vec.perpendicular( Vec.sub(edge[4], edge[3], edge[2], edge[1]) )
+            local nx, ny = Vec.sub(edge[3], edge[4], edge[1], edge[2])
+			nx, ny = ny, -nx
 	        love.graphics.line(x, y, x+nx, y+ny)
         end
+    end
+end
+
+local function show_proj(mtv)
+	local c = mtv.collided.centroid
+	for _, shape in mtv.collided:ipairs() do
+		local nmx, nmy = Vec.normalize(mtv.x, mtv.y)
+		local smin, smax = shape:project(nmx, nmy)
+		love.graphics.setColor(.5,.5,.1)
+	   	love.graphics.line(16+nmx*smin, nmy*smin, 16+nmx*smax, nmy*smax)
+		love.graphics.setColor(1,1,1)
     end
 end
 
@@ -464,6 +475,7 @@ S.ettle = settle
 -- Functions to draw collision info
 S.howMTV = show_mtv
 S.howNorms = show_norms
+S.howProj = show_proj
 -- Add collisions table
 S.trikes = {}
 
