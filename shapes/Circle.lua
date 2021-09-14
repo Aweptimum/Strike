@@ -40,7 +40,7 @@ function Circle:ipairs()
 end
 
 function Circle:translate(dx, dy)
-    self.centroid.x, self.centroid.y = self.x + dx, self.y + dy
+    self.centroid.x, self.centroid.y = self.centroid.x + dx, self.centroid.y + dy
 end
 
 function Circle:rotate(angle, ref_x, ref_y)
@@ -51,6 +51,11 @@ end
 function Circle:scale(sf)
     self.radius = self.radius * sf
     self:calc_area()
+end
+
+function Circle:project(nx, ny)
+    local proj = Vec.dot(self.centroid.x, self.centroid.y, nx, ny)
+    return proj - self.radius, proj + self.radius
 end
 
 function Circle:unpack()
