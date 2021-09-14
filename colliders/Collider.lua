@@ -155,6 +155,15 @@ function Collider:scale(sf, ref_x, ref_y)
     --self.radius = self.radius * sf
 end
 
+function Collider:project(dx, dy)
+    local minp, maxp = math.huge, 0
+    for _, shape in self:ipairs() do
+        local smin, smax = shape:project(dx, dy)
+        minp = smin < minp and smin or minp
+        maxp = smax > maxp and smax or maxp
+    end
+    return minp, maxp
+end
 -- Remove shape(s) from collider
 function Collider:remove(index, ...)
     pop(self.shapes, index) -- hopefully no one makes a collider with 1000's of shapes
