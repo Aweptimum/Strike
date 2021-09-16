@@ -54,7 +54,7 @@ The `collider` field represents the collider that the mtv is oriented *from*. If
 Very little in this library was done in the best way from the start, and it's been extensively rewritten as its author learned more about best practices. Still, there's further work to be done. If a particular snippet makes you cringe, or there's a feature missing, feel free to fork, edit, test, and PR.
 
 ## TODO
-[] Add `:getEdge(index)` methods to shapes to return an edge by its number
-[] Return references to the two shapes that actually collided in the returned mtv, as well as the index of the normal's edge for the `collider_shape` field
-[] Add a function to solve for the edge(s) in `collided_shape` interesecting the normal's edge of the `collider_shape`
-[] Add contact solver (some kind of clipping function that can optionally be run given an mtv that returns 1-2 points)
+- [ ] Add `:getEdge(index)` methods to shapes to return an edge by its number
+- [ ] Return references to the two shapes that actually collided in the returned mtv, as well as the index of the normal's edge for the `collider_shape` field
+- [ ] Add a function to solve for the edge(s) in `collided_shape` interesecting the normal's edge of the `collider_shape`
+- [ ] Add contact solver (some kind of clipping function that can optionally be run given an mtv that returns 1-2 points)
