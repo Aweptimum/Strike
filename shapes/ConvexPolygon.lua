@@ -292,14 +292,15 @@ end
 function ConvexPolygon:project(nx,ny)
 	-- Dummy var for storing dot-product results
 	local vertices = self.vertices
-	local p = 0
+	local proj_x, proj_y
+	local p, min_dot, max_dot
 	-- The vector to project, travelling from the origin to the vertices of the polygon
 	-- So it's really just the x/y coordinates of a vertex
-	local proj_x, proj_y = vertices[1].x, vertices[1].y
+	proj_x, proj_y = vertices[1].x, vertices[1].y
 	-- Init our min/max dot products.
 	-- Can't init to random value; min_dot might never go below the starting value.
-	local min_dot = Vec.dot(proj_x,proj_y, nx,ny)
-	local max_dot = min_dot
+	min_dot = Vec.dot(proj_x,proj_y, nx,ny)
+	max_dot = min_dot
 	-- Create new projection vectors, dot-prod them with the input vector, and return the min/max
 	for i = 2, #vertices do
 		proj_x, proj_y = vertices[i].x , vertices[i].y

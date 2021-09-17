@@ -156,7 +156,7 @@ function Collider:scale(sf, ref_x, ref_y)
 end
 
 function Collider:project(dx, dy)
-    local minp, maxp = math.huge, 0
+    local minp, maxp = math.huge, -math.huge
     for _, shape in self:ipairs() do
         local smin, smax = shape:project(dx, dy)
         minp = smin < minp and smin or minp
