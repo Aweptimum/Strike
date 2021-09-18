@@ -17,38 +17,17 @@ function Collider:add(shape, ...)
     self:add(...)
 end
 
--- Iterate over collider shapes
-local function iter_shapes(col, i)
-    i = i+1
-    local shape = col.shapes[i]
-    if shape then
-        return i, shape
-    end
-end
-
-local function iter_method(method, col, i)
-    i = i+1
-    local shape = col.shapes[i]
-    if shape then
-        return i, shape[method](shape)
-    end
-end
-
+-- Iter method
 local function shapes(collider)
     for i, shape in ipairs(collider.shapes) do
         if shape.type == 'shape' then
-            coroutine.yield(collider, shape)
+            coroutine.yield(collider, shape, i) -- return reference to parent, shape, and shape's index in parent
         elseif shape.type == 'collider' then
-            print(shape.name)
             shapes(shape)
         end
     end
 end
-
-function Collider:ipairs()
-    return iter_shapes, self, 0
-end
-
+-- Actual iterator
 function Collider:ipairs()
     return coroutine.wrap( function() shapes(self) end )
 end
