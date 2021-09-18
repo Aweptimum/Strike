@@ -112,7 +112,7 @@ end
 
 -- [[--- Collision Functions ---]] --
 
--- Broadphase functions
+-- Broadphase
 
 -- Determine if two circles are colliding using their coordinates and radii
 local function circle_circle(collider1, collider2)
@@ -122,8 +122,7 @@ local function circle_circle(collider1, collider2)
 	return (x2 - x1)^2 + (y2 - y1)^2 <= (r1 + r2)^2
 end
 
--- Use AABB collision for broadphase,
--- returns true if two bounding boxes overlap
+-- Returns true if two bounding boxes overlap
 local function aabb_aabb(collider1, collider2)
 	local rect_1_x, rect_1_y, rect_1_w, rect_1_h = collider1:get_bbox()
 	local rect_2_x, rect_2_y, rect_2_w, rect_2_h = collider2:get_bbox()
@@ -190,8 +189,6 @@ end
 local function striking(collider1, collider2)
 	local max_mtv, c = MTV(0, 0), 0
 	local from, mtv
-	local contactx, contacty
-	local i, j = 0,0
 	for _, shape1 in collider1:ipairs() do
 		for _, shape2 in collider2:ipairs() do
 			c, mtv = SAT(shape1, shape2)
@@ -210,10 +207,14 @@ local function striking(collider1, collider2)
 	end
 	return max_mtv:mag() ~= 0 and from, max_mtv or false
 end
-
+-- Translate both colliders equally away from each other
 local function settle(mtv)
 	mtv.collider:translate( Vec.mul(-.5, mtv.x, mtv.y))
 	mtv.collided:translate( Vec.mul(0.5, mtv.x, mtv.y))
+end
+-- Translate collided by full mtv (good for edge collision)
+local function shove(mtv)
+	mtv.collided:translate( mtv.x, mtv.y)
 end
 
 local function show_mtv(mtv)
@@ -253,7 +254,7 @@ S.ettings = {}
 -- Add shapes
 S.hapes = Shapes
 
--- Add collider definition for each shape
+-- Add collider definition for each shape to Colliders
 for name, shape in pairs(Shapes) do
 	Colliders[name] = function(...)
 		return Collider( shape(...) )
@@ -269,6 +270,7 @@ S.ircle = circle_circle
 -- Add collison functions
 S.triking = striking
 S.ettle = settle
+S.hove	= shove
 
 -- Functions to draw collision info
 S.howMTV = show_mtv
