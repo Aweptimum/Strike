@@ -1,19 +1,17 @@
 local bit 		= require'bit' --https://luajit.org/extensions.html
-local Stable	= _Require_relative( ... , "DeWallua.Stable" )
-local Vec		= _Require_relative( ... , "DeWallua.vector-light")
-local Object	= require 'Strike.classic.classic'
+local Vec		= _Require_relative( ... , "lib.DeWallua.vector-light")
+local Object	= _Require_relative( ... , "lib.classic.classic")
 local Shapes 	= _Require_relative( ... , "shapes")
 local Collider	= _Require_relative( ... , "colliders.Collider")
 local Colliders	= _Require_relative( ... , "colliders")
 
-local pi , cos, sin, atan2 = math.pi, math.cos, math.sin, math.atan2
+local pi, cos, sin, atan2 = math.pi, math.cos, math.sin, math.atan2
 -- atan(y, 0) returns 0, not undefined
 local floor, ceil, sqrt, abs, max, min   = math.floor, math.ceil, math.sqrt, math.abs, math.max, math.min
 local inf = math.huge
 -- Push/pop
 local push, pop = table.insert, table.remove
 
---tprint(Shapes)
 --local _PACKAGE = (...):match("^(.+)%.[^%.]+")
 
 -- Polygon module for creating shapes to strike each other
@@ -30,24 +28,6 @@ local push, pop = table.insert, table.remove
 -- Get signs of numbers
 local function sign(number)
     return number > 0 and 1 or (number == 0 and 0 or -1)
-end
-
--- Given two x, y points, calculate ccw normal at their midpoint
-local function normal_vec_ccw(x1,y1, x2,y2)
-    local x = (x1+x2)/2
-    local y = (y1+y2)/2
-    local dy, dx = Vec.normalize(x2-x1, y2-y1)
-    return x, y, -dx, dy -- dx of the normal vector is the -dy of the given vec, dy of the normal vector is the dx of the vector
-end
-
--- Given two x, y points, calculate cw normal at their midpoint
-local function normal_vec_cw(x1,y1, x2,y2)
-    local x = (x1+x2)/2
-    local y = (y1+y2)/2
-    local dy, dx = Vec.normalize(x2-x1, y2-y1)
-    return x, y, dx, -dy
-	-- x/y are the vector origin (midpoint of line)
-	-- dx of the normal vector is the dy of the given vec, dy of the normal vector is the -dx of the vector
 end
 
 -- Create MTV object
@@ -119,10 +99,7 @@ end
 -- Shallow copy table (depth-of-1) into re-usable table
 -- Modified from lua-users wiki (http://lua-users.org/wiki/CopyTable)
 function shallow_copy_table(orig, copy)
-	-- If a table isn't manually given, grab one from the Stable
-	if not copy then
-		copy = Stable:fetch()
-	end
+	copy = copy or {}
 	local orig_type, copy_type = type(orig), type(copy)
     if orig_type == 'table' and copy_type == 'table' then
         for orig_key, orig_value in pairs(orig) do
@@ -157,7 +134,7 @@ end
 
 -- Declare read-only proxy table function for .config
 local function read_only (t)
-	local proxy = Stable:fetch()
+	local proxy = {}
 	local mt = {       -- create metatable
 		__index = t,
 		__newindex = function (t,k,v)
@@ -167,86 +144,6 @@ local function read_only (t)
 	setmetatable(t, mt)
 	setmetatable(proxy, mt)
 	return proxy
-end
-
--- [[---------------------]]    Polygon Utility Functions    [[---------------------]] --
-
-
--- [[------------------]]    Polygon (Merging) Triangulation Functions    [[------------------]] --
-
--- Use a spatial-coordinate search to detect if two polygons
--- share a coordinate pair (and are thus incident to one another)
-local function get_incident_edge(poly_1, poly_2)
-    -- Define hash table
-    local p_map = Stable:fetch()
-    -- Iterate over poly_1's vertices
-    -- Place in p using x/y coords as keys
-    local v_1 = poly_1.vertices
-    for i = 1, #v_1 do
-        p_map[v_1[i].x][p_map[i].y] = i
-    end
-
-    -- Now look through poly_2's vertices and see if there's a match
-    local v_2 = poly_2.vertices
-    local i = #v_2
-    for j = 1, #v_2 do
-        -- Set p and q to reference poly_2's vertices at i and j
-        local p, q = v_2[i], v_2[j]
-        -- Access p_map based on line p-q's two coordinates
-        if p_map[p.x][p.y] and p_map[q.x][q.y] then
-            -- Return the indices of the edge in both polygons
-            return p_map[p.x][p.y],p_map[q.x][q.y], i,j
-        end
-        -- Cycle i up to j
-        i = j
-    end
-    -- Well, we looped through and got nothing, so eat p_map and return nil
-	Stable:eat_table(p_map)
-    return nil, nil, nil, nil
-end
-
-
--- Merge simplices (index-based) into convex polygons
---
-local function merge_simplices(simplices, vertices, convex_polys)
-
-    -- For simplex in simplices
-    --      For edge in simplex
-	--
-end
-
--- Given two convex polygons, merge them together
--- Assuming they share at least one edge,
--- and so long as the new polygon is also convex
-local function merge_convex_incident(poly_1, poly_2)
-    -- Find an incident edge between the two polygons
-    local i_1,j_1, i_2,j_2 = get_incident_edge(poly_1, poly_2)
-    -- Check that one of them is not nil
-    if i_1 then
-        -- Let's meeeerge bay-bee!
-        -- Ref both polygons' vertices
-        local v_1, v_2 = poly_1, poly_2
-        -- Init new verts table
-        local union = Stable:fetch()
-        -- Loop through the vertices of poly_1 and add applicable points to the union
-        for i = 1, #v_1 do
-            -- Skip the vertex if it's part of the poly_2's half of the incident edge
-            if i ~= j_1 then
-                push(union, v_1[i])
-            end
-        end
-        -- Loop through the vertices of poly_2 and add applicable points to the union
-        for i = 1, #v_2 do
-            -- Skip the vertex if it's part of the poly_2's half of the incident edge
-            if i ~= i_2 then
-                push(union, v_1[i])
-            end
-        end
-        return create_polygon(unpack(union))
-    else
-        -- Got nil, no incident edge, so return nil
-        return nil
-    end
 end
 
 -- [[--- Masking functions ---]] --
@@ -270,18 +167,18 @@ end
 -- Broadphase functions
 
 -- Determine if two circles are colliding using their coordinates and radii
-local function circle_circle(shape_1, shape_2)
-	local x1,y1 = shape_1.centroid.x, shape_1.centroid.y
-	local x2,y2 = shape_2.centroid.x, shape_2.centroid.y
-	local r1,r2 = shape_1.radius,	  shape_2.radius
+local function circle_circle(collider1, collider2)
+	local x1,y1 = collider1.centroid.x, collider1.centroid.y
+	local x2,y2 = collider2.centroid.x, collider2.centroid.y
+	local r1,r2 = collider1.radius,	  collider2.radius
 	return (x2 - x1)^2 + (y2 - y1)^2 <= (r1 + r2)^2
 end
 
 -- Use AABB collision for broadphase,
 -- returns true if two bounding boxes overlap
-local function aabb_collision(shape_1, shape_2)
-	local rect_1_x, rect_1_y, rect_1_w, rect_1_h = shape_1:get_bbox()
-	local rect_2_x, rect_2_y, rect_2_w, rect_2_h = shape_2:get_bbox()
+local function aabb_aabb(collider1, collider2)
+	local rect_1_x, rect_1_y, rect_1_w, rect_1_h = collider1:get_bbox()
+	local rect_2_x, rect_2_y, rect_2_w, rect_2_h = collider2:get_bbox()
 	return (
 		rect_1_x < rect_2_x + rect_2_w and
 		rect_1_x + rect_1_w > rect_2_x and
@@ -290,14 +187,6 @@ local function aabb_collision(shape_1, shape_2)
 	)
 end
 
--- SAT alg for polygon-polygon collision
--- Only tests half the edges of even polygons (parallel edges are redundant)
--- Two convex polygons are intersecting when all edge normal projects have been checked and no gap found
--- If intersecting, push the MTV onto the stack of the polygon being looped over
--- If not intersecting, exit early and return false - found a separating axis
-local function get_overlap(min1, max1, min2, max2)
-	return max(0, min(max1, max2) - max(min1, min2))
-end
 local function project(shape1, shape2)
 	local minimum, mtv_dx, mtv_dy = inf, 0, 0
 	local overlap, dx, dy
@@ -307,24 +196,18 @@ local function project(shape1, shape2)
 		-- get the normal
 		dx, dy = Vec.normalize( Vec.sub(edge[3],edge[4], edge[1], edge[2]) )
 		dx, dy = dy, -dx
-		--print('dx, dy: '..dx..', '..dy)
-		-- Then project verts_1 onto its normal, and verts_2 onto the normal to compare shadows
+		-- Project both shapes 1 and 2 onto this normal to get their shadows
 		shape1_min_dot, shape1_max_dot = shape1:project(dx, dy)
 		shape2_min_dot, shape2_max_dot = shape2:project(dx, dy)
-		--print('shape 1 min/max: '..shape1_min_dot..', '..shape1_max_dot)
-		--print('shape 2 min/max: '..shape2_min_dot..', '..shape2_max_dot)
 		-- We've now reduced it to ranges intersecting on a number line,
-		-- Compare verts_2 bounds to verts_1's lower bound
+		-- Test for bounding overlap
 		if not ( shape1_max_dot > shape2_min_dot and shape2_max_dot > shape1_min_dot ) then
 			-- WE FOUND IT BOIS, TIME TO GO HOME
 			return MTV(0,0)
 		else
-			-- Not a separating axis
 			-- Find the overlap, which is equal to the magnitude of the MTV
-			-- Overlap = difference between max of min's and min of max's
-			overlap = min(shape1_max_dot, shape2_max_dot) - max(shape1_min_dot, shape2_min_dot)
-			--print('overlap: '..overlap)
-			-- Check if it's less than minimum
+			-- Overlap = minimum difference of bounds
+			overlap = min(shape1_max_dot-shape2_min_dot, shape2_max_dot-shape1_min_dot)
 			if overlap < minimum then
 				-- Set our MTV to the smol vector
 				minimum = overlap
@@ -412,50 +295,12 @@ local function show_proj(mtv)
     end
 end
 
--- Collision function that handles calling the right method
--- on all pairs of shapes in polygons
-local function strike(strike)
-	local type_1, type_2
-	local shape_1, shape_2
-
-	local k = #shapes
-
-	for i = 1, k do
-		-- Shadow polygons so we can modify them more easily
-		shape_1 = shapes[i]
-		-- Set type_1 to the polygon we're inspecting
-		type_1 = shape_1.type
-		for j = i+1, k do
-			shape_2 = shapes[j]
-			-- before we set any other vars, check collision masks
-			if shape_1.collision_mask and shape_2.collision_mask then
-				-- Now we do collision checking
-				type_2 = shape_2.type
-
-				--TODO - do stuff :(
-
-			end
-			-- their masks didn't collide, so move on to the next shape
-		end
-	end
-end
-
 -- [[---------------------]] Strike API Table [[---------------------]] --
 -- Strike table
 local S = {}
 
 -- Config table
 S.ettings = {}
-
--- Add table for collider instances
-S.tash = {}
-
-function S:tow(collider)
-end
-
-function S:hed(collider)
-	return nil
-end
 
 -- Add shapes
 S.hapes = Shapes
@@ -469,15 +314,18 @@ end
 -- Add colliders
 S.trikers = Colliders
 
--- Add collison function
+-- Broadphase functions
+S.aabb = aabb_aabb
+S.ircle = circle_circle
+
+-- Add collison functions
 S.triking = striking
 S.ettle = settle
+
 -- Functions to draw collision info
 S.howMTV = show_mtv
 S.howNorms = show_norms
 S.howProj = show_proj
--- Add collisions table
-S.trikes = {}
 
 -- Config flags for Strike
 local default_config = {
@@ -521,7 +369,6 @@ local function load_strike(config_flag, value, ...)
 		-- Util functions
 		new						= load_strike, -- Get new strike isntance
 		configure				= configure, -- config function
-		pool					= Stable,
 
 		-- Broadphase/hash-table here
 		aabb_collision			= aabb_collision,
