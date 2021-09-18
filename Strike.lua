@@ -74,28 +74,6 @@ function tprint (tbl, height, indent)
 	end
 end
 
--- For S.ettings, need an unpacking function that returns BOTH keys and values
--- Modified from this: https://stackoverflow.com/a/60731121/12135804
--- Basically returns new_key in addition to the value
-local function unpack_unordered_recursive(tbl, key)
-	local new_key, value = next(tbl, key)
-	if new_key == nil then return end
-
-	return new_key, value, unpack_unordered_recursive(tbl, new_key)
-end
-
--- Might as well toss this experiment here too
-local function unpack_n(tbl, n)
-    n = n or #tbl
-    if n >= 1 then
-        --print(tbl[#tbl-n+1])
-        return tbl[#tbl-n+1], unpack_n(tbl, n-1)
-    end
-end
---local tbl  = {7,8,9}
---local a,b,c=unpack_n(tbl)
---print("a: "..a.." b: "..b.." c: "..c)
-
 -- Shallow copy table (depth-of-1) into re-usable table
 -- Modified from lua-users wiki (http://lua-users.org/wiki/CopyTable)
 function shallow_copy_table(orig, copy)
@@ -130,20 +108,6 @@ function deepcopy(o, seen)
 			no = o
 		end
 	return no
-end
-
--- Declare read-only proxy table function for .config
-local function read_only (t)
-	local proxy = {}
-	local mt = {       -- create metatable
-		__index = t,
-		__newindex = function (t,k,v)
-		error("attempt to update a read-only table", 2)
-		end
-	}
-	setmetatable(t, mt)
-	setmetatable(proxy, mt)
-	return proxy
 end
 
 -- [[--- Collision Functions ---]] --
@@ -310,72 +274,6 @@ S.ettle = settle
 S.howMTV = show_mtv
 S.howNorms = show_norms
 S.howProj = show_proj
-
--- Config flags for Strike
-local default_config = {
-	IDIOT_PROOF = true,		-- If false, turns off all checks in create_polygon - assumes only convex polygons
-	CONVEX_ONLY = false,	-- All vertex lists in create_polygon should be convex - does not turn off checks
-	BROAD_PHASE = 'none'	-- Specify broad_phase function to use w/ spatial hash
-}
-
--- Edit the configuration for Strike to change some behavior using rawset
--- Takes a series of flag + value where flag is a string corresponding to the key
--- in S.ettings to change, and value is a valid value for that flag
--- flag-values can also be passed as a table containing key-value pairs
-local function configure(self, config_flag, value, ...)
-
-	-- Return if no config flag specified
-	if not config_flag then return end
-
-	-- If the user supplies their own config table, unpack it
-	if type(config_flag) == "table" then
-		return configure(self, unpack_unordered_recursive(config_flag))
-	end
-
-	-- Else, carry on
-	-- Need to sandbox each config var so it's locked to appropriate options
-	if		config_flag == 'IDIOT_PROOF' or config_flag == 'CONVEX_ONLY' then
-		-- Assert if value is not bool
-		assert(type(value) == "boolean", "In: strike:load() - IDIOT_PROOF must be of type boolean")
-	elseif	config_flag == 'BROAD_PHASE' then
-		local good =  value ~= 'none' or value ~= 'aabb' or value ~= 'radii'
-		assert(good, "BROAD_PHASE must be (aabb/radii/none")
-	end
-
-	-- Use rawset to update config
-	rawset( self.__instance_config, config_flag, value )
-	return configure(self, ...)
-end
-
-local function load_strike(config_flag, value, ...)
-	-- Create API table
-	local strike = {
-		-- Util functions
-		new						= load_strike, -- Get new strike isntance
-		configure				= configure, -- config function
-
-		-- Broadphase/hash-table here
-		aabb_collision			= aabb_collision,
-		circle_collision		= circle_circle,
-
-		-- Collision functions
-		strike					= strike,
-
-		-- Love functions
-		draw_polygon			= draw_polygon
-	}
-	-- This is where the flag variables ACTUALLY live
-	-- these are modifed through strike:configure
-	strike.__instance_config = deepcopy(default_config)
-	-- Init read-only proxy table, add to strike
-	-- This is to prevent the user from accidentally setting flags to the wrong type.
-	-- If you're reading this, just edit the __instance_config table yourself, I trust you.
-	strike.config = read_only(strike.__instance_config)
-
-	-- Config using args
-	strike:configure(config_flag, value, ...)
-	return strike
-end
 
 -- Actually return Strike!
 return S
