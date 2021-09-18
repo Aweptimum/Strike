@@ -1,4 +1,4 @@
-local Vec = require "Strike.DeWallua.vector-light"
+local Vec = require "Strike.lib.DeWallua.vector-light"
 local Polygon = require 'Strike.shapes.ConvexPolygon'
 
 local Edge = Polygon:extend()

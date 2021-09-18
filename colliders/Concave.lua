@@ -1,8 +1,9 @@
-local Dewall = require "DeWallua"
+local Dewall    = require "Strike.lib.DeWallua.init"
+local Collider  = require 'Strike.colliders.Collider'
+local Convex    = require 'Strike.shapes.ConvexPolygon'
 local pop = table.remove
-local cos, sin = math.cos, math.sin
-local Collider = require 'Strike.colliders.Collider'
-local Convex = require 'Strike.shapes.ConvexPolygon'
+
+tprint(Dewall)
 
 -- A concave shape must be decomposed into a collection of convex shapes
 local Concave = Collider:extend()

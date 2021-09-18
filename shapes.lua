@@ -6,7 +6,6 @@ local Shape     = require 'Strike.shapes.Shape'
 local Shapes = {}
 
 function Shapes:Create_Definition(name, object)
-    print('Creating definition for:' .. name)
     --Check that the object implements new
     assert(object.new, "\tnew is null for shape: ".. name..'\n Make sure to :extend() it')
     -- Add "private" _copy method for each object

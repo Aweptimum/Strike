@@ -1,5 +1,3 @@
-local pop = table.remove
-local cos, sin = math.cos, math.sin
 local Collider  = require 'Strike.colliders.Collider'
 local Circle    = require 'Strike.shapes.Circle'
 local Rectangle = require 'Strike.shapes.Rectangle'

@@ -1,5 +1,5 @@
 -- "Abstract" base object, provides some generic methods.
-local Object = require 'Strike.classic.classic'
+local Object = require 'Strike.lib.classic.classic'
 
 local Shape = Object:extend()
 

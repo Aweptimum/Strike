@@ -1,12 +1,11 @@
 local scandir 	= _Require_relative(..., 'fileloader')
-local Collider     = require 'Strike.colliders.Collider'
+local Collider  = require 'Strike.colliders.Collider'
 -- Two kinds of shapes:
 -- circles and polygons
 
 local Colliders = {}
 
 function Colliders:Create_Definition(name, object)
-    print('Creating definition for:' .. name)
     --Check that the object implements new
     assert(object.new, "\tnew is null for shape: ".. name..'\n Make sure to :extend() it')
     -- Add "private" _copy method for each object

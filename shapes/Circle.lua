@@ -1,4 +1,4 @@
-local Vec = require "Strike.DeWallua.vector-light"
+local Vec = require "Strike.lib.DeWallua.vector-light"
 local pi = math.pi
 local Shape = require "Strike.shapes.shape"
 
