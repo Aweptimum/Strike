@@ -146,22 +146,6 @@ local function read_only (t)
 	return proxy
 end
 
--- [[--- Masking functions ---]] --
-
--- Mask layer - objects will only check for collisions if they're in the same layer
-local function mask_polygon_layer(polygon, bit)
-	polygon.layer_mask = bit
-end
-
--- Should I add two masks, one that is "affected" and one that is "affects"
--- Like: Wing affects particle = true, particle affects wing = false
--- https://stackoverflow.com/questions/39063949/cant-understand-how-collision-bit-mask-works
--- Mask collisions - polygons will only collide if their masks AND'd = true
-local function mask_polygon_collision(polygon, bit)
-	polygon.collision_mask = bit
-end
-
-
 -- [[--- Collision Functions ---]] --
 
 -- Broadphase functions
