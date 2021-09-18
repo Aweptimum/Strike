@@ -1,17 +1,8 @@
-local Vec	= require "Strike.DeWallua.vector-light"
+local abs, max, atan2 	= math.abs, math.max, math.atan2
+local push = table.insert
+local Vec	= require "Strike.lib.DeWallua.vector-light"
 local Shape = require "Strike.shapes.shape"
-local abs, max	= math.abs, math.max
-local atan2 = math.atan2
 
--- Create polygon object
-local ConvexPolygon = {
-    vertices 		= {},              -- list of {x,y} coords
-    convex      	= true,             -- boolean
-    centroid   		= {x = 0, y = 0},	-- {x, y} coordinate pair
-    radius			= 0,				-- radius of circumscribed circle
-    area			= 0					-- absolute/unsigned area of polygon
-}
---ConvexPolygon.__index = ConvexPolygon
 ConvexPolygon = Shape:extend()
 ConvexPolygon.name = 'convex'
 
@@ -330,6 +321,75 @@ function ConvexPolygon:point_inside(point)
 end
 
 ConvexPolygon._get_verts = ConvexPolygon.unpack
+
+
+-- [[------------------]]    Polygon Merging    [[------------------]] --
+
+-- Use a spatial-coordinate search to detect if two polygons
+-- share a coordinate pair (means have an incident face)
+local function get_incident_edge(poly1, poly2)
+    -- Define hash table
+    local p_map = {}
+    -- Iterate over poly_1's vertices
+    -- Place in p using x/y coords as keys
+    local v_1 = poly1.vertices
+    for i = 1, #v_1 do
+        p_map[v_1[i].x][p_map[i].y] = i
+    end
+
+    -- Now look through poly_2's vertices and see if there's a match
+    local v_2 = poly2.vertices
+    local i = #v_2
+    for j = 1, #v_2 do
+        -- Set p and q to reference poly_2's vertices at i and j
+        local p, q = v_2[i], v_2[j]
+        -- Access p_map based on line p-q's two coordinates
+        if p_map[p.x][p.y] and p_map[q.x][q.y] then
+            -- Return the indices of the edge in both polygons
+            return p_map[p.x][p.y],p_map[q.x][q.y], i,j
+        end
+        -- Cycle i up to j
+        i = j
+    end
+    -- Well, we looped through and got nothing, so return nil
+    return nil, nil, nil, nil
+end
+
+-- Given two convex polygons, merge them together
+-- Assuming they share at least one edge,
+-- and so long as the new polygon is also convex
+local function merge_convex_incident(poly1, poly2)
+	if poly2.name ~= 'convex' then return false end
+    -- Find an incident edge between the two polygons
+    local i_1,j_1, i_2,j_2 = get_incident_edge(poly1, poly2)
+    -- Check that one of them is not nil
+    if not i_1 then
+        -- Got nil, no incident edge, so return false
+		return false
+    else
+        -- Ref both polygons' vertices
+        local v_1, v_2 = poly1.vertices, poly2.vertices
+        -- Init new verts table
+        local union = {}
+        -- Loop through the vertices of poly_1 and add applicable points to the union
+        for i = 1, #v_1 do
+            -- Skip the vertex if it's part of the poly_2's half of the incident edge
+            if i ~= j_1 then
+                push(union, v_1[i])
+            end
+        end
+        -- Loop through the vertices of poly_2 and add applicable points to the union
+        for i = 1, #v_2 do
+            -- Skip the vertex if it's part of the poly_2's half of the incident edge
+            if i ~= i_2 then
+                push(union, v_1[i])
+            end
+        end
+        return ConvexPolygon(unpack(union))
+    end
+end
+
+ConvexPolygon.merge = merge_convex_incident
 
 function ConvexPolygon:draw(mode)
 	-- default fill to "line"
