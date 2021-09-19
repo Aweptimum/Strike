@@ -203,6 +203,9 @@ function ConvexPolygon:new(...)
 	end
 	trim_collinear(self.vertices)
 	assert(not self_intersecting(self.vertices), 'Ordered points still self-intersecting')
+	self.centroid = {x=0,y=0}
+	self.area = 0
+	self.radius = 0
 	self:calc_area_centroid()
 	self:calc_radius()
 end
