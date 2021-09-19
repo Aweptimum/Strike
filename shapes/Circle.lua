@@ -60,6 +60,11 @@ function Circle:project(nx, ny)
     return proj - self.radius, proj + self.radius
 end
 
+function Circle:getEdge(i)
+    local c, r = self.centroid, self.radius
+    return i == 1 and {c.x, c.y, c.x + r, c.y + r} or false
+end
+
 function Circle:unpack()
     return self.centroid.x, self.centroid.y, self.radius
 end

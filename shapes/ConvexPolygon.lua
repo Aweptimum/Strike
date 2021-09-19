@@ -286,6 +286,14 @@ function ConvexPolygon:project(nx,ny)
 	return min_dot, max_dot
 end
 
+function ConvexPolygon:getEdge(i)
+	if i > self.vertices then return false end
+	local verts = self.vertices
+	local j = i+1 <= #verts and i+1 or 1
+	local p1, p2 = verts[i], verts[j]
+	return {p1.x, p1.y, p2.x, p2.y}
+end
+
 -- Need this to test if a shape is completely inside
 function ConvexPolygon:point_inside(point)
 	local vertices = self.vertices
