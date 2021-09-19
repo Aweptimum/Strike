@@ -314,7 +314,7 @@ local function get_incident_edge(poly1, poly2)
     -- Iterate over poly_1's vertices, add x/y coords as keys to pmap
     local v_1 = poly1.vertices
     for i = 1, #v_1 do
-		local key = v_1[i].x..'-'..v_1[i].y--string.format('%s-%s')
+		local key = v_1[i].x..'-'..v_1[i].y
         p_map[key] = i
     end
     -- Now look through poly_2's vertices and see if there's a match
