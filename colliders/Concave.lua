@@ -30,6 +30,7 @@ function Concave:new(...)
     -- Need to merge triangles into the largest concave polygons possible
     -- Then, for each polygon, calc area/centroid
     -- Figure out how to store several sub-polygons in a consistent way
+    self:consolidate()
     self:calc_area_centroid()
     self:calc_radius()
 end
