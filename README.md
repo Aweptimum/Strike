@@ -17,13 +17,80 @@ Rect = {
 To actually create this, the ConvexPolygon definition can be extended and overriden with a new constructor. Example in [Defining Your Own Shapes](#defining-your-own-shapes)
 
 ## Colliders
-Accessed via `S.trikers`, Colliders are grab-bags of geometry that are used for collision detection. They can be composed of Shapes, but may also contain other Colliders (and their shapes). The only requirement is that *every shape* in the Collider is convex. As with Shapes, the available ones are defined in the `/colliders` directory and auto-loaded in, and you can define custom collider definitions for particular collections of geometry that you're fond of. Just look at the included Capsule definition for an example.
+Accessed via `S.trikers`, Colliders are grab-bags of geometry that are used for collision detection. They can be composed of Shapes, but may also contain other Colliders (and their shapes). The only requirement is that *every shape* in the Collider is convex. As with Shapes, the available ones are defined in the `/colliders` directory and auto-loaded in, and you can define custom collider definitions for particular collections of geometry that you're fond of. Just look at the included Capsule definition for an example. The included colliders are listed below. They are simply defined as `Collider(shape_name(shape_args))`, and so the basic colliders are not directly shapes.
+### Basic Colliders
+#### Circle
+```lua
+c = S.trikers.Circle(x_pos, y_pos, radius, angle_rads)
+```
+Creates a circle centered on `{x_pos, y_pos}` with the given `radius`. `angle_rads` not really useful at the moment, might delete it.
 
-## Collision
-Calling `S:trike(collider1, collider2)` will check for collisions between the two given colliders and return a boolean (true/false) that signifies a collision, followed by a corresponding, second value (mtv/nil).
+#### ConvexPolygon
+```lua
+cp = S.trikers.ConvexPolygon(x,y, ...)
+```
+Takes a vardiadic list of `x,y` pairs that describe a convex polygon.
+Should be in counter-clockwise winding order, but the constructor will automatically sort non-ccw input when it fails a convexity check.
+
+#### Edge
+```lua
+e = S.trikers.Edge(x1,y1, x2,y2)
+```
+Takes the two endpoints of an edge and... creates an edge
+
+#### Ellipse
+```lua
+el = S.trikers.Ellipse(x_pos, y_pos, a, b, segments, angle_rads)
+```
+Creates a **discretized** Ellipse centered at `{x_pos, y_pos}`, `a` and `b` are lengths of major/minor axes, segments is the number of edges to use to approximate the Ellipse, and `angle_rads` is the angled offset in radians.
+
+#### Rectangle
+```lua
+S.trikers.Rectangle(x_pos, y_pos, dx, dy, angle_rads)
+```
+Creates a rectangle centered at `{x_pos, y_pos}` with width `dx` and height `dy`, offset by `angle_rads` (radians).
+
+#### RegularPolygon
+```lua
+r = S.trikers.RegularPolygon(x_pos, y_pos, n, radius, angle_rads)
+```
+Creates a regular polygon centered at `{x_pos, y_pos}` with `n` sides. `radius` is the radius of the circumscribed circle, `angle_rads` is the angled offset in radians.
+
+### Special Colliders
+#### Capsule
+```lua
+cap = S.trikers.Capsule(x_pos, y_pos, dx, dy, angle_rads)
+```
+Creates a capsule centered at `{x_pos, y_pos}` with width `dx` and height `dy`, offset by `angle_rads` (radians). Circles are along vertical axis.
+
+#### Concave
+```lua
+concave = S.trikers.Concave(x,y, ...)
+```
+Takes a vardiadic list of `x,y` pairs that describe a convex polygon.
+Should be in pseudo-counter-clockwise winding order. 
+
+### Moving Colliders
+The base Collider class (and all colliders that extend it) have these methods:
+
+```lua
+collider:translate(dx, dy) -- adds dx and dy to each shapes' points
+collider:translate_to(x,y) -- translates centroid to position (and everything with it)
+collider:rotate(angle, ref_x, ref_y) -- rotates by `angle` (radians) about a reference point (defaults to centroid)
+collider:scale(sf, ref_x, ref_y) -- scales by factor `sf` with respect to a reference point (defaults to centroid)
+```
+
+### Manipulating Colliders
+Other useful methods include:
+```lua
+collider:copy() -- returns a copy of the collider
+collider:remove(index, ...) -- removes a shape at the specified index, can handle multiple indexes
+	**uses table.remove internally, so as long as you don't have tens of thousands of shapes in a collider, you'll be fine! 
+collider:consolidate() -- will merge incident convex polygons together, makes for less iterations if applicable
+```
 
 ## MTV's
-Minimum Translating Vectors are an object that represent the penetration depth between two colliders. The vector components are accessed via `mtv.x` and `mtv.y`, but they contain other information (similar to Box2D's manifolds). An example of the contained fields is below:
+Minimum Translating Vectors are an object that represent the penetration depth between two colliders. The vector components are accessed via `mtv.x` and `mtv.y`, but they contain other information. An example of the contained fields is below:
 ```lua
 MTV = {
     x = 0,
@@ -34,57 +101,16 @@ MTV = {
 ```
 The `collider` field represents the collider that the mtv is oriented *from*. If you were to draw the mtv from the centroid of the collider object, it would point out of the shape, towards the collider it is currently intersecting. The `collided` field is a reference to that intersected collider, the one that the mtv would be pointing *towards*. This information is necessary to know the orientation of the mtv and for settling/resolving collisions; they can directly be operated on from the references in the mtv.
 
-# Basic Colliders
-## Circle
-```lua
-c = S.trikers.Circle(x_pos, y_pos, radius, angle_rads)
-```
-Creates a circle centered on `{x_pos, y_pos}` with the given `radius`. `angle_rads` not really useful at the moment, might delete it.
+The plan is to add references to the two shapes that generated the collision and *maybe* the contact points between the two colliders (very unsure of how to go about that, will need to play with clipping algorithms)
 
-## ConvexPolygon
-```lua
-cp = S.trikers.ConvexPolygon(x,y, ...)
-```
-Takes a vardiadic list of `x,y` pairs that describe a convex polygon.
-Should be in counter-clockwise winding order, but the constructor will automatically sort non-ccw input when it fails a convexity check.
+## Collision
+Calling `S:trike(collider1, collider2)` will check for collisions between the two given colliders and return a boolean (true/false) that signifies a collision, followed by a corresponding, second value (MTV/nil).
 
-## Edge
-```lua
-e = S.trikers.Edge(x1,y1, x2,y2)
-```
-Takes the two endpoints of an edge and... creates an edge
+## Resolution
+Calling `S.ettle(mtv)` will move the refrenced colliders by half the magnitude of the mtv in opposite directions to one another.
 
-## Ellipse
-```lua
-el = S.trikers.Ellipse(x_pos, y_pos, a, b, segments, angle_rads)
-```
-Creates a **discretized** Ellipse centered at `{x_pos, y_pos}`, `a` and `b` are lengths of major/minor axes, segments is the number of edges to use to approximate the Ellipse, and `angle_rads` is the angled offset in radians.
-
-## Rectangle
-```lua
-S.trikers.Rectangle(x_pos, y_pos, dx, dy, angle_rads)
-```
-Creates a rectangle centered at `{x_pos, y_pos}` with width `dx` and height `dy`, offset by `angle_rads` (radians).
-
-## RegularPolygon
-```lua
-r = S.trikers.RegularPolygon(x_pos, y_pos, n, radius, angle_rads)
-```
-Creates a regular polygon centered at `{x_pos, y_pos}` with `n` sides. `radius` is the radius of the circumscribed circle, `angle_rads` is the angled offset in radians.
-
-# Special Colliders
-## Capsule
-```lua
-cap = S.trikers.Capsule(x_pos, y_pos, dx, dy, angle_rads)
-```
-Creates a capsule centered at `{x_pos, y_pos}` with width `dx` and height `dy`, offset by `angle_rads` (radians). Circles are along vertical axis.
-
-## Concave
-```lua
-concave = S.trikers.Concave(x,y, ...)
-```
-Takes a vardiadic list of `x,y` pairs that describe a convex polygon.
-Should be in pseudo-counter-clockwise winding order. 
+## In love?
+If you're running within LÖVE, every included shape has an appropriate `:draw` function defined. Calling `collider:draw` will draw every single shape and collider contained.
 
 # Bit more in depth
 
