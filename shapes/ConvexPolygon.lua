@@ -15,7 +15,7 @@ local function to_vertices(vertices, x, y, ...)
 end
 
 -- Test if 3 points are collinear (do they not make a triangle?)
-local function is_collinear_points(a, b, c)
+local function is_collinear(a, b, c)
 	return abs(Vec.det(a.x-c.x, a.y-c.y, b.x-c.x,b.y-c.y)) <= 1e-32
 end
 
@@ -25,12 +25,11 @@ local function is_ccw(p, q, r)
 end
 
 -- Remove vertices that are collinear
-local function trim_collinear_points(vertices)
+local function trim_collinear(vertices)
 	local trimmed = {}
-	-- Initialize vars for fancy wrap-around loop (⌐■_■)
 	local i, j = #vertices-1, #vertices
 	for k = 1, #vertices do
-		if not is_collinear_points(vertices[i], vertices[j], vertices[k]) then
+		if not is_collinear(vertices[i], vertices[j], vertices[k]) then
 			trimmed[#trimmed+1] = vertices[j]
 		end
 		i,j = j,k
@@ -44,7 +43,7 @@ local function are_lines_intersecting(a,b, c,d)
 end
 
 -- Checks for physical intersection of lines within polygon's vertices
-local function is_self_intersecting(vertices)
+local function self_intersecting(vertices)
 	local a, b = nil, vertices[#vertices]
 	for i = 1, #vertices-2 do
 		a, b = b, vertices[i]
@@ -61,19 +60,17 @@ local function is_convex(vertices)
 	local i, j = #vertices-1, #vertices
 	for k = 1, #vertices do
 		-- Convex polygons always make a ccw turn
-		-- If we don't, then this is not a convex polygon and we return false.
 		if not is_ccw(vertices[i], vertices[j], vertices[k]) then
 			return false
 		end
 		-- Cycle i to j, j to k
 		i,j = j,k
 	end
-	-- Made it out, so it must be convex
+	-- Made it out, must be convex
 	return true
 end
 
--- Enforce counter-clockwise points order
--- using graham scan algorithm to return the ordered hull.
+-- Enforce counter-clockwise points order using graham scan sort
 local function order_points_ccw(vertices)
 	-- Find reference point to calculate cw/ccw from (left-most x, lowest y)
 	local p_ref = vertices[1]
@@ -112,25 +109,14 @@ local function order_points_ccw(vertices)
             end
         end
 	end
-
-    -- Creat table of indices, sort the indices by corresponding vertex, then check if index order is_convex.
-	-- If is_convex, apply order to vertices, then return vertices, return false if not convex (triangulation time).
-	local vertices_clone = {}
-    -- Shallow copy vertices
-	tbl.shallow_copy(vertices, vertices_clone)
-	-- Sort table
+    -- Sort a copy of vertices. If convex, then apply the sort to the original, else return false
+	local vertices_clone = tbl.shallow_copy(vertices, {})
+	-- Sort table, Check if convex
 	table.sort(vertices_clone, sort_ccw)
-	-- Check if convex
 	local good_sort = is_convex(vertices_clone)
 
-	-- And return our investigation
-    if good_sort then
-        table.sort(vertices, sort_ccw)
-		return true --- true means the list is convex after all
-    else
-        return false -- false means not convex, treat it as concave
-    end
-
+	-- Return our investigation
+    return good_sort and true, table.sort(vertices, sort_ccw) or not true
 end
 
 function ConvexPolygon:calc_area()
@@ -158,7 +144,7 @@ function ConvexPolygon:calc_area_centroid()
 	local vertices = self.vertices
 	-- Initialize p and q so we can wrap around in the loop
 	local p, q = vertices[#vertices], vertices[1]
-	-- a is the signed area of the triangle formed by the two legs of p.x-q.x and p.y-q.y - it is our weighting
+	-- a is the area of the triangle formed by the two legs of p.x-q.x and p.y-q.y - it is our weighting
 	local a = Vec.det(p.x,p.y, q.x,q.y)
 	-- area is the total area of all triangles
 	self.area = a
@@ -183,11 +169,10 @@ function ConvexPolygon:calc_radius()
 		radius = max(radius, Vec.dist(vertices[i].x,vertices[i].y, self.centroid.x, self.centroid.y))
 	end
 	self.radius = radius
-	return radius
+	return self.radius
 end
 
 function ConvexPolygon:get_bbox()
-
 	local min_x, max_x, min_y, max_y = self.vertices[1].x,self.vertices[1].x, self.vertices[1].y, self.vertices[1].y
 	local x, y--, bbox
 	for __, vertex in ipairs(self.vertices) do
@@ -197,8 +182,7 @@ function ConvexPolygon:get_bbox()
 		if y < min_y then min_y = y end
 		if y > max_y then max_y = y end
 	end
-    -- Return rect info as separate values (don't create a table!)
-	-- If the bbox is constantly being re-calculated every frame for broadphase, that's a lot of garbage.
+    -- Return rect info as separate values (don't create a table (aka garbage)!)
 	return min_x, min_y, max_x-min_x, max_y-min_y
 end
 
@@ -217,8 +201,8 @@ function ConvexPolygon:new(...)
 	if not is_convex(self.vertices) then
 		assert(order_points_ccw(self.vertices), 'Points cannot be ordered into a convex shape')
 	end
-	trim_collinear_points(self.vertices)
-	assert(not is_self_intersecting(self.vertices), 'Ordered points still self-intersecting')
+	trim_collinear(self.vertices)
+	assert(not self_intersecting(self.vertices), 'Ordered points still self-intersecting')
 	self:calc_area_centroid()
 	self:calc_radius()
 end
@@ -269,7 +253,7 @@ end
 function ConvexPolygon:scale(sf, ref_x, ref_y)
 	-- Default to centroid as ref-point
     ref_x = ref_x or self.centroid.x
-	ref_y = ref_y and ref_x or self.centroid.y
+	ref_y = ref_y or self.centroid.y
 	-- Push each vertex out from the ref point by scale-factor
     for i = 1, #self.vertices do
         local v = self.vertices[i]
@@ -282,15 +266,12 @@ function ConvexPolygon:scale(sf, ref_x, ref_y)
 end
 
 function ConvexPolygon:project(nx,ny)
-	-- Dummy var for storing dot-product results
 	local vertices = self.vertices
 	local proj_x, proj_y
 	local p, min_dot, max_dot
-	-- The vector to project, travelling from the origin to the vertices of the polygon
-	-- So it's really just the x/y coordinates of a vertex
+	-- Project each point onto vector <nx, ny>
 	proj_x, proj_y = vertices[1].x, vertices[1].y
-	-- Init our min/max dot products.
-	-- Can't init to random value; min_dot might never go below the starting value.
+	-- Init our min/max dot products (Can't init to random value)
 	min_dot = Vec.dot(proj_x,proj_y, nx,ny)
 	max_dot = min_dot
 	-- Create new projection vectors, dot-prod them with the input vector, and return the min/max
@@ -323,37 +304,31 @@ end
 
 ConvexPolygon._get_verts = ConvexPolygon.unpack
 
-
 -- [[------------------]]    Polygon Merging    [[------------------]] --
 
 -- Use spatial-coordinate search to detect if two polygons
 -- share a coordinate pair (means have an incident face)
 local function get_incident_edge(poly1, poly2)
     -- Define hash table
-    local p_map = setmetatable({}, {__index = function(t,k)
-		local s = {}
-		t[k] = s
-		return s
-	end})
-    -- Iterate over poly_1's vertices
-    -- Place in p using x/y coords as keys
+    local p_map = {}
+    -- Iterate over poly_1's vertices, add x/y coords as keys to pmap
     local v_1 = poly1.vertices
     for i = 1, #v_1 do
-        p_map[v_1[i].x][v_1[i].y] = i
+		local key = v_1[i].x..'-'..v_1[i].y--string.format('%s-%s')
+        p_map[key] = i
     end
-
     -- Now look through poly_2's vertices and see if there's a match
     local v_2 = poly2.vertices
     local i = #v_2
     for j = 1, #v_2 do
         -- Set p and q to reference poly_2's vertices at i and j
         local p, q = v_2[i], v_2[j]
+		local kp, kq = p.x..'-'..p.y, q.x..'-'..q.y
         -- Access p_map based on line p-q's two coordinates
-        if p_map[p.x][p.y] and p_map[q.x][q.y] then
+        if p_map[kp] and p_map[kq] then
             -- Return the indices of the edge in both polygons
-            return p_map[p.x][p.y],p_map[q.x][q.y], i,j
+            return p_map[kp],p_map[kq], i,j
         end
-        -- Cycle i up to j
         i = j
     end
     -- No incident edge
@@ -361,40 +336,34 @@ local function get_incident_edge(poly1, poly2)
 end
 
 -- Given two convex polygons, merge them together
--- Assuming they share at least one edge,
--- and so long as the new polygon is also convex
+-- So long as the new polygon is also convex
 local function merge_convex_incident(poly1, poly2)
 	if not poly2.vertices then return false end
     -- Find an incident edge between the two polygons
     local i_1,j_1, i_2,j_2 = get_incident_edge(poly1, poly2)
-    -- Check that one of them is not nil
-    if not i_1 then
-        -- Got nil, no incident edge, so return false
-		return false
-    else
-        -- Ref both polygons' vertices
-        local v_1, v_2 = poly1.vertices, poly2.vertices
-        -- Init new verts table
-        local union = {}
-        -- Loop through the vertices of poly_1 and add applicable points to the union
-        for i = 1, #v_1 do
-            -- Skip the vertex if it's part of the poly_2's half of the incident edge
-            if i ~= j_1 then
-                push(union, v_1[i].x)
-                push(union, v_1[i].y)
-            end
-        end
-        -- Do the same for poly2
-        for i = 1, #v_2 do
-            if i ~= i_2 then
-                push(union, v_2[i].x)
-                push(union, v_2[i].y)
-            end
-        end
-		local new_verts = to_vertices({},unpack(union))
-		order_points_ccw(new_verts)
-        return is_convex(new_verts) and ConvexPolygon(unpack(union)) or not true
-    end
+
+	if not i_1 then return false end
+
+	local v_1, v_2 = poly1.vertices, poly2.vertices
+	local union = {}
+	-- Loop through the vertices of poly_1 and add applicable points to the union
+	for i = 1, #v_1 do
+		-- Skip the vertex if it's part of the poly_2's half of the incident edge
+		if i ~= j_1 then
+			push(union, v_1[i].x)
+			push(union, v_1[i].y)
+		end
+	end
+	-- Do the same for poly2
+	for i = 1, #v_2 do
+		if i ~= i_2 then
+			push(union, v_2[i].x)
+			push(union, v_2[i].y)
+		end
+	end
+	local new_verts = to_vertices({},unpack(union))
+	order_points_ccw(new_verts)
+	return is_convex(new_verts) and ConvexPolygon(unpack(union)) or not true
 end
 
 ConvexPolygon.merge = merge_convex_incident
