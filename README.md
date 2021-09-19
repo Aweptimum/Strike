@@ -1,5 +1,6 @@
 # Strike
-Strike (Separating-Axis Theorem Routines for Ill-tempered, Kaleidascopic Entities) is a 2D SAT Collision Detection library
+Strike (Separating-Axis Theorem Routines for Ill-tempered, Kaleidascopic Entities) is a 2D SAT Collision Detection library.\
+Made primarily for the [LÖVE](https://github.com/love2d/love) community, but should be compatible with any Lua version (at least at time of writing)
 
 ## Shapes
 Accessed via `S.hapes`, Shapes are objects representing convex geometry. Mostly polygons and circles. They are not used for collision detection by themselves, but are at your disposal. The available ones are in the `/shapes` directory, but you can add your own shape definitions as well. With the exception of `Circle`, every other shape is extended from `ConvexPolygon` and overrides its constructor. There are a few more requirements, but it's important to know that object definitions and instantiation are handled by rxi's [classic](https://github.com/rxi/classic). classic's distinction is that the constructor definition,`:new`, is not supposed to return the object at the end itself. The object's `__call` method handles that.
@@ -104,18 +105,21 @@ The `collider` field represents the collider that the mtv is oriented *from*. If
 The plan is to add references to the two shapes that generated the collision and *maybe* the contact points between the two colliders (very unsure of how to go about that, will need to play with clipping algorithms)
 
 ## Collision
+### Broad Phase
+Has both circle-circle and aabb-aabb intersection test functions - `S.ircle(collider1, collider2)` and `S.aabb(collider1, collider2)` respectively. Both return true on interesction, else false.
+### Narrow Phase (SAT)
 Calling `S:trike(collider1, collider2)` will check for collisions between the two given colliders and return a boolean (true/false) that signifies a collision, followed by a corresponding, second value (MTV/nil).
 
 ## Resolution
 Calling `S.ettle(mtv)` will move the refrenced colliders by half the magnitude of the mtv in opposite directions to one another.
 
 ## In love?
-If you're running within LÖVE, every included shape has an appropriate `:draw` function defined. Calling `collider:draw` will draw every single shape and collider contained.
+If you're running within [LÖVE](https://github.com/love2d/love), every included shape has an appropriate `:draw` function defined. Calling `collider:draw` will draw every single shape and collider contained.
 
 # Bit more in depth
 
 ## Defining Your Own Shapes
-You can create shape definitions in the /shapes directory of Strike that will be loaded into `S.hapes`. There are a few rules to follow:
+You can create shape definitions in the `/shapes` directory of Strike that will be loaded into `S.hapes`. There are a few rules to follow:
 1. The shape must be convex
 2. At least define `:new` and `:unpack`
 3. *All* necessary properties need to be initialized inside `:new`. If not, you'll get weird behavior as instantiated shapes will populate the object's attributes (I know from experience)
