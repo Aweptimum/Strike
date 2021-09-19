@@ -1,7 +1,5 @@
 local pi, cos, sin = math.pi, math.cos, math.sin
 local floor, max = math.floor, math.max
-
-local Vec = require "Strike.lib.DeWallua.vector-light"
 local Polygon = require 'Strike.shapes.ConvexPolygon'
 
 local Ellipse = Polygon:extend()
@@ -9,8 +7,7 @@ local Ellipse = Polygon:extend()
 Ellipse.name = 'ellipse'
 function Ellipse:new(x_pos, y_pos, a, b, segments, angle_rads)
 	if not ( a or b ) then return false end -- We need both to make an ellipse!
-	-- Set default value for segments if it's nil
-	-- Ratio of major/minor axes = # of segments per quadrant - multiply by 4 to get total segments
+	-- Default to a ratio of major/minor axes = # of segments per quadrant - multiply by 4 to get total segments
 	local segs = segments or max( floor(a/b)*4, 8)
 	-- Set ellipse coords
 	local x_offset 	= x_pos or 0
