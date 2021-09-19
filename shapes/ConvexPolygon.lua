@@ -325,16 +325,20 @@ ConvexPolygon._get_verts = ConvexPolygon.unpack
 
 -- [[------------------]]    Polygon Merging    [[------------------]] --
 
--- Use a spatial-coordinate search to detect if two polygons
+-- Use spatial-coordinate search to detect if two polygons
 -- share a coordinate pair (means have an incident face)
 local function get_incident_edge(poly1, poly2)
     -- Define hash table
-    local p_map = {}
+    local p_map = setmetatable({}, {__index = function(t,k)
+		local s = {}
+		t[k] = s
+		return s
+	end})
     -- Iterate over poly_1's vertices
     -- Place in p using x/y coords as keys
     local v_1 = poly1.vertices
     for i = 1, #v_1 do
-        p_map[v_1[i].x][p_map[i].y] = i
+        p_map[v_1[i].x][v_1[i].y] = i
     end
 
     -- Now look through poly_2's vertices and see if there's a match
@@ -351,15 +355,15 @@ local function get_incident_edge(poly1, poly2)
         -- Cycle i up to j
         i = j
     end
-    -- Well, we looped through and got nothing, so return nil
-    return nil, nil, nil, nil
+    -- No incident edge
+    return false
 end
 
 -- Given two convex polygons, merge them together
 -- Assuming they share at least one edge,
 -- and so long as the new polygon is also convex
 local function merge_convex_incident(poly1, poly2)
-	if poly2.name ~= 'convex' then return false end
+	if not poly2.vertices then return false end
     -- Find an incident edge between the two polygons
     local i_1,j_1, i_2,j_2 = get_incident_edge(poly1, poly2)
     -- Check that one of them is not nil
@@ -375,17 +379,20 @@ local function merge_convex_incident(poly1, poly2)
         for i = 1, #v_1 do
             -- Skip the vertex if it's part of the poly_2's half of the incident edge
             if i ~= j_1 then
-                push(union, v_1[i])
+                push(union, v_1[i].x)
+                push(union, v_1[i].y)
             end
         end
-        -- Loop through the vertices of poly_2 and add applicable points to the union
+        -- Do the same for poly2
         for i = 1, #v_2 do
-            -- Skip the vertex if it's part of the poly_2's half of the incident edge
             if i ~= i_2 then
-                push(union, v_1[i])
+                push(union, v_2[i].x)
+                push(union, v_2[i].y)
             end
         end
-        return ConvexPolygon(unpack(union))
+		local new_verts = to_vertices({},unpack(union))
+		order_points_ccw(new_verts)
+        return is_convex(new_verts) and ConvexPolygon(unpack(union)) or not true
     end
 end
 

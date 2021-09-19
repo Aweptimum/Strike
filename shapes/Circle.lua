@@ -64,6 +64,10 @@ function Circle:unpack()
     return self.centroid.x, self.centroid.y, self.radius
 end
 
+function Circle:merge()
+    return false -- Can't merge circles :/
+end
+
 function Circle:draw(mode)
 	-- default fill to "line"
 	mode = mode or "line"
