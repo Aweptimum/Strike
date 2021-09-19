@@ -145,8 +145,25 @@ function Collider:project(dx, dy)
 end
 -- Remove shape(s) from collider
 function Collider:remove(index, ...)
-    pop(self.shapes, index) -- hopefully no one makes a collider with 1000's of shapes
+    if not index then return end
+    table.remove(self.shapes, index) -- hopefully no one makes a collider with 1000's of shapes
     return self:remove(...)
+end
+
+function Collider:consolidate()
+    for i = #self.shapes, 2, -1 do
+        local s1 = self.shapes[i]
+        for j = i-1, 1, -1 do
+            if s1.type == 'collider' then s1:consolidate() break end
+            local s2 = self.shapes[j]
+            local s = s1:merge(s2)
+            if s then
+                self:remove(i)
+                self.shapes[j] = s
+                break
+            end
+        end
+    end
 end
 
 -- Draw Collider
