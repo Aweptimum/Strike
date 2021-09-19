@@ -8,10 +8,6 @@ local Colliders = {}
 function Colliders:Create_Definition(name, object)
     --Check that the object implements new
     assert(object.new, "\tnew is null for shape: ".. name..'\n Make sure to :extend() it')
-    -- Add "private" _copy method for each object
-    function object:_copy()
-        return object(self:unpack())
-    end
     self[name] = object
 end
 

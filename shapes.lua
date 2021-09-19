@@ -1,14 +1,12 @@
 local scandir 	= _Require_relative(..., 'fileloader')
 local Shape     = require 'Strike.shapes.Shape'
--- Two kinds of shapes:
--- circles and polygons
 
 local Shapes = {}
 
 function Shapes:Create_Definition(name, object)
     --Check that the object implements new
     assert(object.new, "\tnew is null for shape: ".. name..'\n Make sure to :extend() it')
-    -- Add "private" _copy method for each object
+    -- Add "private" _copy method for each shape
     function object:_copy()
         return object(self:unpack())
     end
@@ -30,7 +28,5 @@ local function load_shapes(cwd)
 end
 
 load_shapes(...)
-
--- Shapes: edge, aabb, ellipse, regular poly, convex poly, concave poly
 
 return Shapes
