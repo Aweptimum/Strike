@@ -1,6 +1,3 @@
 [submodule "DeWallua"]
 	path = lib/DeWallua
 	url = https://github.com/Aweptimum/DeWallua
-[submodule "classic"]
-	path = lib/classic
-	url = https://github.com/rxi/classic.git
