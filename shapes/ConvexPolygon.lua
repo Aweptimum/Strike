@@ -1,5 +1,6 @@
 local abs, max, atan2 	= math.abs, math.max, math.atan2
 local push = table.insert
+local tbl = require "Strike.tbl"
 local Vec	= require "Strike.lib.DeWallua.vector-light"
 local Shape = require "Strike.shapes.shape"
 
@@ -116,7 +117,7 @@ local function order_points_ccw(vertices)
 	-- If is_convex, apply order to vertices, then return vertices, return false if not convex (triangulation time).
 	local vertices_clone = {}
     -- Shallow copy vertices
-	shallow_copy_table(vertices, vertices_clone)
+	tbl.shallow_copy(vertices, vertices_clone)
 	-- Sort table
 	table.sort(vertices_clone, sort_ccw)
 	-- Check if convex

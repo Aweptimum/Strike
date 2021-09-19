@@ -1,5 +1,6 @@
 -- Base collider object
 local push, pop = table.insert, table.remove
+local tbl = require "Strike.tbl"
 local Vec = require "Strike.lib.DeWallua.vector-light"
 local Object = require 'Strike.lib.classic.classic'
 
@@ -86,7 +87,7 @@ function Collider:unpack()
 end
 -- Turn this into a recursive copy - each shape in the new collider still references the old one.
 function Collider:copy(x, y, angle_rads)
-    local copy = self:_copy()
+    local copy = tbl.deep_copy(self)
 	-- if origin specified, then translate
 	if x and y then
 		copy:translate_to(x, y)
