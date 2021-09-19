@@ -37,6 +37,9 @@ function MTV:new(dx, dy, collider, collided)
 	self.x, self.y = dx or 0, dy or 0
 	self.collider = collider or 'none'
 	self.collided = collided or 'none'
+	self.colliderShape = 'none'
+	self.collidedShape = 'none'
+	self.edgeIndex = 0
 end
 
 function MTV:mag()
@@ -47,8 +50,20 @@ function MTV:setCollider(collider)
 	self.collider = collider
 end
 
+function MTV:setColliderShape(shape)
+	self.colliderShape = shape
+end
+-- Index of edge that generated mtv
+function MTV:setEdgeIndex(index)
+	self.edgeIndex = index
+end
+
 function MTV:setCollided(collider)
 	self.collided = collider
+end
+
+function MTV:setCollidedShape(shape)
+	self.collidedShape = shape
 end
 
 -- [[--- Collision Functions ---]] --
@@ -77,11 +92,11 @@ end
 
 -- SAT
 local function project(shape1, shape2)
-	local minimum, mtv_dx, mtv_dy = inf, 0, 0
+	local minimum, mtv_dx, mtv_dy, edge_index = inf, 0, 0, 0
 	local overlap, dx, dy
 	local shape1_min_dot, shape1_max_dot, shape2_min_dot, shape2_max_dot
 	-- loop through shape1 geometry
-	for _, edge in shape1:ipairs() do
+	for i, edge in shape1:ipairs() do
 		-- get the normal
 		dx, dy = Vec.normalize( Vec.sub(edge[3],edge[4], edge[1], edge[2]) )
 		dx, dy = dy, -dx
@@ -101,6 +116,7 @@ local function project(shape1, shape2)
 				-- Set our MTV to the smol vector
 				minimum = overlap
 				mtv_dx, mtv_dy = dx, dy
+				edge_index = i
 			end
 		end
 	end
@@ -108,7 +124,11 @@ local function project(shape1, shape2)
 	local ccx, ccy = shape2.centroid.x - shape1.centroid.x, shape2.centroid.y - shape1.centroid.y
 	local s = sign( Vec.dot(mtv_dx, mtv_dy, ccx, ccy) )
 	-- Welp. We made it here. So they're colliding, I guess. Hope it's consensual :(
-	return MTV( Vec.mul(s*minimum, mtv_dx, mtv_dy) )
+	local mtv = MTV( Vec.mul(s*minimum, mtv_dx, mtv_dy) )
+	mtv:setColliderShape(shape1)
+	mtv:setEdgeIndex(edge_index)
+	mtv:setCollidedShape(shape2)
+	return mtv
 end
 
 local function SAT(shape1, shape2)
