@@ -2,7 +2,7 @@
 local push, pop = table.insert, table.remove
 local tbl = require "Strike.tbl"
 local Vec = require "Strike.lib.DeWallua.vector-light"
-local Object = require 'Strike.lib.classic.classic'
+local Object = require 'Strike.lib.classic'
 
 local Collider = Object:extend()
 

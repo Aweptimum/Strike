@@ -1,6 +1,6 @@
 local bit 		= require'bit' --https://luajit.org/extensions.html
 local Vec		= _Require_relative( ... , "lib.DeWallua.vector-light")
-local Object	= _Require_relative( ... , "lib.classic.classic")
+local Object	= _Require_relative( ... , "lib.classic")
 local Shapes 	= _Require_relative( ... , "shapes")
 local Collider	= _Require_relative( ... , "colliders.Collider")
 local Colliders	= _Require_relative( ... , "colliders")
