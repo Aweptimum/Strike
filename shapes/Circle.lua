@@ -4,6 +4,8 @@ local Shape = require "Strike.shapes.shape"
 
 Circle = Shape:extend()
 
+Circle.name = 'circle'
+
 function Circle:new(x_pos, y_pos, radius,  angle_rads)
     print('constructing circle')
 	if not ( radius ) then return false end
