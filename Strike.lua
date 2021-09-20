@@ -181,7 +181,12 @@ end
 
 local function show_mtv(mtv)
 	local c = mtv.collider.centroid
+	local edge = mtv.colliderShape:getEdge(mtv.edgeIndex)
+	love.graphics.setColor(1,.5,.5)
 	love.graphics.line(c.x, c.y, c.x+mtv.x, c.y+mtv.y)
+	love.graphics.setColor(1,0,.5)
+	love.graphics.line(unpack(edge))
+	love.graphics.setColor(1,1,1)
 end
 
 local function show_norms(collider)
@@ -196,12 +201,12 @@ local function show_norms(collider)
 end
 
 local function show_proj(mtv)
-	local c = mtv.collided.centroid
 	for _, shape in mtv.collided:ipairs() do
+		local c = shape.centroid
 		local nmx, nmy = Vec.normalize(mtv.x, mtv.y)
 		local smin, smax = shape:project(nmx, nmy)
 		love.graphics.setColor(.5,.5,.1)
-	   	love.graphics.line(16+nmx*smin, nmy*smin, 16+nmx*smax, nmy*smax)
+	   	love.graphics.line(c.x+nmx*smin, c.y+nmy*smin, c.x+nmx*smax, c.y+nmy*smax)
 		love.graphics.setColor(1,1,1)
     end
 end
