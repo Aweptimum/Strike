@@ -287,9 +287,9 @@ function ConvexPolygon:project(nx,ny)
 end
 
 function ConvexPolygon:getEdge(i)
-	if i > self.vertices then return false end
+	if i > #self.vertices then return false end
 	local verts = self.vertices
-	local j = i <= #verts and i+1 or 1
+	local j = i < #verts and i+1 or 1
 	local p1, p2 = verts[i], verts[j]
 	return {p1.x, p1.y, p2.x, p2.y}
 end
