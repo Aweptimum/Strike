@@ -295,7 +295,7 @@ function ConvexPolygon:getEdge(i)
 end
 
 -- Need this to test if a shape is completely inside
-function ConvexPolygon:point_inside(point)
+function ConvexPolygon:containsPoint(point)
 	local vertices = self.vertices
 	local winding = 0
 	local p, q = vertices[#vertices], vertices[1]
