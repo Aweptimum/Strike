@@ -65,6 +65,17 @@ function Circle:getEdge(i)
     return i == 1 and {c.x, c.y, c.x + r, c.y + r} or false
 end
 
+function Circle:containsPoint(point)
+    return Vec.len2(Vec.sub(point.x,point.y, self.centroid.x, self.centroid.y)) <= self.radius*self.radius
+end
+
+function Circle:intersectsRay(x,y, dx,dy)
+    dx, dy = Vec.perpendicular( dx, dy)
+    local cmin, cmax = self:project(dx, dy)
+    local d = Vec.dot(x,y, dx, dy)
+    return cmax > d and d > cmin
+end
+
 function Circle:unpack()
     return self.centroid.x, self.centroid.y, self.radius
 end
