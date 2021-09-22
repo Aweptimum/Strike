@@ -314,7 +314,7 @@ function ConvexPolygon:containsPoint(point)
 end
 
 -- Project each individual edge instead of using self:project like in Circle
-function ConvexPolygon:intersectsRay(x,y, dx,dy)
+function ConvexPolygon:rayIntersects(x,y, dx,dy)
 	dx, dy = Vec.perpendicular(dx,dy)
     local d = Vec.dot(x,y, dx,dy)
 	for i, edge in self:ipairs() do
