@@ -1,4 +1,4 @@
-local abs, max, atan2 	= math.abs, math.max, math.atan2
+local abs, min, max, atan2 	= math.abs, math.min, math.max, math.atan2
 local push = table.insert
 local tbl = require "Strike.tbl"
 local Vec	= require "Strike.lib.DeWallua.vector-light"
@@ -311,6 +311,19 @@ function ConvexPolygon:containsPoint(point)
 		end
 	end
 	return winding ~= 0
+end
+
+-- Project each individual edge instead of using self:project like in Circle
+function ConvexPolygon:intersectsRay(x,y, dx,dy)
+	dx, dy = Vec.perpendicular(dx,dy)
+    local d = Vec.dot(x,y, dx,dy)
+	for i, edge in self:ipairs() do
+		local e1 = Vec.dot(edge[1],edge[2], dx,dy)
+		local e2 = Vec.dot(edge[3],edge[4], dx,dy)
+		local emin, emax = min(e1, e1), max(e1, e2)
+		if emax > d and d > emin then return true end
+	end
+	return false
 end
 
 ConvexPolygon._get_verts = ConvexPolygon.unpack
