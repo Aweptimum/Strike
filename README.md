@@ -76,9 +76,9 @@ The base Collider class (and all colliders that extend it) have these methods:
 
 ```lua
 collider:translate(dx, dy) -- adds dx and dy to each shapes' points
-collider:translate_to(x,y) -- translates centroid to position (and everything with it)
-collider:rotate(angle, ref_x, ref_y) -- rotates by `angle` (radians) about a reference point (defaults to centroid)
-collider:scale(sf, ref_x, ref_y) -- scales by factor `sf` with respect to a reference point (defaults to centroid)
+collider:translateTo(x,y) -- translates centroid to position (and everything with it)
+collider:rotate(angle, refx, refy) -- rotates by `angle` (radians) about a reference point (defaults to centroid)
+collider:scale(sf, refx, refy) -- scales by factor `sf` with respect to a reference point (defaults to centroid)
 ```
 
 ### Manipulating Colliders
@@ -203,7 +203,7 @@ If you crack open Rectangle.lua, this is actually the entire file! Hopefully thi
 One last thing to touch on (and you may have wondered this already) - do I use this by calling `S.hapes.Rect` or `S.hapes.Rectangle`? The answer is that Strike stores each shape using the filename, so `S.hapes.Rectangle` it is.
 
 ## Defining Your Own Colliders
-Just like Shapes, you can make your own ready-to-go Collider definitions. These follow the same rules as Shapes, with the exception of `:unpack` being unnecessary. You should, however, always call `self:calc_area_centroid` and `self:calc_radius` at the end of your constructor.
+Just like Shapes, you can make your own ready-to-go Collider definitions. These follow the same rules as Shapes, with the exception of `:unpack` being unnecessary. You should, however, always call `self:calcAreaCentroid` and `self:calcRadius` at the end of your constructor.
 
 Let's make a Capsule!
 
@@ -230,8 +230,8 @@ function Capsule:new(x, y, dx, dy, angle_rads)
         Circle(x, y+hy, hx),
         Rectangle(x,y,dx,dy)
     )
-    self:calc_area_centroid()
-    self:calc_radius()
+    self:calcAreaCentroid()
+    self:calcRadius()
     self:rotate(self.angle)
 end
 ```
