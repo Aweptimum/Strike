@@ -411,7 +411,7 @@ if love and love.graphics then
 	function ConvexPolygon:draw(mode)
 		-- default fill to "line"
 		mode = mode or "line"
-		love.graphics.polygon("line", self:_get_verts())
+		love.graphics.polygon(mode, self:_get_verts())
 	end
 end
 

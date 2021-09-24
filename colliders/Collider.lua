@@ -184,10 +184,11 @@ function Collider:consolidate()
 end
 
 -- Draw Collider
-function Collider:draw()
+function Collider:draw(mode)
+    mode = mode or 'line'
     for _, shape in self:ipairs() do
         --love.graphics.setColor(love.math.random(), love.math.random(), love.math.random())
-        shape:draw()
+        shape:draw(mode)
         love.graphics.points(shape.centroid.x, shape.centroid.y)
         love.graphics.print(_,shape.centroid.x, shape.centroid.y)
     end

@@ -103,7 +103,7 @@ if love and love.graphics then
     function Circle:draw(mode)
         -- default fill to "line"
         mode = mode or "line"
-        love.graphics.circle("line", self:unpack())
+        love.graphics.circle(mode, self:unpack())
     end
 end
 
