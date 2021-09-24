@@ -305,6 +305,9 @@ And that's it!
 
 Because the Collider object assumes it only contains convex shapes and other colliders, you have a lot of flexibility in what you can construct.
 
+# Thanks
+I'd like to thank Max Cahill, MikuAuahDark, Potatonomicon, and radgeRayden for helping (knowingly or not) with some details :)
+
 # Contributing
 Very little in this library was done in the best way from the start, and it's been extensively rewritten as its author learned more about best practices. Still, there's further work to be done. If a particular snippet makes you cringe, or there's a feature missing, feel free to fork, edit, test, and PR.
 
