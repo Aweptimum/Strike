@@ -1,4 +1,3 @@
-local bit 		= require'bit' --https://luajit.org/extensions.html
 local Vec		= _Require_relative( ... , "lib.DeWallua.vector-light")
 local Object	= _Require_relative( ... , "lib.classic")
 local Shapes 	= _Require_relative( ... , "shapes")
@@ -6,26 +5,10 @@ local Collider	= _Require_relative( ... , "colliders.Collider")
 local Colliders	= _Require_relative( ... , "colliders")
 
 local pi, cos, sin, atan2 = math.pi, math.cos, math.sin, math.atan2
--- atan(y, 0) returns 0, not undefined
 local floor, ceil, sqrt, abs, max, min   = math.floor, math.ceil, math.sqrt, math.abs, math.max, math.min
 local inf = math.huge
--- Push/pop
-local push, pop = table.insert, table.remove
 
---local _PACKAGE = (...):match("^(.+)%.[^%.]+")
-
--- Polygon module for creating shapes to strike each other
-
--- [[---------------------]] Declaration of Spelling Collinear [[---------------------]] --
-
--- [[ IT IS TO BE DECLARED HEREIN THIS DOCUMENT THAT THE "LL" SPELLING OF COLLINEAR ]] --
--- [[ SHALL BE ADOPTED THROUGHOUT, AS IT'S SPELLED ON WIKIPEDIA. "WHY?" YOU MAY ASK ]] --
--- [[ Well, it's because that's how my vector calculus prof spelled it. Using 1 "L" ]] --
--- [[ just feels a bit wrong, y'know? So accept it. Or change it in your fork, idk. ]] --
-
--- [[---------------------]]        Utility Functions        [[---------------------]] --
-
--- Get signs of numbers
+-- Get sign of number
 local function sign(number)
     return number > 0 and 1 or (number == 0 and 0 or -1)
 end
