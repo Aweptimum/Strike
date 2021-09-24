@@ -57,7 +57,7 @@ r = S.trikers.RegularPolygon(x_pos, y_pos, n, radius, angle_rads)
 ```
 Creates a regular polygon centered at `{x_pos, y_pos}` with `n` sides. `radius` is the radius of the circumscribed circle, `angle_rads` is the angled offset in radians.
 
-### Special Colliders
+### Composite Colliders
 #### Capsule
 ```lua
 cap = S.trikers.Capsule(x_pos, y_pos, dx, dy, angle_rads)
@@ -109,6 +109,34 @@ The plan is to add references to the two shapes that generated the collision and
 Has both circle-circle and aabb-aabb intersection test functions - `S.ircle(collider1, collider2)` and `S.aabb(collider1, collider2)` respectively. Both return true on interesction, else false.
 ### Narrow Phase (SAT)
 Calling `S:trike(collider1, collider2)` will check for collisions between the two given colliders and return a boolean (true/false) that signifies a collision, followed by a corresponding, second value (MTV/nil).
+### Ray Intersection
+There are two ray intersection functions: `rayIntersects` and `rayIntersections`. Both have the same arguments: a ray origin and a normalized vector
+```lua
+Collider:rayIntersect(ion)s(x,y, dx,dy)
+```
+`Intersects` earlies out at the first intersection and returns true (else false).
+
+`Intersections` returns a list of key-value pairs, where the keys are references to the shape objects hit and the values are a table of lengths along the ray vector. 
+It looks like this:
+```lua
+hits = Collider:rayIntersections(0,0, 1,1)
+-- hits = {
+--	<shape1> = {length-1, length-2},
+--	<shape2> = {length-1},
+--	<shape3> = {length-1, length-2}
+--	}
+```
+Because the keys are references, it is possible to iterate through the `hits` table using `pairs()` and oeprate on them idnividually.
+
+To compute the intersection points, here's a sample loop:
+```lua
+for shape, dists in pairs(hits) do
+	for _, dist in ipairs(dists) do
+		local px, py = rx + dx*dist, ry + dy*dist -- coordinate math
+		love.graphics.points(px, py) -- draw with love
+	end
+end
+```
 
 ## Resolution
 Calling `S.ettle(mtv)` will move the refrenced colliders by half the magnitude of the mtv in opposite directions to one another.
