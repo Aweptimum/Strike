@@ -58,6 +58,12 @@ r = S.trikers.RegularPolygon(x_pos, y_pos, n, radius, angle_rads)
 Creates a regular polygon centered at `{x_pos, y_pos}` with `n` sides. `radius` is the radius of the circumscribed circle, `angle_rads` is the angled offset in radians.
 
 ### Composite Colliders
+#### Collider
+```lua
+coll = S.trikers.Collider( S.hapes.Rectangle(...), S.hapes.Circle(...), S.trikers.Circle(...) )
+```
+Creates a collider object that contains the specified geometry, either instantiated `S.hapes` or `S.trikers`, though `S.hapes` make for a flatter object
+
 #### Capsule
 ```lua
 cap = S.trikers.Capsule(x_pos, y_pos, dx, dy, angle_rads)
@@ -140,6 +146,8 @@ The one useful function might be `MTV:mag()` - it returns the magnitude of the s
 Has both circle-circle and aabb-aabb intersection test functions - `S.ircle(collider1, collider2)` and `S.aabb(collider1, collider2)` respectively. Both return true on interesction, else false.
 ### Narrow Phase (SAT)
 Calling `S:trike(collider1, collider2)` will check for collisions between the two given colliders and return a boolean (true/false) that signifies a collision, followed by a corresponding, second value (MTV/nil).
+
+It's important to note that Shapes within a Collider do not collide with each other. This is relevant for gettign around [Ghost Collisions](#ghosting)
 ### Ray Intersection
 There are two ray intersection functions: `rayIntersects` and `rayIntersections`. Both have the same arguments: a ray origin and a normalized vector
 ```lua
@@ -176,6 +184,23 @@ Calling `S.ettle(mtv)` will move the referenced colliders by half the magnitude 
 If you're running within [LÖVE](https://github.com/love2d/love), every included shape has an appropriate `:draw` function defined. Calling `collider:draw` will draw every single shape and collider contained.
 
 # Bit more in depth
+
+## Ghosting
+Erin Catto wrote up a nice article on the subject of [ghost collisions](https://box2d.org/posts/2020/06/ghost-collisions/). The problem outlined is this: if two colliders intersect, and a third collider hits both at their intersection, not-nice things can happen. Strike has this problem as well. Box2D solves it with chain shapes, which store edges together and modify the collision logic to bad resolution. Strike doesn't directly solve this. However, in the case of two edges intersecting at a common endpoint and a shape hitting that intersection, it seems to be circumvented by adding both edge colliders to a common collider. A minimum example is below:
+```lua
+local edges = {
+	S.trikers.Edge(400,600, 600,600),
+	S.trikers.Edge(600,600, 800,600)
+}
+-- vs
+local EDGE = S.trikers.Collider(
+	S.trikers.Edge(400,600, 600,600),
+	S.trikers.Edge(600,600, 800,600)
+)
+```
+The first will produce ghosting, while the second does not. This is either because I was extremely lucky in my testing or built into the collision detection logic on accident. Either way, it's a feature.
+
+To make this explicit, a check for whether the MTV is headed *into* a Collider's centroid should probably be added somewhere in the logic for `S.triking`.
 
 ## Defining Your Own Shapes
 You can create shape definitions in the `/shapes` directory of Strike that will be loaded into `S.hapes`. There are a few rules to follow:
