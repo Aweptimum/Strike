@@ -97,12 +97,33 @@ MTV = {
     x = 0,
     y = 0,
     collider = <reference-to-collider>,
-    collided = <reference-to-collider>
+    collided = <reference-to-collider>,
+    colliderShape = <reference-to-collider-shape>,
+    collidedShape = <reference-to-collided-shape>,
+    edgeIndex = colliderShape-edge-index
 }
 ```
 The `collider` field represents the collider that the mtv is oriented *from*. If you were to draw the mtv from the centroid of the collider object, it would point out of the shape, towards the collider it is currently intersecting. The `collided` field is a reference to that intersected collider, the one that the mtv would be pointing *towards*. This information is necessary to know the orientation of the mtv and for settling/resolving collisions; they can directly be operated on from the references in the mtv.
 
-The plan is to add references to the two shapes that generated the collision and *maybe* the contact points between the two colliders (very unsure of how to go about that, will need to play with clipping algorithms)
+The `colliderShape` and `collidedShape` fields are references to the two actual shapes that generated the collision. `edgeIndex` is the actual index of the edge that generated the separating axis. The edge can be retrieved by calling `mtv.colliderShape:getEdge( mtv.edgeIndex )`.
+
+The plan is to add a solver that can calculate the contact points between the two colliders given the information inside of a MTV alone. Similar to Box2D's manifolds.
+(very unsure of how to go about this, will need to play with clipping algorithms).
+
+The MTV object has a camelCased setter for every single field (`setCollider` for `collider`). It's unlikely anyone will need to use them, but here they are:
+```lua
+MTV:setCollider(collider)
+
+MTV:setColliderShape(shape)
+
+MTV:setEdgeIndex(index)
+
+MTV:setCollided(collider)
+
+MTV:setCollidedShape(shape)
+```
+
+The one useful function might be `MTV:mag()` - it returns the magnitude of the separating vector.
 
 ## Collision
 ### Broad Phase
