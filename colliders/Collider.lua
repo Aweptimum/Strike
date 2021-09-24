@@ -132,7 +132,7 @@ function Collider:scale(sf, ref_x, ref_y)
 	self.centroid.x, self.centroid.y = Vec.add(ref_x, ref_y, Vec.mul(sf, self.centroid.x-ref_x, self.centroid.y - ref_y))
     -- Recalculate area, and radius
     self:calc_area()
-    self:calc_radius() --self.radius = self.radius * sf
+    self.radius = self.radius * sf
 end
 
 function Collider:project(dx, dy)
