@@ -122,17 +122,17 @@ function Collider:rotate(angle, ref_x, ref_y)
         shape:rotate(angle, ref_x, ref_y)
     end
     self.centroid.x, self.centroid.y = Vec.add(ref_x, ref_y, Vec.rotate(angle, self.centroid.x-ref_x, self.centroid.y - ref_y))
-    --self:calc_centroid()
 end
 
 function Collider:scale(sf, ref_x, ref_y)
+    ref_x, ref_y = ref_x or self.centroid.x, ref_y or self.centroid.y
     for _, shape in self:ipairs() do
         shape:scale(sf, ref_x, ref_y)
     end
 	self.centroid.x, self.centroid.y = Vec.add(ref_x, ref_y, Vec.mul(sf, self.centroid.x-ref_x, self.centroid.y - ref_y))
     -- Recalculate area, and radius
     self:calc_area()
-    --self.radius = self.radius * sf
+    self:calc_radius() --self.radius = self.radius * sf
 end
 
 function Collider:project(dx, dy)
