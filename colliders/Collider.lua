@@ -155,9 +155,9 @@ end
 function Collider:rayIntersections(x,y, dx,dy)
     local ts = {}
     for _, shape in self:ipairs() do
-        shape:rayIntersections(x,y, dx,dy, ts)
+        ts[shape] = shape:rayIntersections(x,y, dx,dy)
     end
-    return #ts > 0 and ts or nil
+    return next(ts) and ts or nil
 end
 
 -- Remove shape(s) from collider
