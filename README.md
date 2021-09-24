@@ -75,10 +75,10 @@ Should be in pseudo-counter-clockwise winding order.
 The base Collider class (and all colliders that extend it) have these methods:
 
 ```lua
-collider:translate(dx, dy) -- adds dx and dy to each shapes' points
-collider:translateTo(x,y) -- translates centroid to position (and everything with it)
-collider:rotate(angle, refx, refy) -- rotates by `angle` (radians) about a reference point (defaults to centroid)
-collider:scale(sf, refx, refy) -- scales by factor `sf` with respect to a reference point (defaults to centroid)
+collider:translate(dx, dy)		-- adds dx and dy to each shapes' points
+collider:translateTo(x,y)		-- translates centroid to position (and everything with it)
+collider:rotate(angle, refx, refy)	-- rotates by `angle` (radians) about a reference point (defaults to centroid)
+collider:scale(sf, refx, refy)		-- scales by factor `sf` with respect to a reference point (defaults to centroid)
 ```
 
 ### Manipulating Colliders
@@ -89,6 +89,16 @@ collider:remove(index, ...) -- removes a shape at the specified index, can handl
 	**uses table.remove internally, so as long as you don't have tens of thousands of shapes in a collider, you'll be fine! 
 collider:consolidate() -- will merge incident convex polygons together, makes for less iterations if applicable
 ```
+
+### Collider Iterating
+```lua
+for parent_collider, shape, shape_index in collider:ipairs() do
+	-- stuff
+end
+```
+`Collider:ipairs()` is a flattened-list iterator that will return *all* Shapes, nested or not, contained within the 'root' Collider it's called from.
+`parent_collider` is the collider that contains `shape`, and `shape_index` is the index of `shape` within `parent_collider.shapes`.\
+If you wanted to remove a shape from a Collider that met some condition, calling `parent_collider:remove( shape_index )` would do it.
 
 ## MTV's
 Minimum Translating Vectors are an object that represent the penetration depth between two colliders. The vector components are accessed via `mtv.x` and `mtv.y`, but they contain other information. An example of the contained fields is below:
@@ -160,7 +170,7 @@ end
 ```
 
 ## Resolution
-Calling `S.ettle(mtv)` will move the refrenced colliders by half the magnitude of the mtv in opposite directions to one another.
+Calling `S.ettle(mtv)` will move the referenced colliders by half the magnitude of the mtv in opposite directions to one another.
 
 ## In love?
 If you're running within [LÖVE](https://github.com/love2d/love), every included shape has an appropriate `:draw` function defined. Calling `collider:draw` will draw every single shape and collider contained.
@@ -267,8 +277,19 @@ Because the Collider object assumes it only contains convex shapes and other col
 # Contributing
 Very little in this library was done in the best way from the start, and it's been extensively rewritten as its author learned more about best practices. Still, there's further work to be done. If a particular snippet makes you cringe, or there's a feature missing, feel free to fork, edit, test, and PR.
 
+## Out-Of-Scope Features
+* **Bit-Masking/Layering**\
+	I want to add it, but this is where Lua falls down a bit. Between Lua 5.1/5.2, LuaJIT, and Lua 5.3+, there's too much compatibility to consider.\
+	Best left to the user to implement it
+* **Broad-Phase Data Structures**\
+	There's more than one way to do it ¯\\\_(ツ)\_/¯\
+	Strike's geometry objects are really just factories - pipe their output into your structure of choice.
+* **Continuous Collision Detection**\
+	For good CCD, it's best to handle it in a physics implementation that would wrap around Strike. Mostly because having access to velocity and rotation vectors allows
+	for interpolationg between timesteps. Right now, `dt` is absent from this library.
+
 ## TODO
-- [ ] Add `:getEdge(index)` methods to shapes to return an edge by its number
-- [ ] Return references to the two shapes that actually collided in the returned mtv, as well as the index of the normal's edge for the `collider_shape` field
+- [X] Add `:getEdge(index)` methods to shapes to return an edge by its number
+- [X] Return references to the two shapes that actually collided in the returned mtv, as well as the index of the normal's edge for the `collider_shape` field
 - [ ] Add a function to solve for the edge(s) in `collided_shape` interesecting the normal's edge of the `collider_shape`
 - [ ] Add contact solver (some kind of clipping function that can optionally be run given an mtv that returns 1-2 points)
