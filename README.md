@@ -147,7 +147,7 @@ hits = Collider:rayIntersections(0,0, 1,1)
 --	<shape3> = {length-1, length-2}
 --	}
 ```
-Because the keys are references, it is possible to iterate through the `hits` table using `pairs()` and oeprate on them idnividually.
+Because the keys are references, it is possible to iterate through the `hits` table using `pairs()` and operate on them individually.
 
 To compute the intersection points, here's a sample loop:
 ```lua
