@@ -152,6 +152,14 @@ function Collider:rayIntersects(x,y, dx,dy)
     return false
 end
 
+function Collider:rayIntersections(x,y, dx,dy)
+    local ts = {}
+    for _, shape in self:ipairs() do
+        shape:rayIntersections(x,y, dx,dy, ts)
+    end
+    return #ts > 0 and ts or nil
+end
+
 -- Remove shape(s) from collider
 function Collider:remove(index, ...)
     if not index then return end
