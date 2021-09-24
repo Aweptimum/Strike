@@ -73,11 +73,11 @@ function Circle:rayIntersects(x,y, dx,dy)
     dx, dy = Vec.perpendicular(dx, dy)
     local cmin, cmax = self:project(dx, dy)
     local d = Vec.dot(x,y, dx, dy)
-    return cmax > d and d > cmin
+    return cmax >= d and d >= cmin
 end
 -- Returns actual intersection point, from:
 -- https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection
-function Circle:rayIntersection(x,y, dx,dy)
+function Circle:rayIntersections(x,y, dx,dy)
     if not self:rayIntersects(x,y, dx,dy) then return false end
     dx, dy = Vec.normalize(dx, dy)
     local lx, ly = Vec.sub(self.centroid.x, self.centroid.y, x, y)
@@ -85,7 +85,8 @@ function Circle:rayIntersection(x,y, dx,dy)
     local d = Vec.len(Vec.reject(lx,ly, dx,dy))
     local r = math.sqrt(self.radius*self.radius - d*d)
     local i = h - r
-    return Vec.add( x,y, Vec.mul(i, dx, dy) )
+    local j = r > 0.0001 and h + r or nil
+    return {i, j}
 end
 
 function Circle:unpack()
