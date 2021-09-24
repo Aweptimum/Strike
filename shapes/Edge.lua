@@ -58,13 +58,13 @@ function Edge:unpack()
     return self.vertices[1].x, self.vertices[1].y, self.vertices[2].x, self.vertices[2].y
 end
 
-function Edge:draw(fill)
-	-- default fill to "line"
-	fill = fill or "line"
-	love.graphics.line(self:unpack())
-	love.graphics.setColor(0,1,1)
-	love.graphics.points(self.centroid.x, self.centroid.y)
-	love.graphics.setColor(1,1,1)
+if love and love.graphics then
+	function Edge:draw(fill)
+		love.graphics.line(self:unpack())
+		love.graphics.setColor(0,1,1)
+		love.graphics.points(self.centroid.x, self.centroid.y)
+		love.graphics.setColor(1,1,1)
+	end
 end
 
 return Edge

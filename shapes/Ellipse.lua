@@ -48,10 +48,12 @@ function Ellipse:unpack()
     return self.centroid.x, self.centroid.y, self.a, self.b, self.segments
 end
 
-function Ellipse:draw(mode)
-	-- default fill to "line"
-	mode = mode or "line"
-	love.graphics.ellipse(mode, self:unpack())
+if love and love.graphics then
+	function Ellipse:draw(mode)
+		-- default fill to "line"
+		mode = mode or "line"
+		love.graphics.ellipse(mode, self:unpack())
+	end
 end
 
 return Ellipse

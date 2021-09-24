@@ -407,10 +407,12 @@ end
 
 ConvexPolygon.merge = merge_convex_incident
 
-function ConvexPolygon:draw(mode)
-	-- default fill to "line"
-	mode = mode or "line"
-	love.graphics.polygon("line", self:_get_verts())
+if love and love.graphics then
+	function ConvexPolygon:draw(mode)
+		-- default fill to "line"
+		mode = mode or "line"
+		love.graphics.polygon("line", self:_get_verts())
+	end
 end
 
 return ConvexPolygon

@@ -99,10 +99,12 @@ function Circle:merge()
     return false -- Can't merge circles :/
 end
 
-function Circle:draw(mode)
-	-- default fill to "line"
-	mode = mode or "line"
-	love.graphics.circle("line", self:unpack())
+if love and love.graphics then
+    function Circle:draw(mode)
+        -- default fill to "line"
+        mode = mode or "line"
+        love.graphics.circle("line", self:unpack())
+    end
 end
 
 return Circle
