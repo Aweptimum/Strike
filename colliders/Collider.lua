@@ -144,6 +144,14 @@ function Collider:project(dx, dy)
     end
     return minp, maxp
 end
+
+function Collider:rayIntersects(x,y, dx,dy)
+    for _, shape in self:ipairs() do
+        if shape:rayIntersects(x,y, dx,dy) then return true end
+    end
+    return false
+end
+
 -- Remove shape(s) from collider
 function Collider:remove(index, ...)
     if not index then return end
