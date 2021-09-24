@@ -320,10 +320,26 @@ function ConvexPolygon:rayIntersects(x,y, dx,dy)
 	for i, edge in self:ipairs() do
 		local e1 = Vec.dot(edge[1],edge[2], dx,dy)
 		local e2 = Vec.dot(edge[3],edge[4], dx,dy)
-		local emin, emax = min(e1, e1), max(e1, e2)
+		local emin, emax = min(e1, e2), max(e1, e2)
 		if emax > d and d > emin then return true end
 	end
 	return false
+end
+-- https://stackoverflow.com/a/32146853/12135804
+function ConvexPolygon:rayIntersections(x,y, dx,dy)
+	local v1x, v1y, v2x, v2y
+	local nx, ny = -dy, dx
+	local ts = {}
+	for i, edge in self:ipairs() do
+		v1x, v1y = Vec.sub(x, y, edge[1], edge[2])
+		v2x, v2y = Vec.sub(edge[3], edge[4], edge[1], edge[2])
+		local dot = Vec.dot(v2x, v2y, nx, ny)
+		if abs(dot) < 0.0001 then break end
+		local t1 = Vec.det(v2x,v2y, v1x,v1y) / dot
+		local t2 = Vec.dot(v1x,v1y, nx,ny) / dot
+		if t1 >= 0 and (t2 >= 0 and t2 <= 1) then push(ts, t1) end
+	end
+	return #ts >0 and ts or nil
 end
 
 ConvexPolygon._get_verts = ConvexPolygon.unpack
