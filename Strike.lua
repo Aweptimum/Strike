@@ -89,7 +89,7 @@ local function project(shape1, shape2)
 		-- We've now reduced it to ranges intersecting on a number line,
 		-- Test for bounding overlap
 		if not ( shape1_max_dot > shape2_min_dot and shape2_max_dot > shape1_min_dot ) then
-			-- WE FOUND IT BOIS, TIME TO GO HOME
+			-- Separating Axis, return
 			return MTV(0,0)
 		else
 			-- Find the overlap, which is equal to the magnitude of the MTV
@@ -159,7 +159,7 @@ local function settle(mtv)
 end
 -- Translate collided by full mtv (good for edge collision)
 local function shove(mtv)
-	mtv.collider:translate( -mtv.x, -mtv.y )
+	mtv.collided:translate( mtv.x, mtv.y )
 end
 
 local function show_mtv(mtv)
@@ -198,9 +198,6 @@ end
 -- [[---------------------]] Strike API Table [[---------------------]] --
 -- Strike table
 local S = {}
-
--- Config table
-S.ettings = {}
 
 -- Add shapes
 S.hapes = Shapes
