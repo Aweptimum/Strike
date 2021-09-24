@@ -80,8 +80,8 @@ end
 
 -- Returns true if two bounding boxes overlap
 local function aabb_aabb(collider1, collider2)
-	local rect_1_x, rect_1_y, rect_1_w, rect_1_h = collider1:get_bbox()
-	local rect_2_x, rect_2_y, rect_2_w, rect_2_h = collider2:get_bbox()
+	local rect_1_x, rect_1_y, rect_1_w, rect_1_h = collider1:getBbox()
+	local rect_2_x, rect_2_y, rect_2_w, rect_2_h = collider2:getBbox()
 	return (
 		rect_1_x < rect_2_x + rect_2_w and
 		rect_1_x + rect_1_w > rect_2_x and
@@ -176,7 +176,7 @@ local function settle(mtv)
 end
 -- Translate collided by full mtv (good for edge collision)
 local function shove(mtv)
-	mtv.collided:translate( mtv.x, mtv.y )
+	mtv.collider:translate( -mtv.x, -mtv.y )
 end
 
 local function show_mtv(mtv)
@@ -189,11 +189,12 @@ local function show_mtv(mtv)
 	love.graphics.setColor(1,1,1)
 end
 
-local function show_norms(collider)
+local function show_norms(collider, len)
+	len = len or 15
 	for _, shape in collider:ipairs() do
         for _, edge in shape:ipairs() do
             local  x,  y = Vec.div(2, Vec.add(edge[1], edge[2], edge[3], edge[4]) )
-            local nx, ny = Vec.sub(edge[3], edge[4], edge[1], edge[2])
+            local nx, ny = Vec.mul(len, Vec.normalize(Vec.sub(edge[3], edge[4], edge[1], edge[2])))
 			nx, ny = ny, -nx
 	        love.graphics.line(x, y, x+nx, y+ny)
         end
