@@ -58,6 +58,12 @@ r = S.trikers.RegularPolygon(x_pos, y_pos, n, radius, angle_rads)
 Creates a regular polygon centered at `{x_pos, y_pos}` with `n` sides. `radius` is the radius of the circumscribed circle, `angle_rads` is the angled offset in radians.
 
 ### Composite Colliders
+#### Collider
+```lua
+coll = S.trikers.Collider( S.hapes.Rectangle(...), S.hapes.Circle(...), S.trikers.Circle(...) )
+```
+Creates a collider object that contains the specified geometry, either instantiated `S.hapes` or `S.trikers`, though `S.hapes` make for a flatter object
+
 #### Capsule
 ```lua
 cap = S.trikers.Capsule(x_pos, y_pos, dx, dy, angle_rads)
@@ -75,10 +81,10 @@ Should be in pseudo-counter-clockwise winding order.
 The base Collider class (and all colliders that extend it) have these methods:
 
 ```lua
-collider:translate(dx, dy) -- adds dx and dy to each shapes' points
-collider:translateTo(x,y) -- translates centroid to position (and everything with it)
-collider:rotate(angle, refx, refy) -- rotates by `angle` (radians) about a reference point (defaults to centroid)
-collider:scale(sf, refx, refy) -- scales by factor `sf` with respect to a reference point (defaults to centroid)
+collider:translate(dx, dy)		-- adds dx and dy to each shapes' points
+collider:translateTo(x,y)		-- translates centroid to position (and everything with it)
+collider:rotate(angle, refx, refy)	-- rotates by `angle` (radians) about a reference point (defaults to centroid)
+collider:scale(sf, refx, refy)		-- scales by factor `sf` with respect to a reference point (defaults to centroid)
 ```
 
 ### Manipulating Colliders
@@ -89,6 +95,16 @@ collider:remove(index, ...) -- removes a shape at the specified index, can handl
 	**uses table.remove internally, so as long as you don't have tens of thousands of shapes in a collider, you'll be fine! 
 collider:consolidate() -- will merge incident convex polygons together, makes for less iterations if applicable
 ```
+
+### Collider Iterating
+```lua
+for parent_collider, shape, shape_index in collider:ipairs() do
+	-- stuff
+end
+```
+`Collider:ipairs()` is a flattened-list iterator that will return *all* Shapes, nested or not, contained within the 'root' Collider it's called from.
+`parent_collider` is the collider that contains `shape`, and `shape_index` is the index of `shape` within `parent_collider.shapes`.\
+If you wanted to remove a shape from a Collider that met some condition, calling `parent_collider:remove( shape_index )` would do it.
 
 ## MTV's
 Minimum Translating Vectors are an object that represent the penetration depth between two colliders. The vector components are accessed via `mtv.x` and `mtv.y`, but they contain other information. An example of the contained fields is below:
@@ -130,6 +146,8 @@ The one useful function might be `MTV:mag()` - it returns the magnitude of the s
 Has both circle-circle and aabb-aabb intersection test functions - `S.ircle(collider1, collider2)` and `S.aabb(collider1, collider2)` respectively. Both return true on interesction, else false.
 ### Narrow Phase (SAT)
 Calling `S:trike(collider1, collider2)` will check for collisions between the two given colliders and return a boolean (true/false) that signifies a collision, followed by a corresponding, second value (MTV/nil).
+
+It's important to note that geometries within a Collider do not collide with each other. This is relevant for how Strike unintentionally gets around [Ghost Collisions](#ghosting)
 ### Ray Intersection
 There are two ray intersection functions: `rayIntersects` and `rayIntersections`. Both have the same arguments: a ray origin and a normalized vector
 ```lua
@@ -160,12 +178,29 @@ end
 ```
 
 ## Resolution
-Calling `S.ettle(mtv)` will move the refrenced colliders by half the magnitude of the mtv in opposite directions to one another.
+Calling `S.ettle(mtv)` will move the referenced colliders by half the magnitude of the mtv in opposite directions to one another.
 
 ## In love?
 If you're running within [LÖVE](https://github.com/love2d/love), every included shape has an appropriate `:draw` function defined. Calling `collider:draw` will draw every single shape and collider contained.
 
 # Bit more in depth
+
+## Ghosting
+Erin Catto wrote up a nice article on the subject of [ghost collisions](https://box2d.org/posts/2020/06/ghost-collisions/). The problem outlined is this: if two colliders intersect, and a third collider hits both at their intersection, not-nice things can happen. Strike has this problem as well. Box2D solves it with chain shapes, which store edges together and modify the collision logic to bad resolution. Strike doesn't directly solve this. However, in the case of two edges intersecting at a common endpoint and a shape hitting that intersection, it seems to be circumvented by adding both edge colliders to a common collider. A minimum example is below:
+```lua
+local edges = {
+	S.trikers.Edge(400,600, 600,600),
+	S.trikers.Edge(600,600, 800,600)
+}
+-- vs
+local EDGE = S.trikers.Collider(
+	S.trikers.Edge(400,600, 600,600),
+	S.trikers.Edge(600,600, 800,600)
+)
+```
+The first will produce ghosting, while the second does not. This is either because I was extremely lucky in my testing or built into the collision detection logic on accident. Either way, it's a feature.
+
+To make this explicit, a check for whether the MTV is headed *into* a Collider's centroid should probably be added somewhere in the logic for `S.triking`.
 
 ## Defining Your Own Shapes
 You can create shape definitions in the `/shapes` directory of Strike that will be loaded into `S.hapes`. There are a few rules to follow:
@@ -267,8 +302,19 @@ Because the Collider object assumes it only contains convex shapes and other col
 # Contributing
 Very little in this library was done in the best way from the start, and it's been extensively rewritten as its author learned more about best practices. Still, there's further work to be done. If a particular snippet makes you cringe, or there's a feature missing, feel free to fork, edit, test, and PR.
 
+## Out-Of-Scope Features
+* **Bit-Masking/Layering**\
+	I want to add it, but this is where Lua falls down a bit. Between Lua 5.1/5.2, LuaJIT, and Lua 5.3+, there's too much compatibility to consider.\
+	Best left to the user to implement it
+* **Broad-Phase Data Structures**\
+	There's more than one way to do it ¯\\\_(ツ)\_/¯\
+	Strike's geometry objects are really just factories - pipe their output into your structure of choice.
+* **Continuous Collision Detection**\
+	For good CCD, it's best to handle it in a physics implementation that would wrap around Strike. Mostly because having access to velocity and rotation vectors allows
+	for interpolationg between timesteps. Right now, `dt` is absent from this library.
+
 ## TODO
-- [ ] Add `:getEdge(index)` methods to shapes to return an edge by its number
-- [ ] Return references to the two shapes that actually collided in the returned mtv, as well as the index of the normal's edge for the `collider_shape` field
+- [X] Add `:getEdge(index)` methods to shapes to return an edge by its number
+- [X] Return references to the two shapes that actually collided in the returned mtv, as well as the index of the normal's edge for the `collider_shape` field
 - [ ] Add a function to solve for the edge(s) in `collided_shape` interesecting the normal's edge of the `collider_shape`
 - [ ] Add contact solver (some kind of clipping function that can optionally be run given an mtv that returns 1-2 points)
