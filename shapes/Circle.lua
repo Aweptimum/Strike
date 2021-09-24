@@ -1,5 +1,6 @@
 local Vec = require "Strike.lib.DeWallua.vector-light"
 local pi = math.pi
+local push = table.insert
 local Shape = require "Strike.shapes.shape"
 
 Circle = Shape:extend()
@@ -77,8 +78,9 @@ function Circle:rayIntersects(x,y, dx,dy)
 end
 -- Returns actual intersection point, from:
 -- https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection
-function Circle:rayIntersections(x,y, dx,dy)
+function Circle:rayIntersections(x,y, dx,dy, ts)
     if not self:rayIntersects(x,y, dx,dy) then return false end
+    ts = ts or {}
     dx, dy = Vec.normalize(dx, dy)
     local lx, ly = Vec.sub(self.centroid.x, self.centroid.y, x, y)
     local h = Vec.dot(lx,ly, dx, dy)
@@ -86,7 +88,8 @@ function Circle:rayIntersections(x,y, dx,dy)
     local r = math.sqrt(self.radius*self.radius - d*d)
     local i = h - r
     local j = r > 0.0001 and h + r or nil
-    return {i, j}
+    push(ts, i) push (ts, j)
+    return ts
 end
 
 function Circle:unpack()

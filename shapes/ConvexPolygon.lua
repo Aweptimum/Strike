@@ -325,10 +325,10 @@ function ConvexPolygon:rayIntersects(x,y, dx,dy)
 	return false
 end
 -- https://stackoverflow.com/a/32146853/12135804
-function ConvexPolygon:rayIntersections(x,y, dx,dy)
+function ConvexPolygon:rayIntersections(x,y, dx,dy, ts)
 	local v1x, v1y, v2x, v2y
 	local nx, ny = -dy, dx
-	local ts = {}
+	ts = ts or {}
 	for i, edge in self:ipairs() do
 		v1x, v1y = Vec.sub(x, y, edge[1], edge[2])
 		v2x, v2y = Vec.sub(edge[3], edge[4], edge[1], edge[2])
