@@ -320,8 +320,7 @@ function ConvexPolygon:rayIntersects(x,y, dx,dy)
 	for i, edge in self:ipairs() do
 		local e1 = Vec.dot(edge[1],edge[2], dx,dy)
 		local e2 = Vec.dot(edge[3],edge[4], dx,dy)
-		local emin, emax = min(e1, e2), max(e1, e2)
-		if emax > d and d > emin then return true end
+		if (e1-d) * (e2-d) < 0 then return true end
 	end
 	return false
 end
