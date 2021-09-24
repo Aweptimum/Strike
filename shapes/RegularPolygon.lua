@@ -5,7 +5,7 @@ local Polygon = require 'Strike.shapes.ConvexPolygon'
 
 local RegularPolygon = Polygon:extend()
 
-function RegularPolygon:calc_area()
+function RegularPolygon:calcArea()
     local n, r = self.n, self.radius*cos(pi/self.n)
     self.area = n*r*r*tan(pi/n)
 end
@@ -33,7 +33,7 @@ function RegularPolygon:new(x_pos, y_pos, n, radius, angle_rads)
     self.convex      	= true      		-- boolean
     self.centroid       = {x = x_pos, y = y_pos}	-- {x, y} coordinate pair
     -- Calculate the area of our polygon.
-    self:calc_area()
+    self:calcArea()
 end
 
 function RegularPolygon:unpack()

@@ -5,22 +5,22 @@ local Shape = Object:extend()
 
 Shape.type = 'shape'
 
-function Shape:get_area()
+function Shape:getArea()
     return self.area
 end
 
-function Shape:get_centroid()
+function Shape:getCentroid()
     return self.centroid
 end
 
-function Shape:get_area_centroid()
+function Shape:getAreaCentroid()
     return self.area, self.centroid
 end
 
-function Shape:get_bbox()
+function Shape:getBbox()
 end
 
-function Shape:get_radius()
+function Shape:getRadius()
 end
 
 function Shape:project()
@@ -32,7 +32,7 @@ end
 function Shape:translate()
 end
 
-function Shape:translate_to(x, y)
+function Shape:translateTo(x, y)
 	local dx, dy = x - self.centroid.x, y - self.centroid.y
 	return self:translate(dx,dy)
 end
@@ -47,7 +47,7 @@ function Shape:copy(x, y, angle_rads)
     local copy = self:_copy()
 	-- if origin specified, then translate
 	if x and y then
-		copy:translate_to(x, y)
+		copy:translateTo(x, y)
 	end
 	-- If rotation specified, then rotate_polygon
 	if angle_rads then
@@ -57,13 +57,13 @@ function Shape:copy(x, y, angle_rads)
 	return copy
 end
 
-function Shape:calc_area()
+function Shape:calcArea()
 end
 
-function Shape:calc_centroid()
+function Shape:calcCentroid()
 end
 
-function Shape:calc_area_centroid()
+function Shape:calcAreaCentroid()
 end
 
 return Shape

@@ -4,22 +4,22 @@ local Polygon = require 'Strike.shapes.ConvexPolygon'
 local Edge = Polygon:extend()
 Edge.name = 'edge'
 
-function Edge:calc_area()
+function Edge:calcArea()
 	self.area = 1
 	return self.area
 end
 
-function Edge:calc_centroid()
+function Edge:calcCentroid()
 	self.centroid.x = (self.vertices[1].x+self.vertices[2].x) / 2
 	self.centroid.y = (self.vertices[1].y+self.vertices[2].y) / 2
 	return self.centroid
 end
 
-function Edge:calc_area_centroid()
-	return self:calc_area(), self:calc_centroid()
+function Edge:calcAreaCentroid()
+	return self:calcArea(), self:calcCentroid()
 end
 
-function Edge:calc_radius()
+function Edge:calcRadius()
 	self.radius = 0.5 * Vec.len(Vec.sub(self.vertices[1].x, self.vertices[1].y, self.vertices[2].x, self.vertices[2].y) )
 	return self.radius
 end
@@ -38,7 +38,7 @@ function Edge:new(x1,y1, x2,y2)
 	self.radius = 0.5 * Vec.len(Vec.sub(x1,y1, x2,y2))
 	self.area = 1
 	self.norm = 0
-	self:calc_area_centroid()
+	self:calcAreaCentroid()
 end
 -- Only iterate once
 local function edge_iter(shape, i)

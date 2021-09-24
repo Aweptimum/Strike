@@ -3,8 +3,6 @@ local Collider  = require 'Strike.colliders.Collider'
 local Convex    = require 'Strike.shapes.ConvexPolygon'
 local pop = table.remove
 
-tprint(Dewall)
-
 -- A concave shape must be decomposed into a collection of convex shapes
 local Concave = Collider:extend()
 
@@ -31,8 +29,8 @@ function Concave:new(...)
     -- Then, for each polygon, calc area/centroid
     -- Figure out how to store several sub-polygons in a consistent way
     self:consolidate()
-    self:calc_area_centroid()
-    self:calc_radius()
+    self:calcAreaCentroid()
+    self:calcRadius()
 end
 
 return Concave

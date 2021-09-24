@@ -16,8 +16,8 @@ function Capsule:new(x, y, dx, dy, angle_rads)
         Circle(x, y+hy, hx),
         Rectangle(x,y,dx,dy)
     )
-    self:calc_area_centroid()
-    self:calc_radius()
+    self:calcAreaCentroid()
+    self:calcRadius()
     self:rotate(self.angle)
 end
 

@@ -33,14 +33,14 @@ function Collider:ipairs()
     return coroutine.wrap( function() shapes(self) end )
 end
 
-function Collider:calc_area()
+function Collider:calcArea()
     self.area = 0
     for _, shape in self:ipairs() do
         self.area = self.area + shape.area
     end
 end
 
-function Collider:calc_centroid()
+function Collider:calcCentroid()
     self.centroid.x, self.centroid.y = 0,0
     local area = 0
     for _, shape in self:ipairs() do
@@ -51,7 +51,7 @@ function Collider:calc_centroid()
     self.centroid.x, self.centroid.y = self.centroid.x/area, self.centroid.y/area
 end
 
-function Collider:calc_area_centroid()
+function Collider:calcAreaCentroid()
     self.centroid.x, self.centroid.y = 0,0
     self.area = 0
     for _, shape in self:ipairs() do
@@ -62,7 +62,7 @@ function Collider:calc_area_centroid()
     self.centroid.x, self.centroid.y = self.centroid.x/self.area, self.centroid.y/self.area
 end
 -- Calc radius by finding shape with: largest sum of centroidal difference + radius
-function Collider:calc_radius()
+function Collider:calcRadius()
     self.radius = 0
     local cx,cy = self.centroid.x, self.centroid.y
     for _, shape in self:ipairs() do
@@ -78,8 +78,8 @@ function Collider:new(...)
     self.centroid  = {x = 0, y = 0}
     self.area = 0
     self.radius = 0
-    self:calc_area_centroid()
-    self:calc_radius()
+    self:calcAreaCentroid()
+    self:calcRadius()
 end
 
 function Collider:unpack()
@@ -90,7 +90,7 @@ function Collider:copy(x, y, angle_rads)
     local copy = tbl.deep_copy(self)
 	-- if origin specified, then translate
 	if x and y then
-		copy:translate_to(x, y)
+		copy:translateTo(x, y)
 	end
 	-- If rotation specified, then rotate_polygon
 	if angle_rads then
@@ -108,30 +108,30 @@ function Collider:translate(dx, dy)
     self.centroid.x, self.centroid.y = self.centroid.x + dx, self.centroid.y + dy
 end
 
-function Collider:translate_to(x, y)
+function Collider:translateTo(x, y)
 	local dx, dy = x - self.centroid.x, y - self.centroid.y
 	return self:translate(dx,dy)
 end
 
 -- Rotate collider
-function Collider:rotate(angle, ref_x, ref_y)
+function Collider:rotate(angle, refx, refy)
     angle = angle or 0
-    ref_x, ref_y = ref_x or self.centroid.x, ref_y or self.centroid.y
+    refx, refy = refx or self.centroid.x, refy or self.centroid.y
     for _, shape in self:ipairs() do
         -- Rotate about ref wrt the collider; per shape would rotate each in-place
-        shape:rotate(angle, ref_x, ref_y)
+        shape:rotate(angle, refx, refy)
     end
-    self.centroid.x, self.centroid.y = Vec.add(ref_x, ref_y, Vec.rotate(angle, self.centroid.x-ref_x, self.centroid.y - ref_y))
+    self.centroid.x, self.centroid.y = Vec.add(refx, refy, Vec.rotate(angle, self.centroid.x-refx, self.centroid.y - refy))
 end
 
-function Collider:scale(sf, ref_x, ref_y)
-    ref_x, ref_y = ref_x or self.centroid.x, ref_y or self.centroid.y
+function Collider:scale(sf, refx, refy)
+    refx, refy = refx or self.centroid.x, refy or self.centroid.y
     for _, shape in self:ipairs() do
-        shape:scale(sf, ref_x, ref_y)
+        shape:scale(sf, refx, refy)
     end
-	self.centroid.x, self.centroid.y = Vec.add(ref_x, ref_y, Vec.mul(sf, self.centroid.x-ref_x, self.centroid.y - ref_y))
+	self.centroid.x, self.centroid.y = Vec.add(refx, refy, Vec.mul(sf, self.centroid.x-refx, self.centroid.y - refy))
     -- Recalculate area, and radius
-    self:calc_area()
+    self:calcArea()
     self.radius = self.radius * sf
 end
 

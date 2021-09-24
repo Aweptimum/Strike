@@ -8,7 +8,6 @@ Circle = Shape:extend()
 Circle.name = 'circle'
 
 function Circle:new(x_pos, y_pos, radius,  angle_rads)
-    print('constructing circle')
 	if not ( radius ) then return false end
 	local x_offset = x_pos or 0
 	local y_offset = y_pos or 0
@@ -20,11 +19,11 @@ function Circle:new(x_pos, y_pos, radius,  angle_rads)
     self.angle    = angle_rads or 0
 end
 
-function Circle:calc_area()
+function Circle:calcArea()
     self.area = pi*self.radius^2
 end
 
-function Circle:get_bbox()
+function Circle:getBbox()
     return self.centroid.x - self.radius, self.centroid.y - self.radius, self.radius, self.radius
 end
 
@@ -46,14 +45,14 @@ function Circle:translate(dx, dy)
     self.centroid.x, self.centroid.y = self.centroid.x + dx, self.centroid.y + dy
 end
 
-function Circle:rotate(angle, ref_x, ref_y)
+function Circle:rotate(angle, refx, refy)
     local c = self.centroid
-    c.x, c.y = Vec.add(ref_x, ref_y, Vec.rotate(angle, c.x-ref_x, c.y - ref_y))
+    c.x, c.y = Vec.add(refx, refy, Vec.rotate(angle, c.x-refx, c.y - refy))
 end
 
 function Circle:scale(sf)
     self.radius = self.radius * sf
-    self:calc_area()
+    self:calcArea()
 end
 
 function Circle:project(nx, ny)

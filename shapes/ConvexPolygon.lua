@@ -119,7 +119,7 @@ local function order_points_ccw(vertices)
     return good_sort and true, table.sort(vertices, sort_ccw) or not true
 end
 
-function ConvexPolygon:calc_area()
+function ConvexPolygon:calcArea()
 	local vertices = self.vertices
 	-- Initialize p and q so we can wrap around in the loop
 	local p, q = vertices[#vertices], vertices[1]
@@ -140,7 +140,7 @@ function ConvexPolygon:calc_area()
 end
 
 -- Calculate centroid and area of the polygon at the _same_ time using the shoe-lace algorithm
-function ConvexPolygon:calc_area_centroid()
+function ConvexPolygon:calcAreaCentroid()
 	local vertices = self.vertices
 	-- Initialize p and q so we can wrap around in the loop
 	local p, q = vertices[#vertices], vertices[1]
@@ -163,7 +163,7 @@ function ConvexPolygon:calc_area_centroid()
 	return self.centroid, self.area
 end
 
-function ConvexPolygon:calc_radius()
+function ConvexPolygon:calcRadius()
 	local vertices, radius = self.vertices, 0
 	for i = 1,#vertices do
 		radius = max(radius, Vec.dist(vertices[i].x,vertices[i].y, self.centroid.x, self.centroid.y))
@@ -172,7 +172,7 @@ function ConvexPolygon:calc_radius()
 	return self.radius
 end
 
-function ConvexPolygon:get_bbox()
+function ConvexPolygon:getBbox()
 	local min_x, max_x, min_y, max_y = self.vertices[1].x,self.vertices[1].x, self.vertices[1].y, self.vertices[1].y
 	local x, y--, bbox
 	for __, vertex in ipairs(self.vertices) do
@@ -206,8 +206,8 @@ function ConvexPolygon:new(...)
 	self.centroid = {x=0,y=0}
 	self.area = 0
 	self.radius = 0
-	self:calc_area_centroid()
-	self:calc_radius()
+	self:calcAreaCentroid()
+	self:calcRadius()
 end
 
 local function iter_edges(shape, i)
@@ -236,35 +236,35 @@ function ConvexPolygon:translate(dx, dy)
     return self.centroid.x, self.centroid.y
 end
 
-function ConvexPolygon:translate_to(x, y)
+function ConvexPolygon:translateTo(x, y)
 	local dx, dy = x - self.centroid.x, y - self.centroid.y
 	return self:translate(dx,dy)
 end
 
-function ConvexPolygon:rotate(angle, ref_x, ref_y)
+function ConvexPolygon:rotate(angle, refx, refy)
 	-- Default to centroid as ref-point
-    ref_x = ref_x or self.centroid.x
-	ref_y = ref_y or self.centroid.y
+    refx = refx or self.centroid.x
+	refy = refy or self.centroid.y
 	-- Rotate each vertex about ref-point
     for i = 1, #self.vertices do
         local v = self.vertices[i]
-        v.x, v.y = Vec.add(ref_x, ref_y, Vec.rotate(angle, v.x-ref_x, v.y - ref_y))
+        v.x, v.y = Vec.add(refx, refy, Vec.rotate(angle, v.x-refx, v.y - refy))
     end
-	self.centroid.x, self.centroid.y = Vec.add(ref_x, ref_y, Vec.rotate(angle, self.centroid.x-ref_x, self.centroid.y-ref_y))
+	self.centroid.x, self.centroid.y = Vec.add(refx, refy, Vec.rotate(angle, self.centroid.x-refx, self.centroid.y-refy))
 end
 
-function ConvexPolygon:scale(sf, ref_x, ref_y)
+function ConvexPolygon:scale(sf, refx, refy)
 	-- Default to centroid as ref-point
-    ref_x = ref_x or self.centroid.x
-	ref_y = ref_y or self.centroid.y
+    refx = refx or self.centroid.x
+	refy = refy or self.centroid.y
 	-- Push each vertex out from the ref point by scale-factor
     for i = 1, #self.vertices do
         local v = self.vertices[i]
-        v.x, v.y = Vec.add(ref_x, ref_y, Vec.mul(sf, v.x-ref_x, v.y - ref_y))
+        v.x, v.y = Vec.add(refx, refy, Vec.mul(sf, v.x-refx, v.y - refy))
     end
-	self.centroid.x, self.centroid.y = Vec.add(ref_x, ref_y, Vec.mul(sf, self.centroid.x-ref_x, self.centroid.y - ref_y))
+	self.centroid.x, self.centroid.y = Vec.add(refx, refy, Vec.mul(sf, self.centroid.x-refx, self.centroid.y - refy))
     -- Recalculate area, and radius
-    self:calc_area()
+    self:calcArea()
     self.radius = self.radius * sf
 end
 
@@ -351,17 +351,17 @@ local function get_incident_edge(poly1, poly2)
     -- Define hash table
     local p_map = {}
     -- Iterate over poly_1's vertices, add x/y coords as keys to pmap
-    local v_1 = poly1.vertices
-    for i = 1, #v_1 do
-		local key = v_1[i].x..'-'..v_1[i].y
+    local v1 = poly1.vertices
+    for i = 1, #v1 do
+		local key = v1[i].x..'-'..v1[i].y
         p_map[key] = i
     end
     -- Now look through poly_2's vertices and see if there's a match
-    local v_2 = poly2.vertices
-    local i = #v_2
-    for j = 1, #v_2 do
+    local v2 = poly2.vertices
+    local i = #v2
+    for j = 1, #v2 do
         -- Set p and q to reference poly_2's vertices at i and j
-        local p, q = v_2[i], v_2[j]
+        local p, q = v2[i], v2[j]
 		local kp, kq = p.x..'-'..p.y, q.x..'-'..q.y
         -- Access p_map based on line p-q's two coordinates
         if p_map[kp] and p_map[kq] then
@@ -383,21 +383,21 @@ local function merge_convex_incident(poly1, poly2)
 
 	if not i_1 then return false end
 
-	local v_1, v_2 = poly1.vertices, poly2.vertices
+	local v1, v2 = poly1.vertices, poly2.vertices
 	local union = {}
 	-- Loop through the vertices of poly_1 and add applicable points to the union
-	for i = 1, #v_1 do
+	for i = 1, #v1 do
 		-- Skip the vertex if it's part of the poly_2's half of the incident edge
 		if i ~= j_1 then
-			push(union, v_1[i].x)
-			push(union, v_1[i].y)
+			push(union, v1[i].x)
+			push(union, v1[i].y)
 		end
 	end
 	-- Do the same for poly2
-	for i = 1, #v_2 do
+	for i = 1, #v2 do
 		if i ~= i_2 then
-			push(union, v_2[i].x)
-			push(union, v_2[i].y)
+			push(union, v2[i].x)
+			push(union, v2[i].y)
 		end
 	end
 	local new_verts = to_vertices({},unpack(union))
