@@ -8,10 +8,14 @@ ConvexPolygon = Shape:extend()
 ConvexPolygon.name = 'convex'
 
 -- Recursive function that returns a list of {x=#,y=#} coordinates given a list of procedural, ccw coordinate pairs
-local function to_vertices(vertices, x, y, ...)
+local function to_verts(vertices, x, y, ...)
     if not (x and y) then return vertices end
 	vertices[#vertices + 1] = {x = x, y = y} -- , dx = 0, dy = 0}   -- set vertex
-	return to_vertices(vertices, ...)
+	return to_verts(vertices, ...)
+end
+
+local function to_vertices(...)
+	return type(...) == 'table'and to_verts(unpack(to_vertices)) or to_verts(...)
 end
 
 -- Test if 3 points are collinear (do they not make a triangle?)
