@@ -147,7 +147,7 @@ Has both circle-circle and aabb-aabb intersection test functions - `S.ircle(coll
 ### Narrow Phase (SAT)
 Calling `S:trike(collider1, collider2)` will check for collisions between the two given colliders and return a boolean (true/false) that signifies a collision, followed by a corresponding, second value (MTV/nil).
 
-It's important to note that Shapes within a Collider do not collide with each other. This is relevant for gettign around [Ghost Collisions](#ghosting)
+It's important to note that geometries within a Collider do not collide with each other. This is relevant for how Strike unintentionally gets around [Ghost Collisions](#ghosting)
 ### Ray Intersection
 There are two ray intersection functions: `rayIntersects` and `rayIntersections`. Both have the same arguments: a ray origin and a normalized vector
 ```lua
