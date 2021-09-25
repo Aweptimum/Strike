@@ -2,22 +2,21 @@ local abs, min, max, atan2 	= math.abs, math.min, math.max, math.atan2
 local push = table.insert
 local tbl = Libs.tbl
 local Vec = _Require_relative(..., 'lib.DeWallua.vector-light',1)
-tbl.tprint(Vec)
 local Shape = _Require_relative(...,"shape")
 
 ConvexPolygon = Shape:extend()
 ConvexPolygon.name = 'convex'
 
 -- Recursive function that returns a list of {x=#,y=#} coordinates given a list of procedural, ccw coordinate pairs
-local function to_vertices(vertices, x, y, ...)
+local function to_verts(vertices, x, y, ...)
     if not (x and y) then return vertices end
 	vertices[#vertices + 1] = {x = x, y = y} -- , dx = 0, dy = 0}   -- set vertex
-	return to_vertices(vertices, ...)
+	return to_verts(vertices, ...)
 end
 
----local function to_vertices(vertices, x, ...)
----	return type(x) == 'table'and to_verts(vertices, unpack(x)) or to_verts(vertices, x,...)
----end
+local function to_vertices(vertices, x, ...)
+	return type(x) == 'table'and to_verts(vertices, unpack(x)) or to_verts(vertices, x,...)
+end
 
 -- Test if 3 points are collinear (do they not make a triangle?)
 local function is_collinear(a, b, c)
@@ -203,7 +202,6 @@ end
 -- Create new Polygon object
 function ConvexPolygon:new(...)
     self.vertices = to_vertices({},...)
-	tbl.tprint(self.vertices)
 	if not is_convex(self.vertices) then
 		assert(order_points_ccw(self.vertices), 'Points cannot be ordered into a convex shape')
 	end
