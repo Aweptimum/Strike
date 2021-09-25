@@ -9,7 +9,7 @@ local S = require 'Strike'
 ```
 
 ## Shapes
-Accessed via `S.hapes`, Shapes are objects representing convex geometry. Mostly polygons and circles. They are not used for collision detection by themselves, but are at your disposal. The available ones are in the `/shapes` directory, but you can add your own shape definitions as well. With the exception of `Circle`, every other shape is extended from `ConvexPolygon` and overrides its constructor. There are a few more requirements, but it's important to know that object definitions and instantiation are handled by rxi's [classic](https://github.com/rxi/classic). classic's distinction is that the constructor definition,`:new`, does not return the object itself. The object's `__call` method handles that, handled by classic.
+Accessed via `S.hapes`, Shapes are objects representing convex geometry, mostly polygons and circles. They are not used for collision detection by themselves, but are at your disposal. The available ones are in the `/shapes` directory, but you can add your own shape definitions as well. With the exception of `Circle`, every shape is extended from `ConvexPolygon` and overrides its constructor. There are a few more things to note, but it's important to know that both object definitions and instantiation are handled by rxi's [classic](https://github.com/rxi/classic). classic's distinction is that the constructor definition,`:new`, does not return the object itself. The object's `__call` method handles that, which is in turn handled by classic.
 
 An example of a shape structure
 ```lua
@@ -21,11 +21,12 @@ Rect = {
     area        = 0               -- absolute/unsigned area of polygon
 }
 ```
-To actually create this, the ConvexPolygon definition can be extended and overriden with a new constructor. Example in [Defining Your Own Shapes](#defining-your-own-shapes)
+To actually define this, the `ConvexPolygon` definition can be extended and overriden with a new constructor. Example in [Defining Your Own Shapes](#defining-your-own-shapes)
 
 ## Colliders
-Accessed via `S.trikers`, Colliders are grab-bags of geometry that are used for collision detection. They can be composed of Shapes, but may also contain other Colliders (and their shapes). The only requirement is that *every shape* in the Collider is convex. As with Shapes, the available ones are defined in the `/colliders` directory and auto-loaded in, and you can define custom collider definitions for particular collections of geometry that you're fond of. Just look at the included Capsule definition for an example. The included colliders are listed below. They are simply defined as `Collider(shape_name(shape_args))`, and so the basic colliders are not directly shapes.
+Accessed via `S.trikers`, Colliders are grab-bags of geometry that are used for collision detection. They can be composed of Shapes, but may also contain other Colliders (and their shapes). The only requirement is that *every shape* in the Collider is convex. As with Shapes, available Colliders are defined in the `/colliders` directory and auto-loaded in. You can define custom collider definitions for particular collections of geometry that you're fond of. Just look at the included `Capsule` definition for a simple example. The included collider objects are listed below.
 ### Basic Colliders
+Theses are automatically defined as `Collider(shape_name(shape_args))`, and so they are not directly shapes. They are a Collider that contains a single shape of the same name.
 #### Circle
 ```lua
 c = S.trikers.Circle(x_pos, y_pos, radius, angle_rads)
@@ -112,8 +113,36 @@ end
 `parent_collider` is the collider that contains `shape`, and `shape_index` is the index of `shape` within `parent_collider.shapes`.\
 If you wanted to remove a shape from a Collider that met some condition, calling `parent_collider:remove( shape_index )` would do it.
 
+## Ray Intersection
+There are two ray intersection functions: `rayIntersects` and `rayIntersections`. Both have the same arguments: a ray origin and a normalized vector. They are defined both at the `Shapes` level and at the `Collider` level.
+```lua
+Collider:rayIntersect(ion)s(x,y, dx,dy)
+```
+`Intersects` earlies out at the first intersection and returns true (else false).
+
+`Intersections` returns a list of key-value pairs, where the keys are references to the shape objects hit and the values are a table of lengths along the ray vector. 
+It looks like this:
+```lua
+hits = Collider:rayIntersections(0,0, 1,1)
+-- hits = {
+--	<shape1> = {length-1, length-2},
+--	<shape2> = {length-1},
+--	<shape3> = {length-1, length-2}
+--	}
+```
+Because the keys are references, it is possible to iterate through the `hits` table using `pairs()` and operate on them individually.
+
+To compute the intersection points, here's a sample loop:
+```lua
+for shape, dists in pairs(hits) do
+	for _, dist in ipairs(dists) do
+		local px, py = rx + dx*dist, ry + dy*dist -- coordinate math
+		love.graphics.points(px, py) -- draw with love
+	end
+end
+```
 ## MTV's
-Minimum Translating Vectors are an object that represent the penetration depth between two colliders. The vector components are accessed via `mtv.x` and `mtv.y`, but they contain other information. An example of the contained fields is below:
+Minimum Translating Vectors are an object that represent the penetration depth between two colliders. The vector components are accessed via `mtv.x` and `mtv.y`, and they contain other information. An example of the contained fields is below:
 ```lua
 MTV = {
     x = 0,
@@ -154,45 +183,16 @@ Has both circle-circle and aabb-aabb intersection test functions - `S.ircle(coll
 Calling `S:trike(collider1, collider2)` will check for collisions between the two given colliders and return a boolean (true/false) that signifies a collision, followed by a corresponding, second value (MTV/nil).
 
 It's important to note that geometries within a Collider do not collide with each other. This is relevant for how Strike unintentionally gets around [Ghost Collisions](#ghosting)
-### Ray Intersection
-There are two ray intersection functions: `rayIntersects` and `rayIntersections`. Both have the same arguments: a ray origin and a normalized vector
-```lua
-Collider:rayIntersect(ion)s(x,y, dx,dy)
-```
-`Intersects` earlies out at the first intersection and returns true (else false).
-
-`Intersections` returns a list of key-value pairs, where the keys are references to the shape objects hit and the values are a table of lengths along the ray vector. 
-It looks like this:
-```lua
-hits = Collider:rayIntersections(0,0, 1,1)
--- hits = {
---	<shape1> = {length-1, length-2},
---	<shape2> = {length-1},
---	<shape3> = {length-1, length-2}
---	}
-```
-Because the keys are references, it is possible to iterate through the `hits` table using `pairs()` and operate on them individually.
-
-To compute the intersection points, here's a sample loop:
-```lua
-for shape, dists in pairs(hits) do
-	for _, dist in ipairs(dists) do
-		local px, py = rx + dx*dist, ry + dy*dist -- coordinate math
-		love.graphics.points(px, py) -- draw with love
-	end
-end
-```
-
 ## Resolution
 Calling `S.ettle(mtv)` will move the referenced colliders by half the magnitude of the mtv in opposite directions to one another.
 
-## In love?
+## In Love?
 If you're running within [LÖVE](https://github.com/love2d/love), every included shape has an appropriate `:draw` function defined. Calling `collider:draw` will draw every single shape and collider contained.
 
 # Bit more in depth
 
 ## Ghosting
-Erin Catto wrote up a nice article on the subject of [ghost collisions](https://box2d.org/posts/2020/06/ghost-collisions/). The problem outlined is this: if two colliders intersect, and a third collider hits both at their intersection, not-nice things can happen. Strike has this problem as well. Box2D solves it with chain shapes, which store edges together and modify the collision logic to bad resolution. Strike doesn't directly solve this. However, in the case of two edges intersecting at a common endpoint and a shape hitting that intersection, it seems to be circumvented by adding both edge colliders to a common collider. A minimum example is below:
+Erin Catto wrote up a nice article on the subject of [ghost collisions](https://box2d.org/posts/2020/06/ghost-collisions/). The problem outlined is this: if two colliders intersect, and a third collider hits both at their intersection, not-nice things can happen. Strike has this problem as well. Box2D solves it with chain shapes, which store edges together and modify the collision logic to avoid bad resolution. Strike doesn't directly solve this. However, in the case of two edges intersecting at a common endpoint and a shape hitting that intersection, it seems to be circumvented by adding both edge colliders to a common collider. A minimum example is below:
 ```lua
 local edges = {
 	S.trikers.Edge(400,600, 600,600),
@@ -204,7 +204,7 @@ local EDGE = S.trikers.Collider(
 	S.trikers.Edge(600,600, 800,600)
 )
 ```
-The first will produce ghosting, while the second does not. This is either because I was extremely lucky in my testing or built into the collision detection logic on accident. Either way, it's a feature.
+The first will produce ghosting, while the second does not. This is either because of exteme luck during testing or built into the collision detection logic on accident. Either way, it's a feature.
 
 To make this explicit, a check for whether the MTV is headed *into* a Collider's centroid should probably be added somewhere in the logic for `S.triking`.
 
@@ -223,8 +223,8 @@ Let's say we create an imaginary file called `Rectangle.lua`.
 First, let's require Vector-light and ConvexPolygon so we can do some math and override the parent's behavior.
 (Vector-light is currently accessed through DeWallua, the triangulation library)
 ```lua
-local Vec = require "Strike.lib.DeWallua.vector-light"
-local Polygon = require 'Strike.shapes.ConvexPolygon'
+local Vec = _Require_relative(..., 'lib.DeWallua.vector-light',1) -- yes, this is pretty horrible
+local Polygon = _Require_relative(..., 'ConvexPolygon')
 
 local Rect = Polygon:extend()
 ```
@@ -271,15 +271,15 @@ Let's make a Capsule!
 
 Well, a Capsule is basically a Rectangle with two Circles on either end, so let's start there. We'll require the base `Collider`, the `Circle`, and the `Rectangle` objects:
 ```lua
-local Collider  = require 'Strike.colliders.Collider'
-local Circle    = require 'Strike.shapes.Circle'
-local Rectangle = require 'Strike.shapes.Rectangle'
+local Collider	= _Require_relative(..., 'Collider')
+local Circle	= _Require_relative(..., 'shapes.Circle', 1)
+local Rectangle	= _Require_relative(..., 'shapes.Rectangle', 1)
 
 local Capsule = Collider:extend()
 ```
 
 For our constructor, we'll have an x-y position that will be the center, a width, a height, and an angle-offset. Let's put the circles on top and bottom. This means their radii is equal to half the width of the `Capsule`. Let's say that the height encompasses both circles and the rectangle, so the Rectangle's height = `height - 2*circle-radius`. Lastly, the `Circle`s will be positioned on the top and bottom edge of the `Rectangle`, so we can just add/subtract half the height accordingle. 
-Now, we have enough information to create our `Capusule` constructor:
+Now, we have enough information to create our `Capsule` constructor:
 ```lua
 function Capsule:new(x, y, dx, dy, angle_rads)
     self.shapes = {}
@@ -309,7 +309,7 @@ Because the Collider object assumes it only contains convex shapes and other col
 I'd like to thank Max Cahill, MikuAuahDark, Potatonomicon, and radgeRayden for helping (knowingly or not) with some details :)
 
 # Contributing
-Very little in this library was done in the best way from the start, and it's been extensively rewritten as its author learned more about best practices. Still, there's further work to be done. If a particular snippet makes you cringe, or there's a feature missing, feel free to fork, edit, test, and PR.
+Very little in this library was done in the best way from the start, and it's been extensively rewritten as its author learned more about best practices. Still, there's further work to be done (the require structure is particularly bad). If a snippet makes you cringe, or there's a feature missing, feel free to fork, edit, test, and PR.
 
 ## Out-Of-Scope Features
 * **Bit-Masking/Layering**\
@@ -325,5 +325,6 @@ Very little in this library was done in the best way from the start, and it's be
 ## TODO
 - [X] Add `:getEdge(index)` methods to shapes to return an edge by its number
 - [X] Return references to the two shapes that actually collided in the returned mtv, as well as the index of the normal's edge for the `collider_shape` field
+- [ ] Add MTV pool to generate less garbage
 - [ ] Add a function to solve for the edge(s) in `collided_shape` interesecting the normal's edge of the `collider_shape`
 - [ ] Add contact solver (some kind of clipping function that can optionally be run given an mtv that returns 1-2 points)
