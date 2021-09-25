@@ -9,7 +9,7 @@ local S = require 'Strike'
 ```
 
 ## Shapes
-Accessed via `S.hapes`, Shapes are objects representing convex geometry. Mostly polygons and circles. They are not used for collision detection by themselves, but are at your disposal. The available ones are in the `/shapes` directory, but you can add your own shape definitions as well. With the exception of `Circle`, every other shape is extended from `ConvexPolygon` and overrides its constructor. There are a few more requirements, but it's important to know that object definitions and instantiation are handled by rxi's [classic](https://github.com/rxi/classic). classic's distinction is that the constructor definition,`:new`, does not return the object itself. The object's `__call` method handles that, handled by classic.
+Accessed via `S.hapes`, Shapes are objects representing convex geometry, mostly polygons and circles. They are not used for collision detection by themselves, but are at your disposal. The available ones are in the `/shapes` directory, but you can add your own shape definitions as well. With the exception of `Circle`, every shape is extended from `ConvexPolygon` and overrides its constructor. There are a few more things to note, but it's important to know that both object definitions and instantiation are handled by rxi's [classic](https://github.com/rxi/classic). classic's distinction is that the constructor definition,`:new`, does not return the object itself. The object's `__call` method handles that, which is in turn handled by classic.
 
 An example of a shape structure
 ```lua
@@ -21,11 +21,12 @@ Rect = {
     area        = 0               -- absolute/unsigned area of polygon
 }
 ```
-To actually create this, the ConvexPolygon definition can be extended and overriden with a new constructor. Example in [Defining Your Own Shapes](#defining-your-own-shapes)
+To actually define this, the `ConvexPolygon` definition can be extended and overriden with a new constructor. Example in [Defining Your Own Shapes](#defining-your-own-shapes)
 
 ## Colliders
-Accessed via `S.trikers`, Colliders are grab-bags of geometry that are used for collision detection. They can be composed of Shapes, but may also contain other Colliders (and their shapes). The only requirement is that *every shape* in the Collider is convex. As with Shapes, the available ones are defined in the `/colliders` directory and auto-loaded in, and you can define custom collider definitions for particular collections of geometry that you're fond of. Just look at the included Capsule definition for an example. The included colliders are listed below. They are simply defined as `Collider(shape_name(shape_args))`, and so the basic colliders are not directly shapes.
+Accessed via `S.trikers`, Colliders are grab-bags of geometry that are used for collision detection. They can be composed of Shapes, but may also contain other Colliders (and their shapes). The only requirement is that *every shape* in the Collider is convex. As with Shapes, available Colliders are defined in the `/colliders` directory and auto-loaded in. You can define custom collider definitions for particular collections of geometry that you're fond of. Just look at the included `Capsule` definition for a simple example. The included collider objects are listed below.
 ### Basic Colliders
+Theses are automatically defined as `Collider(shape_name(shape_args))`, and so they are not directly shapes. They are a Collider that contains a single shape of the same name.
 #### Circle
 ```lua
 c = S.trikers.Circle(x_pos, y_pos, radius, angle_rads)
@@ -112,8 +113,36 @@ end
 `parent_collider` is the collider that contains `shape`, and `shape_index` is the index of `shape` within `parent_collider.shapes`.\
 If you wanted to remove a shape from a Collider that met some condition, calling `parent_collider:remove( shape_index )` would do it.
 
+## Ray Intersection
+There are two ray intersection functions: `rayIntersects` and `rayIntersections`. Both have the same arguments: a ray origin and a normalized vector. They are defined both at the `Shapes` level and at the `Collider` level.
+```lua
+Collider:rayIntersect(ion)s(x,y, dx,dy)
+```
+`Intersects` earlies out at the first intersection and returns true (else false).
+
+`Intersections` returns a list of key-value pairs, where the keys are references to the shape objects hit and the values are a table of lengths along the ray vector. 
+It looks like this:
+```lua
+hits = Collider:rayIntersections(0,0, 1,1)
+-- hits = {
+--	<shape1> = {length-1, length-2},
+--	<shape2> = {length-1},
+--	<shape3> = {length-1, length-2}
+--	}
+```
+Because the keys are references, it is possible to iterate through the `hits` table using `pairs()` and operate on them individually.
+
+To compute the intersection points, here's a sample loop:
+```lua
+for shape, dists in pairs(hits) do
+	for _, dist in ipairs(dists) do
+		local px, py = rx + dx*dist, ry + dy*dist -- coordinate math
+		love.graphics.points(px, py) -- draw with love
+	end
+end
+```
 ## MTV's
-Minimum Translating Vectors are an object that represent the penetration depth between two colliders. The vector components are accessed via `mtv.x` and `mtv.y`, but they contain other information. An example of the contained fields is below:
+Minimum Translating Vectors are an object that represent the penetration depth between two colliders. The vector components are accessed via `mtv.x` and `mtv.y`, and they contain other information. An example of the contained fields is below:
 ```lua
 MTV = {
     x = 0,
@@ -154,39 +183,10 @@ Has both circle-circle and aabb-aabb intersection test functions - `S.ircle(coll
 Calling `S:trike(collider1, collider2)` will check for collisions between the two given colliders and return a boolean (true/false) that signifies a collision, followed by a corresponding, second value (MTV/nil).
 
 It's important to note that geometries within a Collider do not collide with each other. This is relevant for how Strike unintentionally gets around [Ghost Collisions](#ghosting)
-### Ray Intersection
-There are two ray intersection functions: `rayIntersects` and `rayIntersections`. Both have the same arguments: a ray origin and a normalized vector
-```lua
-Collider:rayIntersect(ion)s(x,y, dx,dy)
-```
-`Intersects` earlies out at the first intersection and returns true (else false).
-
-`Intersections` returns a list of key-value pairs, where the keys are references to the shape objects hit and the values are a table of lengths along the ray vector. 
-It looks like this:
-```lua
-hits = Collider:rayIntersections(0,0, 1,1)
--- hits = {
---	<shape1> = {length-1, length-2},
---	<shape2> = {length-1},
---	<shape3> = {length-1, length-2}
---	}
-```
-Because the keys are references, it is possible to iterate through the `hits` table using `pairs()` and operate on them individually.
-
-To compute the intersection points, here's a sample loop:
-```lua
-for shape, dists in pairs(hits) do
-	for _, dist in ipairs(dists) do
-		local px, py = rx + dx*dist, ry + dy*dist -- coordinate math
-		love.graphics.points(px, py) -- draw with love
-	end
-end
-```
-
 ## Resolution
 Calling `S.ettle(mtv)` will move the referenced colliders by half the magnitude of the mtv in opposite directions to one another.
 
-## In love?
+## In Love?
 If you're running within [LÖVE](https://github.com/love2d/love), every included shape has an appropriate `:draw` function defined. Calling `collider:draw` will draw every single shape and collider contained.
 
 # Bit more in depth
@@ -204,7 +204,7 @@ local EDGE = S.trikers.Collider(
 	S.trikers.Edge(600,600, 800,600)
 )
 ```
-The first will produce ghosting, while the second does not. This is either because I was extremely lucky in my testing or built into the collision detection logic on accident. Either way, it's a feature.
+The first will produce ghosting, while the second does not. This is either because of exteme luck during testing or built into the collision detection logic on accident. Either way, it's a feature.
 
 To make this explicit, a check for whether the MTV is headed *into* a Collider's centroid should probably be added somewhere in the logic for `S.triking`.
 
@@ -325,5 +325,6 @@ Very little in this library was done in the best way from the start, and it's be
 ## TODO
 - [X] Add `:getEdge(index)` methods to shapes to return an edge by its number
 - [X] Return references to the two shapes that actually collided in the returned mtv, as well as the index of the normal's edge for the `collider_shape` field
+- [ ] Add MTV pool to generate less garbage
 - [ ] Add a function to solve for the edge(s) in `collided_shape` interesecting the normal's edge of the `collider_shape`
 - [ ] Add contact solver (some kind of clipping function that can optionally be run given an mtv that returns 1-2 points)
