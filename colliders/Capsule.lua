@@ -1,6 +1,6 @@
 local Collider  = _Require_relative(..., 'Collider')
-local Circle  = _Require_relative(..., 'shapes.Circle', 1)
-local Rectangle =  _Require_relative(..., 'shapes.Rectangle', 1)
+local Circle    = _Require_relative(..., 'shapes.Circle', 1)
+local Rectangle = _Require_relative(..., 'shapes.Rectangle', 1)
 
 local Capsule = Collider:extend()
 
