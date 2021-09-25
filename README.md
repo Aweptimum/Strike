@@ -3,7 +3,7 @@ Strike (Separating-Axis Theorem Routines for Ill-tempered, Kaleidascopic Entitie
 Made primarily for the [LÖVE](https://github.com/love2d/love) community, but should be compatible with any Lua version (at least at time of writing)
 
 ## Installation
-Drop it into your project and require it:
+Drop the folder into your project and require it:
 ```lua
 local S = require 'Strike'
 ```
