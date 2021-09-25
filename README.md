@@ -223,8 +223,8 @@ Let's say we create an imaginary file called `Rectangle.lua`.
 First, let's require Vector-light and ConvexPolygon so we can do some math and override the parent's behavior.
 (Vector-light is currently accessed through DeWallua, the triangulation library)
 ```lua
-local Vec = require "Strike.lib.DeWallua.vector-light"
-local Polygon = require 'Strike.shapes.ConvexPolygon'
+local Vec = _Require_relative(..., 'lib.DeWallua.vector-light',1) -- yes, this is pretty horrible
+local Polygon = _Require_relative(..., 'ConvexPolygon')
 
 local Rect = Polygon:extend()
 ```
@@ -271,9 +271,9 @@ Let's make a Capsule!
 
 Well, a Capsule is basically a Rectangle with two Circles on either end, so let's start there. We'll require the base `Collider`, the `Circle`, and the `Rectangle` objects:
 ```lua
-local Collider  = require 'Strike.colliders.Collider'
-local Circle    = require 'Strike.shapes.Circle'
-local Rectangle = require 'Strike.shapes.Rectangle'
+local Collider	= _Require_relative(..., 'Collider')
+local Circle	= _Require_relative(..., 'shapes.Circle', 1)
+local Rectangle	= _Require_relative(..., 'shapes.Rectangle', 1)
 
 local Capsule = Collider:extend()
 ```
