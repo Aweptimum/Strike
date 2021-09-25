@@ -14,8 +14,8 @@ local function to_verts(vertices, x, y, ...)
 	return to_verts(vertices, ...)
 end
 
-local function to_vertices(...)
-	return type(...) == 'table'and to_verts(unpack(to_vertices)) or to_verts(...)
+local function to_vertices(vertices,...)
+	return type(...) == 'table'and to_verts(vertices, unpack(...)) or to_verts(vertices, ...)
 end
 
 -- Test if 3 points are collinear (do they not make a triangle?)
