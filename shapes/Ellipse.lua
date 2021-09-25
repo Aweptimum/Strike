@@ -1,6 +1,6 @@
 local pi, cos, sin = math.pi, math.cos, math.sin
 local floor, max = math.floor, math.max
-local Polygon = require 'Strike.shapes.ConvexPolygon'
+local Polygon = _Require_relative(..., 'ConvexPolygon')
 
 local Ellipse = Polygon:extend()
 

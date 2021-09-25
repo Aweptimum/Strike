@@ -1,7 +1,7 @@
 local pi, cos, sin, tan = math.pi, math.cos, math.sin, math.tan
 
-local Vec = require "Strike.lib.DeWallua.vector-light"
-local Polygon = require 'Strike.shapes.ConvexPolygon'
+local Vec = Libs['vector-light']
+local Polygon = _Require_relative(..., 'ConvexPolygon')
 
 local RegularPolygon = Polygon:extend()
 

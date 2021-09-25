@@ -1,8 +1,8 @@
 -- Base collider object
 local push, pop = table.insert, table.remove
-local tbl = require "Strike.tbl"
-local Vec = require "Strike.lib.DeWallua.vector-light"
-local Object = require 'Strike.lib.classic'
+local tbl = Libs.tbl
+local Vec = _Require_relative(..., 'lib.DeWallua.vector-light',1)
+local Object = Libs.classic
 
 local Collider = Object:extend()
 

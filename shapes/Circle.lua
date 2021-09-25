@@ -1,7 +1,7 @@
-local Vec = require "Strike.lib.DeWallua.vector-light"
+local Vec = _Require_relative(..., 'lib.DeWallua.vector-light',1)
 local pi = math.pi
 local push = table.insert
-local Shape = require "Strike.shapes.shape"
+local Shape = _Require_relative(..., "shape")
 
 Circle = Shape:extend()
 

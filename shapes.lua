@@ -1,5 +1,5 @@
 local scandir 	= _Require_relative(..., 'fileloader')
-local Shape     = require 'Strike.shapes.Shape'
+local Shape     = _Require_relative(..., 'shapes.Shape')
 
 local Shapes = {}
 

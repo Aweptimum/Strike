@@ -1,6 +1,6 @@
-local Dewall    = require "Strike.lib.DeWallua.init"
-local Collider  = require 'Strike.colliders.Collider'
-local Convex    = require 'Strike.shapes.ConvexPolygon'
+local Dewall    = Libs.DeWallua
+local Collider  = _Require_relative(..., 'Collider')
+local Convex    = _Require_relative(..., 'shapes.ConvexPolygon', 1)
 local pop = table.remove
 
 -- A concave shape must be decomposed into a collection of convex shapes
@@ -12,9 +12,9 @@ local function to_vertices(vertices, x, y, ...)
 	return to_vertices(vertices, ...)
 end
 
-function Concave:new(...)
-	if ... and type(...) == "table" then return self:new(unpack(...)) end
-    local vertices = to_vertices({}, ...)
+function Concave:new(x, ...)
+	if x and type(x) == "table" then return self:new(unpack(x)) end
+    local vertices = to_vertices({}, x,...)
 	assert(#vertices >= 3, "Need at least 3 non collinear points to build polygon (got "..#vertices..")")
     self.shapes = {}
     self.centroid = {x=0, y=0}

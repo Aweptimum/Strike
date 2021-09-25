@@ -1,5 +1,5 @@
-local Vec = require "Strike.lib.DeWallua.vector-light"
-local Polygon = require 'Strike.shapes.ConvexPolygon'
+local Vec = _Require_relative(..., 'lib.DeWallua.vector-light',1)
+local Polygon = _Require_relative(..., 'ConvexPolygon')
 
 local Edge = Polygon:extend()
 Edge.name = 'edge'
