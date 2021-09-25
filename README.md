@@ -192,7 +192,7 @@ If you're running within [LÖVE](https://github.com/love2d/love), every included
 # Bit more in depth
 
 ## Ghosting
-Erin Catto wrote up a nice article on the subject of [ghost collisions](https://box2d.org/posts/2020/06/ghost-collisions/). The problem outlined is this: if two colliders intersect, and a third collider hits both at their intersection, not-nice things can happen. Strike has this problem as well. Box2D solves it with chain shapes, which store edges together and modify the collision logic to bad resolution. Strike doesn't directly solve this. However, in the case of two edges intersecting at a common endpoint and a shape hitting that intersection, it seems to be circumvented by adding both edge colliders to a common collider. A minimum example is below:
+Erin Catto wrote up a nice article on the subject of [ghost collisions](https://box2d.org/posts/2020/06/ghost-collisions/). The problem outlined is this: if two colliders intersect, and a third collider hits both at their intersection, not-nice things can happen. Strike has this problem as well. Box2D solves it with chain shapes, which store edges together and modify the collision logic to avoid bad resolution. Strike doesn't directly solve this. However, in the case of two edges intersecting at a common endpoint and a shape hitting that intersection, it seems to be circumvented by adding both edge colliders to a common collider. A minimum example is below:
 ```lua
 local edges = {
 	S.trikers.Edge(400,600, 600,600),
@@ -279,7 +279,7 @@ local Capsule = Collider:extend()
 ```
 
 For our constructor, we'll have an x-y position that will be the center, a width, a height, and an angle-offset. Let's put the circles on top and bottom. This means their radii is equal to half the width of the `Capsule`. Let's say that the height encompasses both circles and the rectangle, so the Rectangle's height = `height - 2*circle-radius`. Lastly, the `Circle`s will be positioned on the top and bottom edge of the `Rectangle`, so we can just add/subtract half the height accordingle. 
-Now, we have enough information to create our `Capusule` constructor:
+Now, we have enough information to create our `Capsule` constructor:
 ```lua
 function Capsule:new(x, y, dx, dy, angle_rads)
     self.shapes = {}
@@ -309,7 +309,7 @@ Because the Collider object assumes it only contains convex shapes and other col
 I'd like to thank Max Cahill, MikuAuahDark, Potatonomicon, and radgeRayden for helping (knowingly or not) with some details :)
 
 # Contributing
-Very little in this library was done in the best way from the start, and it's been extensively rewritten as its author learned more about best practices. Still, there's further work to be done. If a particular snippet makes you cringe, or there's a feature missing, feel free to fork, edit, test, and PR.
+Very little in this library was done in the best way from the start, and it's been extensively rewritten as its author learned more about best practices. Still, there's further work to be done (the require structure is particularly bad). If a snippet makes you cringe, or there's a feature missing, feel free to fork, edit, test, and PR.
 
 ## Out-Of-Scope Features
 * **Bit-Masking/Layering**\
