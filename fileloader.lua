@@ -5,16 +5,25 @@ local function get_script_path()
 	return script_path
 end
 
--- Lua implementation of PHP scandir function
-local function scandir(directory)
-    directory = get_script_path() .. directory .. "/"
-    local i, t, popen = 0, {}, io.popen
-    for filename in popen('dir "'..directory..'" /b'):lines() do
-        --print(filename)
-        i = i + 1
-        t[i] = filename
+local scandir
+
+if love then
+    function scandir(directory)
+        directory = get_script_path() .. directory .. "/"
+        return love.filesystem.getDirectoryItems(directory)
     end
-    return t
+else
+    -- Lua implementation of PHP scandir function
+    function scandir(directory)
+        directory = get_script_path() .. directory .. "/"
+        local i, t, popen = 0, {}, io.popen
+        for filename in popen('dir "'..directory..'" /b'):lines() do
+            --print(filename)
+            i = i + 1
+            t[i] = filename
+        end
+        return t
+    end
 end
 
 return scandir
