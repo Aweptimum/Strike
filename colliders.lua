@@ -1,4 +1,4 @@
-local scandir 	= _Require_relative(..., 'fileloader')
+local scandir 	= _Require_relative(..., 'scandir')
 local Collider  = _Require_relative(..., 'colliders.Collider')
 -- Two kinds of shapes:
 -- circles and polygons

@@ -13,7 +13,7 @@ function _Require_relative(PATH, file, up)
 	return require(table.concat({path, file}, "."))
 end
 
-local scandir = require( table.concat({..., 'fileloader'},".") )
+local scandir = require( table.concat({..., 'scandir'},".") )
 
 Libs = scandir('lib')
 for _, filename in ipairs(Libs) do

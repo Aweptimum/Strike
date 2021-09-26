@@ -1,4 +1,4 @@
-local scandir 	= _Require_relative(..., 'fileloader')
+local scandir 	= _Require_relative(..., 'scandir')
 local Shape     = _Require_relative(..., 'shapes.Shape')
 
 local Shapes = {}
