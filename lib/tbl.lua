@@ -7,7 +7,7 @@ function t.tprint (tbl, height, indent)
 	if not indent then indent = 0 end
 	for k, v in pairs(tbl) do
 		height = height+1
-		local formatting = string.rep("  ", indent) .. k .. ": "
+		local formatting = string.rep("  ", indent) .. tostring(k) .. ": "
 		if type(v) == "table" then
 			print(formatting, indent*8, 16*height)
 			tprint(v, height+1, indent+1)
