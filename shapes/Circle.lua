@@ -78,7 +78,7 @@ end
 -- Returns actual intersection point, from:
 -- https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection
 function Circle:rayIntersections(x,y, dx,dy, ts)
-    if not self:rayIntersects(x,y, dx,dy) then return false end
+    if not self:rayIntersects(x,y, dx,dy) then return nil end
     ts = ts or {}
     dx, dy = Vec.normalize(dx, dy)
     local lx, ly = Vec.sub(self.centroid.x, self.centroid.y, x, y)
@@ -88,7 +88,7 @@ function Circle:rayIntersections(x,y, dx,dy, ts)
     local i = h - r
     local j = r > 0.0001 and h + r or nil
     push(ts, i) push (ts, j)
-    return ts
+    return #ts > 0 and ts or nil
 end
 
 function Circle:unpack()
