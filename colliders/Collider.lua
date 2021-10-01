@@ -123,6 +123,7 @@ function Collider:rotate(angle, refx, refy)
         shape:rotate(angle, refx, refy)
     end
     self.centroid.x, self.centroid.y = Vec.add(refx, refy, Vec.rotate(angle, self.centroid.x-refx, self.centroid.y - refy))
+    self.angle = self.angle + angle
 end
 
 function Collider:rotateTo(angle_rads)
