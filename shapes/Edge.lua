@@ -38,6 +38,7 @@ function Edge:new(x1,y1, x2,y2)
 	self.radius = 0.5 * Vec.len(Vec.sub(x1,y1, x2,y2))
 	self.area = 1
 	self.norm = 0
+	self.angle = 0
 	self:calcAreaCentroid()
 end
 -- Only iterate once

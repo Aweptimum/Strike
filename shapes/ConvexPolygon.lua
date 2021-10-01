@@ -210,6 +210,7 @@ function ConvexPolygon:new(...)
 	self.centroid = {x=0,y=0}
 	self.area = 0
 	self.radius = 0
+	self.angle = 0
 	self:calcAreaCentroid()
 	self:calcRadius()
 end
@@ -240,11 +241,6 @@ function ConvexPolygon:translate(dx, dy)
     return self.centroid.x, self.centroid.y
 end
 
-function ConvexPolygon:translateTo(x, y)
-	local dx, dy = x - self.centroid.x, y - self.centroid.y
-	return self:translate(dx,dy)
-end
-
 function ConvexPolygon:rotate(angle, refx, refy)
 	-- Default to centroid as ref-point
     refx = refx or self.centroid.x
@@ -255,6 +251,7 @@ function ConvexPolygon:rotate(angle, refx, refy)
         v.x, v.y = Vec.add(refx, refy, Vec.rotate(angle, v.x-refx, v.y - refy))
     end
 	self.centroid.x, self.centroid.y = Vec.add(refx, refy, Vec.rotate(angle, self.centroid.x-refx, self.centroid.y-refy))
+	self.angle = self.angle + angle
 end
 
 function ConvexPolygon:scale(sf, refx, refy)

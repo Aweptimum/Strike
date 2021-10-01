@@ -13,7 +13,7 @@ end
 function RegularPolygon:new(x_pos, y_pos, n, radius, angle_rads)
     -- Initialize our polygon's origin and rotation
     n = n or 3
-    self.angle 	    = angle_rads or 0
+    self.angle = angle_rads or 0
     -- Initalize our dummy point vars to put into the vertices list
     local x, y
     local vertices = {}
