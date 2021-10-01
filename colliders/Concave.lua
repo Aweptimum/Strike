@@ -19,6 +19,7 @@ function Concave:new(x, ...)
     self.shapes = {}
     self.centroid = {x=0, y=0}
     self.radius = 0
+    self.angle = 0
     -- Triangulation!
     local triangles = Dewall.constrained(vertices)
 	-- Convert triangles to polygons and add to self.shapes
