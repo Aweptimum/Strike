@@ -78,6 +78,7 @@ function Collider:new(...)
     self.centroid  = {x = 0, y = 0}
     self.area = 0
     self.radius = 0
+    self.angle = 0
     self:calcAreaCentroid()
     self:calcRadius()
 end
@@ -122,6 +123,11 @@ function Collider:rotate(angle, refx, refy)
         shape:rotate(angle, refx, refy)
     end
     self.centroid.x, self.centroid.y = Vec.add(refx, refy, Vec.rotate(angle, self.centroid.x-refx, self.centroid.y - refy))
+end
+
+function Collider:rotateTo(angle_rads)
+	local aoffset = angle_rads - self.angle
+	return self:rotate(aoffset)
 end
 
 function Collider:scale(sf, refx, refy)

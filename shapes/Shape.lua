@@ -40,6 +40,11 @@ end
 function Shape:rotate()
 end
 
+function Shape:rotateTo(angle_rads)
+	local aoffset = angle_rads - self.angle
+	return self:rotate(aoffset)
+end
+
 function Shape:scale()
 end
 
