@@ -174,7 +174,16 @@ MTV:setCollided(collider)
 MTV:setCollidedShape(shape)
 ```
 
-The one useful function might be `MTV:mag()` - it returns the magnitude of the separating vector.
+Given their simplicity, there is an object pool available for MTV's. The following instance methods can be used to interact with the pool:
+```lua
+MTV:fetch(dx, dy, collider, collided)
+MTV:stow()
+```
+`fetch()` works like the `MTV()` constructor, but sets a previously initialized MTV to the given arguments and returns it from the pool
+`stow()` inserts the MTV instance into the object pool, resetting it using `MTV:reset()`
+There is a default limit of 128 for pooled MTV objects, but it can be changed using Strike's `S.etPoolSize(size)` method. Multiples of 2 are best because of lua-hash-table-resizing-stuff. The size can be acquired via `S.eePoolSize()` (yes, I am aware that these API function names are suffering from the `S.` gimmick)
+
+The one practical instance method of interest might be `MTV:mag()` - it returns the magnitude of the separating vector.
 
 ## Collision
 ### Broad Phase

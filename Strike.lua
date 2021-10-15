@@ -7,6 +7,7 @@ local Colliders	= _Require_relative( ... , "colliders")
 local pi, cos, sin, atan2 = math.pi, math.cos, math.sin, math.atan2
 local floor, ceil, sqrt, abs, max, min   = math.floor, math.ceil, math.sqrt, math.abs, math.max, math.min
 local inf = math.huge
+local push, pop = table.insert, table.remove
 
 -- Get sign of number
 local function sign(number)
@@ -47,6 +48,42 @@ end
 
 function MTV:setCollidedShape(shape)
 	self.collidedShape = shape
+end
+
+-- MTV Pool
+local mtv_pool = {}
+local pool_limit = 128
+local function summon_mtv()
+	return #mtv_pool >0 and pop(mtv_pool) or MTV()
+end
+
+function MTV:getPoolSize()
+	return #mtv_pool
+end
+
+function MTV:fetch(dx, dy, collider, collided)
+	local mtv = summon_mtv()
+	mtv.x, mtv.y = dx, dy
+	collider = collider or 'none'
+	collided = collided or 'none'
+	mtv:setCollider( collider )
+	mtv:setCollided( collided )
+	return mtv
+end
+
+function MTV:reset()
+	self.x, self.y = dx or 0, dy or 0
+	self.collider = 'none'
+	self.collided = 'none'
+	self.colliderShape = 'none'
+	self.collidedShape = 'none'
+	self.edgeIndex = 0
+end
+
+function MTV:stow()
+	if #mtv_pool >= pool_limit then return nil end
+	self:reset()
+	push(mtv_pool, self)
 end
 
 -- [[--- Collision Functions ---]] --
@@ -90,10 +127,9 @@ local function project(shape1, shape2)
 		-- Test for bounding overlap
 		if not ( shape1_max_dot > shape2_min_dot and shape2_max_dot > shape1_min_dot ) then
 			-- Separating Axis, return
-			return MTV(0,0)
+			return MTV:fetch(0,0)
 		else
-			-- Find the overlap, which is equal to the magnitude of the MTV
-			-- Overlap = minimum difference of bounds
+			-- Find the overlap (minimum difference of bounds), which is equal to the magnitude of the MTV
 			overlap = min(shape1_max_dot-shape2_min_dot, shape2_max_dot-shape1_min_dot)
 			if overlap < minimum then
 				-- Set our MTV to the smol vector
@@ -107,7 +143,7 @@ local function project(shape1, shape2)
 	local ccx, ccy = shape2.centroid.x - shape1.centroid.x, shape2.centroid.y - shape1.centroid.y
 	local s = sign( Vec.dot(mtv_dx, mtv_dy, ccx, ccy) )
 	-- Welp. We made it here. So they're colliding, I guess. Hope it's consensual :(
-	local mtv = MTV( Vec.mul(s*minimum, mtv_dx, mtv_dy) )
+	local mtv = MTV:fetch( Vec.mul(s*minimum, mtv_dx, mtv_dy) )
 	mtv:setColliderShape(shape1)
 	mtv:setEdgeIndex(edge_index)
 	mtv:setCollidedShape(shape2)
@@ -117,22 +153,26 @@ end
 local function SAT(shape1, shape2)
 	local mtv1 = project(shape1, shape2)
 	if mtv1:mag() == 0 then -- don't bother calculating mtv2
+		mtv1:stow()
 		return false, nil
 	end
 	local mtv2 = project(shape2, shape1)
 	if mtv2:mag() == 0 then
+		mtv1:stow() mtv2:stow()
 		return false, nil
 	end
 	-- Else, return the min
 	if mtv1:mag() < mtv2:mag() then
+		mtv2:stow()
 		return 1, mtv1
 	else
+		mtv1:stow()
 		return 2, mtv2
 	end
 end
 
 local function striking(collider1, collider2)
-	local max_mtv, c = MTV(0, 0), 0
+	local max_mtv, c = MTV:fetch(0, 0), 0
 	local from, mtv
 	for _, shape1 in collider1:ipairs() do
 		for _, shape2 in collider2:ipairs() do
@@ -224,6 +264,15 @@ S.hove	= shove
 S.howMTV = show_mtv
 S.howNorms = show_norms
 S.howProj = show_proj
+
+-- Config
+function S.eePoolSize()
+	return pool_limit
+end
+
+function S.etPoolSize(limit)
+	pool_limit = limit
+end
 
 -- Actually return Strike!
 return S
