@@ -334,6 +334,6 @@ Very little in this library was done in the best way from the start, and it's be
 ## TODO
 - [X] Add `:getEdge(index)` methods to shapes to return an edge by its number
 - [X] Return references to the two shapes that actually collided in the returned mtv, as well as the index of the normal's edge for the `collider_shape` field
-- [ ] Add MTV pool to generate less garbage
+- [X] Add MTV pool to generate less garbage
 - [ ] Add a function to solve for the edge(s) in `collided_shape` interesecting the normal's edge of the `collider_shape`
 - [ ] Add contact solver (some kind of clipping function that can optionally be run given an mtv that returns 1-2 points)
