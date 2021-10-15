@@ -4,7 +4,8 @@ local Shapes 	= _Require_relative( ... , "shapes")
 local Collider	= _Require_relative( ... , "colliders.Collider")
 local Colliders	= _Require_relative( ... , "colliders")
 
-local min   = math.floor
+local pi, cos, sin, atan2 = math.pi, math.cos, math.sin, math.atan2
+local floor, ceil, sqrt, abs, max, min   = math.floor, math.ceil, math.sqrt, math.abs, math.max, math.min
 local inf = math.huge
 local push, pop = table.insert, table.remove
 
