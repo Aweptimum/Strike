@@ -167,6 +167,22 @@ function Collider:rayIntersections(x,y, dx,dy)
     return next(ts) and ts or nil
 end
 
+-- Get BBOX as aabb
+function Collider:getBbox()
+	local min_x, min_y, dx, dy = self.shapes[1]:getBbox()
+    local max_x, max_y = min_x+dx, min_y+dy
+	for __, shape in self:ipairs() do
+		local mix, miy, x, y = shape:getBbox()
+        local max, may = mix+x, miy+y
+		if mix < min_x then min_x = mix end
+		if max > max_x then max_x = max end
+		if miy < min_y then min_y = miy end
+		if may > max_y then max_y = may end
+	end
+    -- Return rect info as separate values (don't create a table (aka garbage)!)
+	return min_x, min_y, max_x-min_x, max_y-min_y
+end
+
 -- Remove shape(s) from collider
 function Collider:remove(index, ...)
     if not index then return end
