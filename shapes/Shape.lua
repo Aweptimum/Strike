@@ -56,7 +56,7 @@ function Shape:copy(x, y, angle_rads)
 	end
 	-- If rotation specified, then rotate_polygon
 	if angle_rads then
-		copy:rotate(angle_rads)
+		copy:rotateTo(angle_rads)
     end
 	-- Return copy
 	return copy
