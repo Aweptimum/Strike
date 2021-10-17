@@ -115,7 +115,7 @@ local function project(shape1, shape2)
 	local overlap, dx, dy
 	local shape1_min_dot, shape1_max_dot, shape2_min_dot, shape2_max_dot
 	-- loop through shape1 geometry
-	for i, edge in shape1:ipairs() do
+	for i, edge in shape1:ipairs(shape2) do
 		-- get the normal
 		dx, dy = Vec.normalize( Vec.sub(edge[3],edge[4], edge[1], edge[2]) )
 		dx, dy = dy, -dx

@@ -28,17 +28,40 @@ function Circle:getBbox()
 end
 
 -- We can't actually iterate over circle geometry, but we can return a single edge
--- from the circle centroid to its radius for consistency and quick iteration.
-local function iter_edges(circle, i)
-	i = i + 1
-    local c, r = circle.centroid, circle.radius
-	if i <= 1 then
-		return i, {c.x, c.y, c.x + r, c.y + r}
-	end
+-- from the circle centroid to closest point of test shape
+local function get_closest_point(shape, p)
+    local dist, min_dist, min_p
+    for i, v in ipairs(shape.vertices) do
+        dist = Vec.dist2(p.x,p.y, v.x,v.y)
+        if not min_dist or dist < min_dist then
+            min_dist = dist
+            min_p = v
+        end
+    end
+    return min_p
 end
 
-function Circle:ipairs()
-    return iter_edges, self, 0
+local function iter_edges(state)
+    local endx, endy
+	state.i = state.i + 1
+    local c = state.self.centroid
+    local shape = state.shape
+    local sc = shape.centroid
+	if state.i <= 1 then
+        if shape.name == 'circle' then
+            endx, endy = sc.x, sc.y
+        else
+            local mp = get_closest_point(shape, c)
+            endx, endy = mp.x, mp.y
+        end
+        local normx, normy = Vec.perpendicular(Vec.sub(endx,endy, c.x,c.y))
+        return state.i, {c.x,c.y, c.x+normx,c.y+normy}
+    end
+end
+
+function Circle:ipairs(shape)
+    local state = {self=self, shape=shape, i=0}
+    return iter_edges, state, nil
 end
 
 function Circle:translate(dx, dy)
