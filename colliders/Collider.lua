@@ -128,9 +128,9 @@ function Collider:rotate(angle, refx, refy)
     return self
 end
 
-function Collider:rotateTo(angle_rads)
+function Collider:rotateTo(angle_rads, ref_x, ref_y)
 	local aoffset = angle_rads - self.angle
-	return self:rotate(aoffset)
+	return self:rotate(aoffset, ref_x, ref_y)
 end
 
 function Collider:scale(sf, refx, refy)
