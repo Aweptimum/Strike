@@ -23,10 +23,60 @@ Rect = {
 ```
 To actually define this, the `ConvexPolygon` definition can be extended and overriden with a new constructor. Example in [Defining Your Own Shapes](#defining-your-own-shapes)
 
+See Basic Colliders down below for available Shapes.
+
+Now for some Shape methods:
+### Transforming Shapes
+All of the below methods return `self` if you need to do some transformation chaining
+```lua
+shape:translate(dx, dy)		  -- adds dx and dy to each shapes' points
+shape:translateTo(x,y)		  -- translates centroid to position (and everything with it)
+shape:rotate(angle, refx, refy)	  -- rotates by `angle` (radians) about a reference point (defaults to centroid)
+shape:rotateTo(angle, refx, refy) -- rotates the shape *to* an `angle` (radians) about a reference point (defaults to centroid)
+shape:scale(sf, refx, refy)	  -- scales by factor `sf` with respect to a reference point (defaults to centroid)
+```
+
+### Querying Shapes
+```lua
+shape:getArea()		-- Returns the area of the shape
+shape:getCentroid()	-- Returns the centroid of the shape as a table {x = x, y = y}
+shape:getAreaCentroid()	-- Returns the area *and* the centroid of the shape
+shape:getRadius()	-- Returns the radies of the shape's circumscribed circle
+shape:getBbox()		-- Returns the minimum AABB dimensions of the shape as 4 numbers: minimum-x, minimum-y, width, height
+shape:unpack()		-- Returns the args the shape was constructed with
+```
+#### More specific query methods:
+```lua
+shape:project(nx, ny)
+```
+Given two normalized vector components, returns the minimum and maximum values of the shape's projection onto the vector
+```lua
+shape:getEdge(i)
+```
+Given an index, returns the corresponding numbered edge. Returns `false` if OOB
+```lua
+shape:containsPoint(point)
+```
+Given a point ({x=x,y=y}), returns `true` if it is within bounds of the shape, else `false`
+```lua
+shape:rayIntersects(x,y, nx,ny)
+```
+Given a ray-origin `x,y` and a normalized vector, returns `true` if it intersects the shape, else `false`
+```lua
+shape:rayInteresections(x,y, nx,ny, ts)	-- Returns a table of numbers that are 
+```
+Same args as `rayIntersects` w/ optional table to insert into. Returns a list of numbers representing lengths along normal `nx, ny`
+
+### Misc Shape Methods
+There are a few more methods, specifically:
+```lua
+shape:copy(x,y, angle_rads) -- (returns a copy, go figure) w/ centroid located at `x, y` and the specified angle.
+shape:ipairs( ?shape2 )	    -- Edge iterator. shape2 only necessary for Circles, which need another shape to get a useful edge
+```
 ## Colliders
 Accessed via `S.trikers`, Colliders are grab-bags of geometry that are used for collision detection. They can be composed of Shapes, but may also contain other Colliders (and their shapes). The only requirement is that *every shape* in the Collider is convex. As with Shapes, available Colliders are defined in the `/colliders` directory and auto-loaded in. You can define custom collider definitions for particular collections of geometry that you're fond of. Just look at the included `Capsule` definition for a simple example. The included collider objects are listed below.
 ### Basic Colliders
-Theses are automatically defined as `Collider(shape_name(shape_args))`, and so they are not directly shapes. They are a Collider that contains a single shape of the same name.
+These correspond to the available `S.hapes`, but are not Shapes themselves. Their constructors are identical to the referenced shapes, and are automatically defined as `Collider(shape_name(shape_args))`. They are a Collider that contains a single shape of the same name.
 #### Circle
 ```lua
 c = S.trikers.Circle(x_pos, y_pos, radius, angle_rads)
@@ -84,23 +134,42 @@ concave = S.trikers.Concave(x,y, ...)
 Takes a vardiadic list of `x,y` pairs that describe a convex polygon.
 Should be in pseudo-counter-clockwise winding order. 
 
-### Moving Colliders
-The base Collider class (and all colliders that extend it) have these methods:
+### Transforming Colliders
+The base Collider class (and all colliders that extend it) have the below methods
+All of them return `self` if you need to do some transformation chaining
 
 ```lua
 collider:translate(dx, dy)		-- adds dx and dy to each shapes' points
 collider:translateTo(x,y)		-- translates centroid to position (and everything with it)
 collider:rotate(angle, refx, refy)	-- rotates by `angle` (radians) about a reference point (defaults to centroid)
+collider:rotateTo(angle, refx, refy)	-- rotates the shape *to* an `angle` (radians) about a reference point (defaults to centroid)
 collider:scale(sf, refx, refy)		-- scales by factor `sf` with respect to a reference point (defaults to centroid)
 ```
+### Querying Colliders
+```lua
+collider:getArea()		-- Returns the area of the collider
+collider:getCentroid()		-- Returns the centroid of the collider as a table {x = x, y = y}
+collider:getAreaCentroid()	-- Returns the area *and* the centroid of the collider
+collider:getRadius()		-- Returns the radies of the collider's circumscribed circle
+collider:getBbox()		-- Returns the minimum AABB dimensions of the collider as 4 numbers: minimum-x, minimum-y, width, height
+collider:unpack()		-- Returns the the shapes a collider contains
+```
+#### More specific query methods:
+```lua
+collider:project(nx, ny)
+```
+Given two normalized vector components, returns the minimum and maximum values of the collider's projection onto the vector.
+Not super useful for concave colliders, but it's there.
+
+Of course, there's also ray-methods, but they're expounded upon in [Ray Intersection](#ray-intersection)
 
 ### Manipulating Colliders
 Other useful methods include:
 ```lua
-collider:copy() -- returns a copy of the collider
-collider:remove(index, ...) -- removes a shape at the specified index, can handle multiple indexes
+collider:copy() 		-- returns a copy of the collider
+collider:remove(index, ...) 	-- removes a shape at the specified index, can handle multiple indexes
 	**uses table.remove internally, so as long as you don't have tens of thousands of shapes in a collider, you'll be fine! 
-collider:consolidate() -- will merge incident convex polygons together, makes for less iterations if applicable
+collider:consolidate() 		-- will merge incident convex polygons together, makes for less iterations if applicable
 ```
 
 ### Collider Iterating
