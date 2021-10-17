@@ -238,7 +238,7 @@ function ConvexPolygon:translate(dx, dy)
 	-- Translate centroid
 	self.centroid.x = self.centroid.x + dx
 	self.centroid.y = self.centroid.y + dy
-    return self.centroid.x, self.centroid.y
+    return self
 end
 
 function ConvexPolygon:rotate(angle, refx, refy)
@@ -252,6 +252,7 @@ function ConvexPolygon:rotate(angle, refx, refy)
     end
 	self.centroid.x, self.centroid.y = Vec.add(refx, refy, Vec.rotate(angle, self.centroid.x-refx, self.centroid.y-refy))
 	self.angle = self.angle + angle
+	return self
 end
 
 function ConvexPolygon:scale(sf, refx, refy)
@@ -267,6 +268,7 @@ function ConvexPolygon:scale(sf, refx, refy)
     -- Recalculate area, and radius
     self:calcArea()
     self.radius = self.radius * sf
+	return self
 end
 
 function ConvexPolygon:project(nx,ny)
@@ -344,7 +346,7 @@ end
 
 ConvexPolygon._get_verts = ConvexPolygon.unpack
 
--- [[------------------]]    Polygon Merging    [[------------------]] --
+-- ------------------]]    Polygon Merging    [[------------------ --
 
 -- Use spatial-coordinate search to detect if two polygons
 -- share a coordinate pair (means have an incident face)

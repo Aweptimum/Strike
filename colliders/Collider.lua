@@ -107,6 +107,7 @@ function Collider:translate(dx, dy)
         shape:translate(dx, dy)
     end
     self.centroid.x, self.centroid.y = self.centroid.x + dx, self.centroid.y + dy
+    return self
 end
 
 function Collider:translateTo(x, y)
@@ -124,6 +125,7 @@ function Collider:rotate(angle, refx, refy)
     end
     self.centroid.x, self.centroid.y = Vec.add(refx, refy, Vec.rotate(angle, self.centroid.x-refx, self.centroid.y - refy))
     self.angle = self.angle + angle
+    return self
 end
 
 function Collider:rotateTo(angle_rads)
@@ -140,6 +142,7 @@ function Collider:scale(sf, refx, refy)
     -- Recalculate area, and radius
     self:calcArea()
     self.radius = self.radius * sf
+    return self
 end
 
 function Collider:project(dx, dy)

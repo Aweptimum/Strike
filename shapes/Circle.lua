@@ -66,16 +66,19 @@ end
 
 function Circle:translate(dx, dy)
     self.centroid.x, self.centroid.y = self.centroid.x + dx, self.centroid.y + dy
+	return self
 end
 
 function Circle:rotate(angle, refx, refy)
     local c = self.centroid
     c.x, c.y = Vec.add(refx, refy, Vec.rotate(angle, c.x-refx, c.y - refy))
+	return self
 end
 
 function Circle:scale(sf)
     self.radius = self.radius * sf
     self:calcArea()
+	return self
 end
 
 function Circle:project(nx, ny)
