@@ -3,8 +3,8 @@ local t = {}
 -- Print table w/ formatting
 function t.tprint (tbl, height, indent)
 	if not tbl then return end
-	if not height then height = 0 end
-	if not indent then indent = 0 end
+	height = height or 0
+	indent = indent or 0
 	for k, v in pairs(tbl) do
 		height = height+1
 		local formatting = string.rep("  ", indent) .. tostring(k) .. ": "
