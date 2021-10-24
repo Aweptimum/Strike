@@ -23,7 +23,7 @@ Rect = {
 ```
 To actually define this, the `ConvexPolygon` definition can be extended and overriden with a new constructor. Example in [Defining Your Own Shapes](#defining-your-own-shapes)
 
-See Basic Colliders down below for available Shapes.
+See [Basic Colliders](#basic-colliders) down below for available Shapes.
 
 Now for some Shape methods:
 ### Transforming Shapes
@@ -117,9 +117,9 @@ Creates a regular polygon centered at `{x_pos, y_pos}` with `n` sides. `radius` 
 ### Composite Colliders
 #### Collider
 ```lua
-coll = S.trikers.Collider( S.hapes.Rectangle(...), S.hapes.Circle(...), S.trikers.Circle(...) )
+coll = S.trikers.Collider( S.hapes.Rectangle(...), S.hapes.Circle(...), S.trikers.Circle(...), ... )
 ```
-Creates a collider object that contains the specified geometry, either instantiated `S.hapes` or `S.trikers`, though `S.hapes` make for a flatter object
+Creates a collider object given a variadic amount of `S.hapes` or `S.trikers` that contains the specified geometry, though `S.hapes` make for a flatter object
 
 #### Capsule
 ```lua
@@ -131,7 +131,7 @@ Creates a capsule centered at `{x_pos, y_pos}` with width `dx` and height `dy`, 
 ```lua
 concave = S.trikers.Concave(x,y, ...)
 ```
-Takes a vardiadic list of `x,y` pairs that describe a convex polygon.
+Takes a vardiadic list of `x,y` pairs that describe a concave polygon.
 Should be in pseudo-counter-clockwise winding order. 
 
 ### Transforming Colliders
@@ -183,7 +183,7 @@ end
 If you wanted to remove a shape from a Collider that met some condition, calling `parent_collider:remove( shape_index )` would do it.
 
 ## Ray Intersection
-There are two ray intersection functions: `rayIntersects` and `rayIntersections`. Both have the same arguments: a ray origin and a normalized vector. They are defined both at the `Shapes` level and at the `Collider` level.
+There are two ray intersection functions: `rayIntersects` and `rayIntersections`. Both have the same arguments: a ray origin and a normalized vector. The current implementation also assumes infinite length. They are defined both at the `Shapes` level and at the `Collider` level.
 ```lua
 Collider:rayIntersect(ion)s(x,y, dx,dy)
 ```
@@ -273,16 +273,16 @@ If you're running within [LÖVE](https://github.com/love2d/love), every included
 Erin Catto wrote up a nice article on the subject of [ghost collisions](https://box2d.org/posts/2020/06/ghost-collisions/). The problem outlined is this: if two colliders intersect, and a third collider hits both at their intersection, not-nice things can happen. Strike has this problem as well. Box2D solves it with chain shapes, which store edges together and modify the collision logic to avoid bad resolution. Strike doesn't directly solve this. However, in the case of two edges intersecting at a common endpoint and a shape hitting that intersection, it seems to be circumvented by adding both edge colliders to a common collider. A minimum example is below:
 ```lua
 local edges = {
-	S.trikers.Edge(400,600, 600,600),
-	S.trikers.Edge(600,600, 800,600)
+	S.hapes.Edge(400,600, 600,600),
+	S.hapes.Edge(600,600, 800,600)
 }
 -- vs
 local EDGE = S.trikers.Collider(
-	S.trikers.Edge(400,600, 600,600),
-	S.trikers.Edge(600,600, 800,600)
+	S.hapes.Edge(400,600, 600,600),
+	S.hapes.Edge(600,600, 800,600)
 )
 ```
-The first will produce ghosting, while the second does not. This is either because of exteme luck during testing or built into the collision detection logic on accident. Either way, it's a feature.
+The first will produce ghosting, while the second does not. This is either because of extreme luck during testing or built into the collision detection logic on accident. Either way, it's a feature.
 
 To make this explicit, a check for whether the MTV is headed *into* a Collider's centroid should probably be added somewhere in the logic for `S.triking`.
 
