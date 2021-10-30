@@ -3,26 +3,41 @@ local pi = math.pi
 local push = table.insert
 local Shape = _Require_relative(..., "shape")
 
+---@class Circle : Shape
 Circle = Shape:extend()
 
 Circle.name = 'circle'
 
-function Circle:new(x_pos, y_pos, radius,  angle_rads)
+---Circle cotr
+---@param x number x coordinate
+---@param y number y coordinate
+---@param radius number
+---@param angle number angle offset
+---@return boolean
+function Circle:new(x, y, radius, angle)
 	if not ( radius ) then return false end
-	local x_offset = x_pos or 0
-	local y_offset = y_pos or 0
+	local x_offset = x or 0
+	local y_offset = y or 0
 	-- Put everything into circle table and then return it
 	self.convex   = true                          -- boolean
     self.centroid = {x = x_offset, y = y_offset}  -- {x, y} coordinate pair
     self.radius   = radius				        -- radius of circumscribed circle
     self.area     = pi*radius^2				    -- absolute/unsigned area of polygon
-    self.angle    = angle_rads or 0
+    self.angle    = angle or 0
 end
 
+---Calculate area
+---@return number area
 function Circle:calcArea()
     self.area = pi*self.radius^2
+    return self.area
 end
 
+---comment
+---@return number x minimum x
+---@return number y minimum y
+---@return number dx width
+---@return number dy height
 function Circle:getBbox()
     return self.centroid.x - self.radius, self.centroid.y - self.radius, self.radius, self.radius
 end
@@ -64,23 +79,39 @@ function Circle:ipairs(shape)
     return iter_edges, state, nil
 end
 
+---Translate by displacement vector
+---@param dx number
+---@param dy number
+---@return Circle self
 function Circle:translate(dx, dy)
     self.centroid.x, self.centroid.y = self.centroid.x + dx, self.centroid.y + dy
 	return self
 end
 
+---Rotate by specified radians
+---@param angle number radians
+---@param refx number reference x-coordinate
+---@param refy number reference y-coordinate
+---@return Circle self
 function Circle:rotate(angle, refx, refy)
     local c = self.centroid
     c.x, c.y = Vec.add(refx, refy, Vec.rotate(angle, c.x-refx, c.y - refy))
 	return self
 end
 
+---Scale circle
+---@param sf number scale factor
+---@return Circle self
 function Circle:scale(sf)
     self.radius = self.radius * sf
     self:calcArea()
 	return self
 end
 
+---Project circle along normalized vector
+---@param nx number normalized x-component
+---@param ny number normalized y-component
+---@return number minimum, number maximumum smallest, largest projection
 function Circle:project(nx, ny)
     local proj = Vec.dot(self.centroid.x, self.centroid.y, nx, ny)
     return proj - self.radius, proj + self.radius
@@ -91,18 +122,34 @@ function Circle:getEdge(i)
     return i == 1 and {c.x, c.y, c.x + r, c.y + r} or false
 end
 
+---Test if point inside circle
+---@param point Point
 function Circle:containsPoint(point)
     return Vec.len2(Vec.sub(point.x,point.y, self.centroid.x, self.centroid.y)) <= self.radius*self.radius
 end
 
+---Test of normalized ray hits circle
+---@param x number ray origin
+---@param y number ray origin
+---@param dx number normalized x component
+---@param dy number normalized y component
+---@return boolean hit
 function Circle:rayIntersects(x,y, dx,dy)
     dx, dy = Vec.perpendicular(dx, dy)
     local cmin, cmax = self:project(dx, dy)
     local d = Vec.dot(x,y, dx, dy)
     return cmax >= d and d >= cmin
 end
+
 -- Returns actual intersection point, from:
 -- https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection
+---Return all intersections as distances along ray
+---@param x number ray origin
+---@param y number ray origin
+---@param dx number normalized x component
+---@param dy number normalized y component
+---@param ts table
+---@return table | nil intersections
 function Circle:rayIntersections(x,y, dx,dy, ts)
     if not self:rayIntersects(x,y, dx,dy) then return nil end
     ts = ts or {}
@@ -117,6 +164,10 @@ function Circle:rayIntersections(x,y, dx,dy, ts)
     return #ts > 0 and ts or nil
 end
 
+---Return ctor args
+---@return number x
+---@return number y
+---@return number radius
 function Circle:unpack()
     return self.centroid.x, self.centroid.y, self.radius
 end
@@ -126,6 +177,8 @@ function Circle:merge()
 end
 
 if love and love.graphics then
+    ---Draw Circle w/ LOVE
+    ---@param mode string fill/line
     function Circle:draw(mode)
         -- default fill to "line"
         mode = mode or "line"
