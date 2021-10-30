@@ -23,6 +23,7 @@ function RegularPolygon:new(x, y, n, radius, angle)
     -- Initialize our polygon's origin and rotation
     n = n or 3
     self.angle = angle or 0
+    self.area = 0
     -- Initalize our dummy point vars to put into the vertices list
     local vertices = {}
 
@@ -33,7 +34,7 @@ function RegularPolygon:new(x, y, n, radius, angle)
         vertices[#vertices+1] = {x = x, y = y}
     end
 
-    -- Put everything into polygon table and then return it
+    -- Set fields
     self.n, self.radius = n, radius
     self.vertices 		= vertices     	    -- list of {x,y} coords
     self.convex      	= true      		-- boolean
