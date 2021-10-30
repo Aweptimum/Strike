@@ -1,29 +1,44 @@
 local Vec = _Require_relative(..., 'lib.DeWallua.vector-light',1)
 local Polygon = _Require_relative(..., 'ConvexPolygon')
 
+---@class Edge : Shape
 local Edge = Polygon:extend()
 Edge.name = 'edge'
 
+---"Calculate" edge area
+---@return number area
 function Edge:calcArea()
 	self.area = 1
 	return self.area
 end
 
+---Calculate midpoint of edge
+---@return Point centroid
 function Edge:calcCentroid()
 	self.centroid.x = (self.vertices[1].x+self.vertices[2].x) / 2
 	self.centroid.y = (self.vertices[1].y+self.vertices[2].y) / 2
 	return self.centroid
 end
 
+---Calculate both area and centroid
+---@return number area
+---@return Point centroid
 function Edge:calcAreaCentroid()
 	return self:calcArea(), self:calcCentroid()
 end
 
+---Calculate radius of circumscribed circle
+---@return number radius
 function Edge:calcRadius()
 	self.radius = 0.5 * Vec.len(Vec.sub(self.vertices[1].x, self.vertices[1].y, self.vertices[2].x, self.vertices[2].y) )
 	return self.radius
 end
 
+---comment
+---@param x1 number x coordinate of first point
+---@param y1 number y coordinate of first point
+---@param x2 number x coordinate of second point
+---@param y2 number y coordinate of second point
 function Edge:new(x1,y1, x2,y2)
 
 	self.vertices = {
@@ -41,6 +56,7 @@ function Edge:new(x1,y1, x2,y2)
 	self.angle = 0
 	self:calcAreaCentroid()
 end
+
 -- Only iterate once
 local function edge_iter(shape, i)
 	i = i + 1
@@ -51,16 +67,26 @@ local function edge_iter(shape, i)
 	end
 end
 
+---Edge iterator
+---@return function
+---@return Edge
+---@return number
 function Edge:ipairs()
     return edge_iter, self, 0
 end
 
+---Return ctor arguments
+---@return number x1
+---@return number y1
+---@return number x2
+---@return number y2
 function Edge:unpack()
     return self.vertices[1].x, self.vertices[1].y, self.vertices[2].x, self.vertices[2].y
 end
 
 if love and love.graphics then
-	function Edge:draw(fill)
+	---Draw Edge w/ LOVE
+	function Edge:draw()
 		love.graphics.line(self:unpack())
 		love.graphics.setColor(0,1,1)
 		love.graphics.points(self.centroid.x, self.centroid.y)
