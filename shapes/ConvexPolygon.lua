@@ -212,8 +212,11 @@ end
 
 -- Create new Polygon object
 ---@vararg number x,y tuples
-function ConvexPolygon:new(...)
-    self.vertices = to_vertices({},...)
+---@param x number
+---@param y number
+function ConvexPolygon:new(x,y, ...)
+    self.vertices = to_vertices({}, x,y, ...)
+	assert(#self.vertices >= 3, "Need at least 3 non collinear points to build polygon (got "..#self.vertices..")")
 	if not is_convex(self.vertices) then
 		assert(order_points_ccw(self.vertices), 'Points cannot be ordered into a convex shape')
 	end
