@@ -355,8 +355,8 @@ function ConvexPolygon:containsPoint(point)
 end
 
 ---Project each individual edge instead of using self:project like in Circle
----@param x number
----@param y number
+---@param x number ray origin
+---@param y number ray origin
 ---@param dx number normalized x component
 ---@param dy number normalized y component
 ---@return boolean hit
@@ -373,8 +373,8 @@ end
 
 -- https://stackoverflow.com/a/32146853/12135804
 ---Return all intersections as distances along ray
----@param x number
----@param y number
+---@param x number ray origin
+---@param y number ray origin
 ---@param dx number normalized x component
 ---@param dy number normalized y component
 ---@param ts table
