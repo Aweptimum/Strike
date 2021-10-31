@@ -211,7 +211,12 @@ for shape, dists in pairs(hits) do
 end
 ```
 ## MTV's
-Minimum Translating Vectors are an object that represent the penetration depth between two colliders. The vector components are accessed via `mtv.x` and `mtv.y`, and they contain other information. An example of the contained fields is below:
+Minimum Translating Vectors are an object that represent the penetration depth between two colliders. It sits under the `classes/` directory if you wish to use it. Here's the cosntructor:
+```lua
+MTV(dx, dy, collider, collided)
+```
+Where `dx,dy` are the vector components and `collider/collided` are each a Collider.
+There are other fields that are not currently set from the constructor. An example of the contained fields is below:
 ```lua
 MTV = {
     x = 0,
@@ -223,7 +228,7 @@ MTV = {
     edgeIndex = colliderShape-edge-index
 }
 ```
-The `collider` field represents the collider that the mtv is oriented *from*. If you were to draw the mtv from the centroid of the collider object, it would point out of the shape, towards the collider it is currently intersecting. The `collided` field is a reference to that intersected collider, the one that the mtv would be pointing *towards*. This information is necessary to know the orientation of the mtv and for settling/resolving collisions; they can directly be operated on from the references in the mtv.
+The vector components are accessed via `mtv.x` and `mtv.y`. The `collider` field represents the collider that the mtv is oriented *from*. If you were to draw the mtv from the centroid of the collider object, it would point out of the shape, towards the collider it is currently intersecting. The `collided` field is a reference to that intersected collider, the one that the mtv would be pointing *towards*. This information is necessary to know the orientation of the mtv and for settling/resolving collisions; they can directly be operated on from the references in the mtv.
 
 The `colliderShape` and `collidedShape` fields are references to the two actual shapes that generated the collision. `edgeIndex` is the actual index of the edge that generated the separating axis. The edge can be retrieved by calling `mtv.colliderShape:getEdge( mtv.edgeIndex )`.
 
@@ -242,17 +247,35 @@ MTV:setCollided(collider)
 
 MTV:setCollidedShape(shape)
 ```
+The one practical instance method of interest might be `MTV:mag()` - it returns the magnitude of the separating vector.
 
-Given their simplicity, there is an object pool available for MTV's. The following instance methods can be used to interact with the pool:
+### Object Pooling
+The `MTV` object implements the `Pool` interface in `classes/Pool.lua`. The following instance methods can be used to interact with the pool:
 ```lua
 MTV:fetch(dx, dy, collider, collided)
 MTV:stow()
 ```
-`fetch()` sets a previously initialized MTV to the given arguments and returns it from the pool. It's identical to the `MTV()` constructor, but that lives inside of Strike.lua at the moment and is not exposed.
-`stow()` inserts the MTV instance into the object pool, resetting it using `MTV:reset()`
-There is a default limit of 128 for pooled MTV objects, but it can be changed using Strike's `S.etPoolSize(size)` method. Multiples of 2 are best because of lua-hash-table-resizing-stuff. The size can be acquired via `S.eePoolSize()` (yes, I am aware that these API function names are suffering from the `S.` gimmick)
+`fetch()` sets a previously initialized MTV to the given arguments and returns it from the pool. Its arguments are identical to the `MTV()` constructor as it uses `:new` to init the object
+`stow()` inserts the MTV instance into the object pool
+There is a default limit of 128 for any pool. The MTV pool size can be changed using Strike's `S.etPoolSize(size)` method or requiring the `MTV` object and calling `:setPoolSize(size)`. Multiples of 2 are best because of lua-hash-table-resizing-stuff. The size can be acquired via `S.eePoolSize()/MTV:getPoolSize()` (yes, I am aware that these API function names are suffering from the `S.` gimmick)
 
-The one practical instance method of interest might be `MTV:mag()` - it returns the magnitude of the separating vector.
+### Implementing Pooling
+If you're ok with embracing `classic` in your own project and want to pool an ubiquitous object in your code, it's easy:
+```lua
+Object = Libs.classic
+Pool = require 'module-path.Strike.classes.Pool`
+
+local myObject = Object:extend():implement(Pool)
+```
+Your `myObject` object now has access to these methods and fields:
+```lua
+Pool.pool               -- Class's object pool
+Pool.size               -- Pool size limit
+Pool:getPoolSize()      -- Get the size of the object pool
+Pool:setPoolSize(size)  -- Set size of object pool (returns self)
+Pool:fetch( ... )       -- Fetch a pooled instance and init to given args (should match class constructor)
+Pool:stow( obj, ... )   -- Stow variable # of instances in Class pool
+```
 
 ## Collision
 ### Broad Phase

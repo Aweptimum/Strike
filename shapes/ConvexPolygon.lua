@@ -4,6 +4,7 @@ local tbl = Libs.tbl
 local Vec = _Require_relative(..., 'lib.DeWallua.vector-light',1)
 local Shape = _Require_relative(...,"shape")
 
+---@class ConvexPolygon : Shape
 ConvexPolygon = Shape:extend()
 ConvexPolygon.name = 'convex'
 
@@ -123,6 +124,8 @@ local function order_points_ccw(vertices)
     return good_sort and true, table.sort(vertices, sort_ccw) or not true
 end
 
+---Calculate polygon area using shoelace algorithm
+---@return number area
 function ConvexPolygon:calcArea()
 	local vertices = self.vertices
 	-- Initialize p and q so we can wrap around in the loop
@@ -143,7 +146,9 @@ function ConvexPolygon:calcArea()
 	return self.area
 end
 
--- Calculate centroid and area of the polygon at the _same_ time using the shoe-lace algorithm
+---Calculate centroid and area of the polygon at the _same_ time
+---@return number area
+---@return table centroid
 function ConvexPolygon:calcAreaCentroid()
 	local vertices = self.vertices
 	-- Initialize p and q so we can wrap around in the loop
@@ -164,9 +169,11 @@ function ConvexPolygon:calcAreaCentroid()
 	self.area = self.area * 0.5
 	self.centroid.x	= self.centroid.x / (6*self.area);
     self.centroid.y	= self.centroid.y / (6*self.area);
-	return self.centroid, self.area
+	return self.area, self.centroid
 end
 
+---Calculate polygon radius
+---@return number radius
 function ConvexPolygon:calcRadius()
 	local vertices, radius = self.vertices, 0
 	for i = 1,#vertices do
@@ -176,6 +183,8 @@ function ConvexPolygon:calcRadius()
 	return self.radius
 end
 
+---Get polygon bounding box
+---@return number x, number y, number dx, number dy minimum x/y, width, and height
 function ConvexPolygon:getBbox()
 	local min_x, max_x, min_y, max_y = self.vertices[1].x,self.vertices[1].x, self.vertices[1].y, self.vertices[1].y
 	local x, y--, bbox
@@ -190,6 +199,8 @@ function ConvexPolygon:getBbox()
 	return min_x, min_y, max_x-min_x, max_y-min_y
 end
 
+---Return unpacked vertices
+---@return number[] ... variable list used to construct the polygon
 function ConvexPolygon:unpack()
 	local v = {}
 	for i = 1,#self.vertices do
@@ -200,8 +211,12 @@ function ConvexPolygon:unpack()
 end
 
 -- Create new Polygon object
-function ConvexPolygon:new(...)
-    self.vertices = to_vertices({},...)
+---@vararg number x,y tuples
+---@param x number
+---@param y number
+function ConvexPolygon:new(x,y, ...)
+    self.vertices = to_vertices({}, x,y, ...)
+	assert(#self.vertices >= 3, "Need at least 3 non collinear points to build polygon (got "..#self.vertices..")")
 	if not is_convex(self.vertices) then
 		assert(order_points_ccw(self.vertices), 'Points cannot be ordered into a convex shape')
 	end
@@ -224,10 +239,18 @@ local function iter_edges(shape, i)
 	end
 end
 
+---Edge Iterator
+---@return function
+---@return ConvexPolygon
+---@return number
 function ConvexPolygon:ipairs()
     return iter_edges, self, 0
 end
 
+---Translate by displacement vector
+---@param dx number
+---@param dy number
+---@return ConvexPolygon self
 function ConvexPolygon:translate(dx, dy)
 	-- Translate each vertex by dx, dy
 	local vertices = self.vertices
@@ -241,6 +264,11 @@ function ConvexPolygon:translate(dx, dy)
     return self
 end
 
+---Rotate by specified radians
+---@param angle number radians
+---@param refx number reference x-coordinate
+---@param refy number reference y-coordinate
+---@return ConvexPolygon self
 function ConvexPolygon:rotate(angle, refx, refy)
 	-- Default to centroid as ref-point
     refx = refx or self.centroid.x
@@ -255,6 +283,11 @@ function ConvexPolygon:rotate(angle, refx, refy)
 	return self
 end
 
+---Scale polygon
+---@param sf number scale factor
+---@param refx number reference x-coordinate
+---@param refy number reference y-coordinate
+---@return ConvexPolygon self
 function ConvexPolygon:scale(sf, refx, refy)
 	-- Default to centroid as ref-point
     refx = refx or self.centroid.x
@@ -271,6 +304,10 @@ function ConvexPolygon:scale(sf, refx, refy)
 	return self
 end
 
+---Project polygon along normalized vector
+---@param nx number normalized x-component
+---@param ny number normalized y-component
+---@return number minimum, number maximumum smallest, largest projection
 function ConvexPolygon:project(nx,ny)
 	local vertices = self.vertices
 	local proj_x, proj_y
@@ -289,6 +326,9 @@ function ConvexPolygon:project(nx,ny)
 	return min_dot, max_dot
 end
 
+---Get an edge by index
+---@param i number
+---@return table {x1,y1, x2,y2}
 function ConvexPolygon:getEdge(i)
 	if i > #self.vertices then return false end
 	local verts = self.vertices
@@ -297,7 +337,8 @@ function ConvexPolygon:getEdge(i)
 	return {p1.x, p1.y, p2.x, p2.y}
 end
 
--- Need this to test if a shape is completely inside
+--- Need this to test if a shape is completely inside
+---@param point Point
 function ConvexPolygon:containsPoint(point)
 	local vertices = self.vertices
 	local winding = 0
@@ -316,7 +357,12 @@ function ConvexPolygon:containsPoint(point)
 	return winding ~= 0
 end
 
--- Project each individual edge instead of using self:project like in Circle
+---Project each individual edge instead of using self:project like in Circle
+---@param x number ray origin
+---@param y number ray origin
+---@param dx number normalized x component
+---@param dy number normalized y component
+---@return boolean hit
 function ConvexPolygon:rayIntersects(x,y, dx,dy)
 	dx, dy = Vec.perpendicular(dx,dy)
     local d = Vec.dot(x,y, dx,dy)
@@ -327,7 +373,15 @@ function ConvexPolygon:rayIntersects(x,y, dx,dy)
 	end
 	return false
 end
+
 -- https://stackoverflow.com/a/32146853/12135804
+---Return all intersections as distances along ray
+---@param x number ray origin
+---@param y number ray origin
+---@param dx number normalized x component
+---@param dy number normalized y component
+---@param ts table
+---@return table | nil intersections
 function ConvexPolygon:rayIntersections(x,y, dx,dy, ts)
 	local v1x, v1y, v2x, v2y
 	local nx, ny = -dy, dx
@@ -379,6 +433,9 @@ end
 
 -- Given two convex polygons, merge them together
 -- So long as the new polygon is also convex
+---@param poly1 Shape
+---@param poly2 Shape
+---@return ConvexPolygon | boolean
 local function merge_convex_incident(poly1, poly2)
 	if not poly2.vertices then return false end
     -- Find an incident edge between the two polygons
@@ -411,6 +468,8 @@ end
 ConvexPolygon.merge = merge_convex_incident
 
 if love and love.graphics then
+	---Draw polygon w/ LOVE
+	---@param mode string fill/line
 	function ConvexPolygon:draw(mode)
 		-- default fill to "line"
 		mode = mode or "line"

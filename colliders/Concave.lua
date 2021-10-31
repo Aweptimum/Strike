@@ -4,19 +4,29 @@ local Convex    = _Require_relative(..., 'shapes.ConvexPolygon', 1)
 local pop = table.remove
 
 -- A concave shape must be decomposed into a collection of convex shapes
+---@class Concave : Collider
 local Concave = Collider:extend()
 
-local function to_vertices(vertices, x, y, ...)
+-- Recursive function that returns a list of {x=#,y=#} coordinates given a list of procedural, ccw coordinate pairs
+local function to_verts(vertices, x, y, ...)
     if not (x and y) then return vertices end
 	vertices[#vertices + 1] = {x = x, y = y} -- , dx = 0, dy = 0}   -- set vertex
-	return to_vertices(vertices, ...)
+	return to_verts(vertices, ...)
 end
 
-function Concave:new(x, ...)
-	if x and type(x) == "table" then return self:new(unpack(x)) end
-    local vertices = to_vertices({}, x,...)
+local function to_vertices(vertices, x, ...)
+	return type(x) == 'table'and to_verts(vertices, unpack(x)) or to_verts(vertices, x,...)
+end
+
+---Concave ctor
+---@vararg number x,y tuples
+---@param x number
+---@param y number
+function Concave:new(x,y, ...)
+    local vertices = to_vertices({}, x,y, ...)
 	assert(#vertices >= 3, "Need at least 3 non collinear points to build polygon (got "..#vertices..")")
     self.shapes = {}
+    self.area = 0
     self.centroid = {x=0, y=0}
     self.radius = 0
     self.angle = 0

@@ -1,95 +1,26 @@
 local Vec		= _Require_relative( ... , "lib.DeWallua.vector-light")
-local Object	= _Require_relative( ... , "lib.classic")
 local Shapes 	= _Require_relative( ... , "shapes")
-local Collider	= _Require_relative( ... , "colliders.Collider")
 local Colliders	= _Require_relative( ... , "colliders")
+local Collider	= _Require_relative( ... , "colliders.Collider")
+---@type MTV
+local MTV = _Require_relative(..., 'classes.MTV')
 
 local min   = math.min
 local inf = math.huge
-local push, pop = table.insert, table.remove
 
 -- Get sign of number
 local function sign(number)
     return number > 0 and 1 or (number == 0 and 0 or -1)
 end
 
--- Create MTV object
-local MTV = Object:extend()
-
-function MTV:new(dx, dy, collider, collided)
-	self.x, self.y = dx or 0, dy or 0
-	self.collider = collider or 'none'
-	self.collided = collided or 'none'
-	self.colliderShape = 'none'
-	self.collidedShape = 'none'
-	self.edgeIndex = 0
-end
-
-function MTV:mag()
-	return Vec.len(self.x, self.y)
-end
-
-function MTV:setCollider(collider)
-	self.collider = collider
-end
-
-function MTV:setColliderShape(shape)
-	self.colliderShape = shape
-end
--- Index of edge that generated mtv
-function MTV:setEdgeIndex(index)
-	self.edgeIndex = index
-end
-
-function MTV:setCollided(collider)
-	self.collided = collider
-end
-
-function MTV:setCollidedShape(shape)
-	self.collidedShape = shape
-end
-
--- MTV Pool
-local mtv_pool = {}
-local pool_limit = 128
-local function summon_mtv()
-	return #mtv_pool >0 and pop(mtv_pool) or MTV()
-end
-
-function MTV:getPoolSize()
-	return #mtv_pool
-end
-
-function MTV:fetch(dx, dy, collider, collided)
-	local mtv = summon_mtv()
-	mtv.x, mtv.y = dx, dy
-	collider = collider or 'none'
-	collided = collided or 'none'
-	mtv:setCollider( collider )
-	mtv:setCollided( collided )
-	return mtv
-end
-
-function MTV:reset()
-	self.x, self.y = dx or 0, dy or 0
-	self.collider = 'none'
-	self.collided = 'none'
-	self.colliderShape = 'none'
-	self.collidedShape = 'none'
-	self.edgeIndex = 0
-end
-
-function MTV:stow()
-	if #mtv_pool >= pool_limit then return nil end
-	self:reset()
-	push(mtv_pool, self)
-end
-
 -- [[--- Collision Functions ---]] --
 
 -- Broadphase
 
--- Determine if two circles are colliding using their coordinates and radii
+---Determine if two circles are colliding using their coordinates and radii
+---@param collider1 Collider
+---@param collider2 Collider
+---@return boolean
 local function circle_circle(collider1, collider2)
 	local x1,y1 = collider1.centroid.x, collider1.centroid.y
 	local x2,y2 = collider2.centroid.x, collider2.centroid.y
@@ -97,7 +28,10 @@ local function circle_circle(collider1, collider2)
 	return (x2 - x1)^2 + (y2 - y1)^2 <= (r1 + r2)^2
 end
 
--- Returns true if two bounding boxes overlap
+---Returns true if two bounding boxes overlap
+---@param collider1 Collider
+---@param collider2 Collider
+---@return boolean
 local function aabb_aabb(collider1, collider2)
 	local rect_1_x, rect_1_y, rect_1_w, rect_1_h = collider1:getBbox()
 	local rect_2_x, rect_2_y, rect_2_w, rect_2_h = collider2:getBbox()
@@ -152,24 +86,29 @@ end
 local function SAT(shape1, shape2)
 	local mtv1 = project(shape1, shape2)
 	if mtv1:mag() == 0 then -- don't bother calculating mtv2
-		mtv1:stow()
+		MTV:stow(mtv1)
 		return false, nil
 	end
 	local mtv2 = project(shape2, shape1)
 	if mtv2:mag() == 0 then
-		mtv1:stow() mtv2:stow()
+		MTV:stow(mtv1, mtv2)
 		return false, nil
 	end
 	-- Else, return the min
 	if mtv1:mag() < mtv2:mag() then
-		mtv2:stow()
+		MTV:stow(mtv2)
 		return 1, mtv1
 	else
-		mtv1:stow()
+		MTV:stow(mtv1)
 		return 2, mtv2
 	end
 end
 
+---Check if two colliders are intersecting
+---@param collider1 Collider
+---@param collider2 Collider
+---@return number | boolean
+---@return MTV | nil
 local function striking(collider1, collider2)
 	local max_mtv, c = MTV:fetch(0, 0), 0
 	local from, mtv
@@ -191,16 +130,22 @@ local function striking(collider1, collider2)
 	end
 	return max_mtv:mag() ~= 0 and from, max_mtv or false
 end
--- Translate both colliders equally away from each other
+
+---Translate both colliders (contained in MTV) equally away from each other
+---@param mtv MTV
 local function settle(mtv)
 	mtv.collider:translate( Vec.mul(-.5, mtv.x, mtv.y))
 	mtv.collided:translate( Vec.mul(0.5, mtv.x, mtv.y))
 end
--- Translate collided by full mtv (good for edge collision)
+
+---Translate mtv.collided by full mtv (good for edge collision)
+---@param mtv MTV
 local function shove(mtv)
 	mtv.collided:translate( mtv.x, mtv.y )
 end
 
+---Draw an mtv w/ LOVE
+---@param mtv MTV
 local function show_mtv(mtv)
 	local c = mtv.collider.centroid
 	local edge = mtv.colliderShape:getEdge(mtv.edgeIndex)
@@ -211,6 +156,9 @@ local function show_mtv(mtv)
 	love.graphics.setColor(1,1,1)
 end
 
+---Draw Collider normals
+---@param collider Collider
+---@param len number length of lines to draw @ normals
 local function show_norms(collider, len)
 	len = len or 15
 	for _, shape in collider:ipairs() do
@@ -223,6 +171,8 @@ local function show_norms(collider, len)
     end
 end
 
+---Project mtv's collided field on normal
+---@param mtv MTV
 local function show_proj(mtv)
 	for _, shape in mtv.collided:ipairs() do
 		local c = shape.centroid
@@ -266,11 +216,11 @@ S.howProj = show_proj
 
 -- Config
 function S.eePoolSize()
-	return pool_limit
+	return MTV:getPoolSize()
 end
 
 function S.etPoolSize(limit)
-	pool_limit = limit
+	MTV:setPoolSize(limit)
 end
 
 -- Actually return Strike!

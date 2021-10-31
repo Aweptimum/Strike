@@ -1,18 +1,24 @@
 -- "Abstract" base object, provides some generic methods.
 local Object = Libs.classic
 
+---@class Shape
+---@field public centroid Point
+---@field public area number
 local Shape = Object:extend()
 
 Shape.type = 'shape'
 
+---@return number area
 function Shape:getArea()
     return self.area
 end
 
+---@return Point self.centroid
 function Shape:getCentroid()
     return self.centroid
 end
 
+---@return number area, table centroid
 function Shape:getAreaCentroid()
     return self.area, self.centroid
 end
@@ -32,6 +38,9 @@ end
 function Shape:translate()
 end
 
+---@param x number
+---@param y number
+---@return Shape self
 function Shape:translateTo(x, y)
 	local dx, dy = x - self.centroid.x, y - self.centroid.y
 	return self:translate(dx,dy)
@@ -40,6 +49,10 @@ end
 function Shape:rotate()
 end
 
+---@param angle_rads number
+---@param ref_x number x coordinate to rotate about
+---@param ref_y number y coordinate to rotate about
+---@return Shape self
 function Shape:rotateTo(angle_rads, ref_x, ref_y)
 	local aoffset = angle_rads - self.angle
 	return self:rotate(aoffset, ref_x, ref_y)
@@ -48,6 +61,10 @@ end
 function Shape:scale()
 end
 
+---@param x number x coordinate to place copy at
+---@param y number y coordinate to place copy at
+---@param angle_rads number radian offset of copy
+---@return Shape copy
 function Shape:copy(x, y, angle_rads)
     local copy = self:_copy()
 	-- if origin specified, then translate

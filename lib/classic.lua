@@ -33,15 +33,16 @@ SOFTWARE.
 -- the terms of the MIT license. See LICENSE for details.
 --
 
-
+---@class Object
 local Object = {}
 Object.__index = Object
 
-
+---Abstract constructor
 function Object:new()
 end
 
-
+---Inheritance method
+---@return Object cls child class
 function Object:extend()
   local cls = {}
   for k, v in pairs(self) do
@@ -55,17 +56,23 @@ function Object:extend()
   return cls
 end
 
-
+---Implement given interfaces (fields + functions)
+---@vararg Object
+---@return Object self
 function Object:implement(...)
   for _, cls in pairs({...}) do
     for k, v in pairs(cls) do
-      if self[k] == nil and type(v) == "function" then
+      if self[k] == nil then
         self[k] = v
       end
     end
   end
+  return self
 end
 
+---Checks if object implements interfaces
+---@vararg Object
+---@return boolean
 function Object:implements(...)
   for _, cls in pairs({...}) do
     for k, v in pairs(cls) do
@@ -78,6 +85,9 @@ function Object:implements(...)
   return true
 end
 
+---Checks that an object is an instance of given class
+---@param T Object class to check against
+---@return boolean
 function Object:is(T)
   local mt = getmetatable(self)
   while mt do
@@ -89,8 +99,10 @@ function Object:is(T)
   return false
 end
 
-
+---Metamethod constructor
+---@return Object new
 function Object:__call(...)
+  ---@type Object
   local obj = setmetatable({}, self)
   obj:new(...)
   return obj
