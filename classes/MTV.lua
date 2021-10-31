@@ -10,8 +10,7 @@ local Pool = _Require_relative( ..., 'Pool')
 ---@field collided Collider the collider this MTV is oriented to
 ---@field collidedShape Shape the shape this MTV is oriented to
 ---@field colliderShape Shape the shape this MTV is oriented from
-local MTV = Object:extend()
-MTV:implement(Pool)
+local MTV = Object:extend():implement(Pool)
 
 ---MTV ctor
 ---@param dx number magnitude of x-component
