@@ -8,7 +8,7 @@ Circle = Shape:extend()
 
 Circle.name = 'circle'
 
----Circle cotr
+---Circle ctor
 ---@param x number x coordinate
 ---@param y number y coordinate
 ---@param radius number
