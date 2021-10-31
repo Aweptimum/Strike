@@ -58,6 +58,7 @@ end
 
 ---Implement given interfaces (fields + functions)
 ---@vararg Object
+---@return Object self
 function Object:implement(...)
   for _, cls in pairs({...}) do
     for k, v in pairs(cls) do
@@ -66,6 +67,7 @@ function Object:implement(...)
       end
     end
   end
+  return self
 end
 
 ---Checks if object implements interfaces
