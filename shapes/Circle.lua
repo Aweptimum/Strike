@@ -1,7 +1,7 @@
 local Vec = _Require_relative(..., 'lib.DeWallua.vector-light',1)
 local pi = math.pi
 local push = table.insert
-local Shape = _Require_relative(..., "shape")
+local Shape = _Require_relative(..., "Shape")
 
 ---@class Circle : Shape
 Circle = Shape:extend()

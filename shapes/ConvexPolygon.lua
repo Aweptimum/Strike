@@ -2,7 +2,7 @@ local abs, min, max, atan2 	= math.abs, math.min, math.max, math.atan2
 local push = table.insert
 local tbl = Libs.tbl
 local Vec = _Require_relative(..., 'lib.DeWallua.vector-light',1)
-local Shape = _Require_relative(...,"shape")
+local Shape = _Require_relative(...,"Shape")
 
 ---@class ConvexPolygon : Shape
 ConvexPolygon = Shape:extend()
