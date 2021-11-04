@@ -8,7 +8,7 @@ local scandir
 
 if love then
     function scandir(directory)
-        directory = get_script_path() .. directory .. "."
+        directory = get_script_path() .. directory
         return love.filesystem.getDirectoryItems(directory)
     end
 else
