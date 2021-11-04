@@ -3,7 +3,14 @@ Strike (Separating-Axis Theorem Routines for Ill-tempered, Kaleidascopic Entitie
 Made primarily for the [LÖVE](https://github.com/love2d/love) community, but should be compatible with any Lua version (at least at time of writing)
 
 ## Installation
-Drop the folder into your project and require it:
+Download or recurisvely clone Strike into your project's directory
+
+If using git's command line to clone Strike, run either of the following commands to clone it:
+git clone --recurse-submodules https://github.com/Aweptimum/Strike.git (git >= 2.13)
+git clone --recursive https://github.com/Aweptimum/Strike.git (git < 2.13)
+If using github desktop, it automatically resolves submodules, so no command-line needed
+
+Then require it:
 ```lua
 local S = require 'Strike'
 ```
