@@ -2,10 +2,10 @@ local Object = Libs.classic
 
 local push, pop = table.insert, table.remove
 
----@class Pool : table Interface
+---@class Pool : table Mixin
 ---@field pool table
 ---@field limit number maximum number of instances
-Pool = Object:extend()
+local Pool = Object:extend()
 
 Pool.pool = {}
 Pool.limit = 128
@@ -16,7 +16,7 @@ function Pool:getPoolSize()
 	return #self.pool
 end
 
----Set size of objectp ool
+---Set size of object pool
 ---@param size number
 ---@return Object self
 function Pool:setPoolSize(size)
