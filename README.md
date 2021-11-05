@@ -5,9 +5,9 @@ Made primarily for the [LÖVE](https://github.com/love2d/love) community, but sh
 ## Installation
 Download or recurisvely clone Strike into your project's directory
 
-If using git's command line to clone Strike, run either of the following commands to clone it:
-git clone --recurse-submodules https://github.com/Aweptimum/Strike.git (git >= 2.13)
-git clone --recursive https://github.com/Aweptimum/Strike.git (git < 2.13)
+If using git's command line to clone Strike, run either of the following commands to clone it:\
+`git clone --recurse-submodules https://github.com/Aweptimum/Strike.git (git >= 2.13)`\
+`git clone --recursive https://github.com/Aweptimum/Strike.git (git < 2.13)`\
 If using github desktop, it automatically resolves submodules, so no command-line needed
 
 Then require it:
@@ -288,7 +288,7 @@ Pool:stow( obj, ... )   -- Stow variable # of instances in Class pool
 ### Broad Phase
 Has both circle-circle and aabb-aabb intersection test functions - `S.ircle(collider1, collider2)` and `S.aabb(collider1, collider2)` respectively. Both return true on interesction, else false.
 ### Narrow Phase (SAT)
-Calling `S:trike(collider1, collider2)` will check for collisions between the two given colliders and return a boolean (true/false) that signifies a collision, followed by a corresponding, second value (MTV/nil).
+Calling `S.triking(collider1, collider2)` will check for collisions between the two given colliders and return a boolean (true/false) that signifies a collision, followed by a corresponding, second value (MTV/nil).
 
 It's important to note that geometries within a Collider do not collide with each other. This is relevant for how Strike unintentionally gets around [Ghost Collisions](#ghosting)
 ## Resolution
