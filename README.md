@@ -5,9 +5,9 @@ Made primarily for the [LÖVE](https://github.com/love2d/love) community, but sh
 ## Installation
 Download or recurisvely clone Strike into your project's directory
 
-If using git's command line to clone Strike, run either of the following commands to clone it:
-git clone --recurse-submodules https://github.com/Aweptimum/Strike.git (git >= 2.13)
-git clone --recursive https://github.com/Aweptimum/Strike.git (git < 2.13)
+If using git's command line to clone Strike, run either of the following commands to clone it:\
+`git clone --recurse-submodules https://github.com/Aweptimum/Strike.git (git >= 2.13)`\
+`git clone --recursive https://github.com/Aweptimum/Strike.git (git < 2.13)`\
 If using github desktop, it automatically resolves submodules, so no command-line needed
 
 Then require it:
