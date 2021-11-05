@@ -34,12 +34,15 @@ function Pool:fetch( ... )
 end
 
 ---Stow variable # of instances in Class pool
+---
+---**relies on class's :new functioning as a reset when no args passed
 ---@vararg Object
+---@param obj Object
 ---@return nil
 function Pool:stow( obj, ... )
 	if not obj or #self.pool >= self.limit then return end
+	obj:new() -- use :new as :reset
 	push(self.pool, obj)
-    print('pool size: '..self:getPoolSize())
     return self:stow( ... )
 end
 
