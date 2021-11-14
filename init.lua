@@ -8,8 +8,6 @@ function _Require_relative(PATH, file, up)
     for i = 1, up do
         path, match = path:gsub("%.(%w+)$", '')
     end
-    --path = match == 0 and '.'..file or path
-    print('path: '..table.concat({path, file}, "."))
 	return require(table.concat({path, file}, "."))
 end
 
@@ -17,13 +15,13 @@ local scandir = require( table.concat({..., 'scandir'},".") )
 
 Libs = scandir('lib')
 for _, filename in ipairs(Libs) do
-    local ext = filename:sub(filename:len()-3, filename:len())
-    local name = ext == '.lua' and filename:sub(1,filename:len()-4) or filename
+    local ext = filename:match("^.+(%..+)$")
+    local name = ext == '.lua' and filename:gsub('.lua', '') or filename
     print('lib name: '..name)
     Libs[name] = require( table.concat({..., 'lib',name},".") )
 end
 
-local Strike  = require( table.concat({..., 'Strike'},".") )
+local Strike = require( table.concat({..., 'Strike'},".") )
 
 
 return Strike
