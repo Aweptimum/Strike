@@ -38,7 +38,7 @@ local Object = {}
 Object.__index = Object
 
 ---Abstract constructor
-function Object:new()
+function Object:new(...)
 end
 
 ---Inheritance method
