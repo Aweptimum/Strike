@@ -56,16 +56,25 @@ function Object:extend()
   return cls
 end
 
+local function implement(self, cls)
+  for k, v in pairs(cls) do
+    if self[k] == nil then
+      if type(v) ~= 'table' then
+        self[k] = v
+      else
+        self[k] = {}
+        implement(self[k], v)
+      end
+    end
+  end
+end
+
 ---Implement given interfaces (fields + functions)
 ---@vararg Object
 ---@return Object self
 function Object:implement(...)
   for _, cls in pairs({...}) do
-    for k, v in pairs(cls) do
-      if self[k] == nil then
-        self[k] = v
-      end
-    end
+    implement(self, cls)
   end
   return self
 end
