@@ -34,13 +34,14 @@ function Ellipse:new(x, y, a, b, n, angle)
 	-- 		x = a * cos(theta)
 	-- 		y = b * sin(theta)
 	-- where a is the major axis and b is the minor axis
+	local a_offset = angle - d_rads
 	for i = 1, segs do
 		-- Increment our angle offset
-		angle = angle + d_rads
+		a_offset = a_offset + d_rads
 		-- Add to vertices list
 		vertices[i] = {
-			x = x_offset + a * cos(angle),
-			y = y_offset + b * sin(angle)
+			x = x_offset + a * cos(a_offset),
+			y = y_offset + b * sin(a_offset)
 		}
 	end
 	-- Put everything into poly table and then return it
