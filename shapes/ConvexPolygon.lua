@@ -467,6 +467,43 @@ end
 
 ConvexPolygon.merge = merge_convex_incident
 
+---Contact Functions
+local function farthest(nx,ny, verts)
+    local maxd, index = -math.huge , 1
+    for i, point in ipairs(verts) do
+        local projection = Vec.dot(point.x,point.y, nx,ny)
+        if projection > maxd then
+            maxd = projection
+            index = i
+        end
+    end
+    return index
+end
+
+---Get the edge involved in a collision
+---@param nx number normalized x dir
+---@param ny number normalized y dir
+---@return table Max-Point
+---@return table Edge
+function ConvexPolygon:getFeature(nx,ny)
+    local verts = self.vertices
+    -- get farthest point in direction of normal
+    local index = farthest(nx,ny, verts)
+    -- test adjacent points to find edge most perpendicular to normal
+    local v = verts[index]
+    local i0 = index - 1 >= 1 and index - 1 or #verts
+    local i1 = index + 1 <= #verts and index + 1 or 1
+    local v0 = verts[i0]
+    local v1 = verts[i1]
+    local gx,gy = Vec.normalize( Vec.sub(v.x,v.y, v0.x,v0.y) )
+    local hx,hy = Vec.normalize( Vec.sub(v.x,v.y, v1.x,v1.y) )
+    if math.abs(Vec.dot(gx,gy, nx,ny)) <= math.abs(Vec.dot(hx,hy, nx,ny)) then
+        return {x=v.x,y=v.y}, {{x=v0.x,y=v0.y}, {x=v.x,y=v.y}}
+    else
+        return {x=v.x,y=v.y}, {{x=v.x,y=v.y}, {x=v1.x,y=v1.y}}
+    end
+end
+
 if love and love.graphics then
 	---Draw polygon w/ LOVE
 	---@param mode string fill/line
