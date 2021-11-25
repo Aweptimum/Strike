@@ -1,11 +1,12 @@
-local Vec		= _Require_relative( ... , "lib.DeWallua.vector-light")
-local Shapes 	= _Require_relative( ... , "shapes")
-local Colliders	= _Require_relative( ... , "colliders")
-local Collider	= _Require_relative( ... , "colliders.Collider")
+local Vec		= _Require_relative( ... , 'lib.DeWallua.vector-light')
+local Shapes 	= _Require_relative( ... , 'shapes')
+local Colliders	= _Require_relative( ... , 'colliders')
+local Collider	= _Require_relative( ... , 'colliders.Collider')
 ---@type MTV
 local MTV = _Require_relative(..., 'classes.MTV')
 
-local min   = math.min
+local contact = _Require_relative(..., 'contact')
+local min = math.min
 local inf = math.huge
 
 -- Get sign of number
@@ -208,6 +209,7 @@ S.ircle = circle_circle
 S.triking = striking
 S.ettle = settle
 S.hove	= shove
+S.ite = contact
 
 -- Functions to draw collision info
 S.howMTV = show_mtv
