@@ -290,9 +290,12 @@ Has both circle-circle and aabb-aabb intersection test functions - `S.ircle(coll
 ### Narrow Phase (SAT)
 Calling `S.triking(collider1, collider2)` will check for collisions between the two given colliders and return a boolean (true/false) that signifies a collision, followed by a corresponding, second value (MTV/nil).
 
-It's important to note that geometries within a Collider do not collide with each other. This is relevant for how Strike unintentionally gets around [Ghost Collisions](#ghosting)
-## Resolution
+It's important to note that geometries contained in the same Collider do not collide with each other. This is relevant for how Strike unintentionally gets around [Ghost Collisions](#ghosting)
+### Resolution
 Calling `S.ettle(mtv)` will move the referenced colliders by half the magnitude of the mtv in opposite directions to one another.
+
+### Point of Contact
+Calling `S.ite(mtv)` will return a table with 1-2 contact points (`{{x=x_val, y=y_val}}`) that represent the position of the collision. For compound Colliders, it only checks for contact between the shapes that generated the MTV, which is currently the maximum of all potential MTV's.
 
 ## In Love?
 If you're running within [LÖVE](https://github.com/love2d/love), every included shape has an appropriate `:draw` function defined. Calling `collider:draw` will draw every single shape and collider contained.
