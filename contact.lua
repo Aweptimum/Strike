@@ -42,7 +42,7 @@ local function contact(mtv)
         flip = -1
     end
 
-    local refvx, refvy = Vec.sub(e1[2].x,e1[2].y,e1[1].x,e1[1].y)
+    local refvx, refvy = Vec.sub(ref[2].x,ref[2].y,ref[1].x,ref[1].y)
     refvx, refvy = Vec.normalize(refvx,refvy)
 
     -- project first vertex onto reference edge
@@ -60,10 +60,10 @@ local function contact(mtv)
     -- Ensure clips are not past projection of max onto ref-edge normal
     local cp0 = Vec.dot(refnx,refny, cp[1].x,cp[1].y) - max
     local cp1 = Vec.dot(refnx,refny, cp[2].x,cp[2].y) - max
-    if cp0 - max < 0 then
+    if cp0 < 0 then
         pop(cp, 1)
     end
-    if cp1 - max < 0 then
+    if cp1 < 0 then
         pop(cp, 2)
     end
 
