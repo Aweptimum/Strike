@@ -433,8 +433,8 @@ end
 
 -- Given two convex polygons, merge them together
 -- So long as the new polygon is also convex
----@param poly1 Shape
----@param poly2 Shape
+---@param poly1 ConvexPolygon
+---@param poly2 ConvexPolygon
 ---@return ConvexPolygon | boolean
 local function merge_convex_incident(poly1, poly2)
 	if not poly2.vertices then return false end
