@@ -176,14 +176,20 @@ function Circle:merge()
     return false -- Can't merge circles :/
 end
 
+--Get the point on the circle in the furthest direction of the given vector
+---@param nx number normalized x dir
+---@param ny number normalized y dir
+---@return table Max-Point
+function Circle:farthest(nx,ny)
+    local px,py = Vec.mul(self.radius, nx,ny)
+    return {x=self.centroid.x+px, y= self.centroid.y+py}
+end
+
 ---Get the point involved in a collision
 ---@param nx number normalized x dir
 ---@param ny number normalized y dir
 ---@return table Max-Point
-function Circle:getFeature(nx,ny)
-    local px,py = Vec.mul(self.radius, nx,ny)
-    return {x=self.centroid.x+px, y= self.centroid.y+py}
-end
+Circle.getFeature = Circle.farthest
 
 if love and love.graphics then
     ---Draw Circle w/ LOVE
