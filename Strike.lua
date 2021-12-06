@@ -61,7 +61,7 @@ local function project(shape1, shape2)
 		-- Test for bounding overlap
 		if not ( shape1_max_dot > shape2_min_dot and shape2_max_dot > shape1_min_dot ) then
 			-- Separating Axis, return
-			return MTV:fetch(0,0)
+			return false, MTV:fetch(dx, dy)
 		else
 			-- Find the overlap (minimum difference of bounds), which is equal to the magnitude of the MTV
 			overlap = min(shape1_max_dot-shape2_min_dot, shape2_max_dot-shape1_min_dot)
@@ -81,27 +81,26 @@ local function project(shape1, shape2)
 	mtv:setColliderShape(shape1)
 	mtv:setEdgeIndex(edge_index)
 	mtv:setCollidedShape(shape2)
-	return mtv
+	return true, mtv
 end
 
 local function SAT(shape1, shape2)
-	local mtv1 = project(shape1, shape2)
-	if mtv1:mag() == 0 then -- don't bother calculating mtv2
-		MTV:stow(mtv1)
-		return false, nil
+	local overlap, mtv1, mtv2
+	overlap, mtv1 = project(shape1, shape2)
+	if not overlap then -- don't bother calculating mtv2
+		return false, mtv1
 	end
-	local mtv2 = project(shape2, shape1)
-	if mtv2:mag() == 0 then
-		MTV:stow(mtv1, mtv2)
-		return false, nil
+	overlap, mtv2 = project(shape2, shape1)
+	if not overlap then
+		return false, mtv2
 	end
 	-- Else, return the min
 	if mtv1:mag() < mtv2:mag() then
 		MTV:stow(mtv2)
-		return 1, mtv1
+		return true, mtv1
 	else
 		MTV:stow(mtv1)
-		return 2, mtv2
+		return true, mtv2
 	end
 end
 
@@ -206,6 +205,7 @@ S.aabb = aabb_aabb
 S.ircle = circle_circle
 
 -- Add collison functions
+S.AT = SAT
 S.triking = striking
 S.ettle = settle
 S.hove	= shove
