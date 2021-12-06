@@ -189,7 +189,7 @@ end
 ---@param nx number normalized x dir
 ---@param ny number normalized y dir
 ---@return table Max-Point
-Circle.getSupport = Circle.farthest
+Circle.getFeature = Circle.farthest
 
 if love and love.graphics then
     ---Draw Circle w/ LOVE
