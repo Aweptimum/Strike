@@ -180,7 +180,7 @@ end
 ---@param nx number normalized x dir
 ---@param ny number normalized y dir
 ---@return table Max-Point
-function Circle:farthest(nx,ny)
+function Circle:getSupport(nx,ny)
     local px,py = Vec.mul(self.radius, nx,ny)
     return {x=self.centroid.x+px, y= self.centroid.y+py}
 end
@@ -189,7 +189,7 @@ end
 ---@param nx number normalized x dir
 ---@param ny number normalized y dir
 ---@return table Max-Point
-Circle.getFeature = Circle.farthest
+Circle.getFeature = Circle.getSupport
 
 if love and love.graphics then
     ---Draw Circle w/ LOVE
