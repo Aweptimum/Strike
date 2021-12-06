@@ -290,7 +290,7 @@ Has both circle-circle and aabb-aabb intersection test functions - `S.ircle(coll
 ### Narrow Phase (SAT)
 Calling `S.triking(collider1, collider2)` will check for collisions between the two given colliders and return a boolean (true/false) that signifies a collision, followed by a corresponding, second value (MTV/nil).
 
-The underlying SAT algorithm for two convex shapes is exposed through `S.AT(shape1, shape2)`, and it similarly returns an overlap boolean `true/false` and an `MTV`. When `true`, the MTV is the vector of minimum separation. When `false`, the MTV is just a vector representing the axis of separation, a normal of one of the shape's edges.
+The underlying SAT algorithm for two convex shapes is exposed through `S.AT(shape1, shape2)`, and it similarly returns an overlap boolean `true/false` and an `MTV`. When `true`, the MTV is the vector of minimum separation. When `false`, the MTV is just a vector representing the axis of separation, a normal of one of the shape's edges. It's entirely possible to build your physics around Shapes + S.AT instead of using Colliders + S.triking if you don't need composite shapes or groups of geometry.
 
 It's important to note that geometries contained in the same Collider do not collide with each other. This is relevant for how Strike unintentionally gets around [Ghost Collisions](#ghosting)
 ### Resolution
