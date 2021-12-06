@@ -97,10 +97,10 @@ local function SAT(shape1, shape2)
 	-- Else, return the min
 	if mtv1:mag() < mtv2:mag() then
 		MTV:stow(mtv2)
-		return true, mtv1
+		return 1, mtv1
 	else
 		MTV:stow(mtv1)
-		return true, mtv2
+		return 2, mtv2
 	end
 end
 
