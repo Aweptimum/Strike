@@ -26,8 +26,8 @@ local function contact(mtv)
     local flip = 1
     local nx,ny = Vec.normalize(mtv.x,mtv.y)
     local s1, s2 = mtv.colliderShape, mtv.collidedShape
-    local e1max, e1 = s1:getFeature(nx,ny)
-    local e2max, e2 = s2:getFeature(-nx,-ny)
+    local e1max, e1 = s1:getSupport(nx,ny)
+    local e2max, e2 = s2:getSupport(-nx,-ny)
     if not e1 then return {e1max} elseif not e2 then return {e2max} end
     local e1x, e1y = Vec.sub(e1[2].x,e1[2].y,e1[1].x,e1[1].y)
     local e2x, e2y = Vec.sub(e2[2].x,e2[2].y,e2[1].x,e2[1].y)

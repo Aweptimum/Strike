@@ -485,7 +485,7 @@ end
 ---@param ny number normalized y dir
 ---@return table Max-Point
 ---@return table Edge
-function ConvexPolygon:getFeature(nx,ny)
+function ConvexPolygon:getSupport(nx,ny)
     local verts = self.vertices
     -- get farthest point in direction of normal
     local index = self:farthest(nx,ny, verts)
