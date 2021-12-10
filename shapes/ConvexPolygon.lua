@@ -468,9 +468,9 @@ end
 ConvexPolygon.merge = merge_convex_incident
 
 ---Contact Functions
-function ConvexPolygon:getSupport(nx,ny, verts)
+function ConvexPolygon:getSupport(nx,ny)
     local maxd, index = -math.huge , 1
-    for i, point in ipairs(verts) do
+    for i, point in ipairs(self.vertices) do
         local projection = Vec.dot(point.x,point.y, nx,ny)
         if projection > maxd then
             maxd = projection
@@ -488,7 +488,7 @@ end
 function ConvexPolygon:getFeature(nx,ny)
     local verts = self.vertices
     -- get farthest point in direction of normal
-    local index = self:getSupport(nx,ny, verts)
+    local index = self:getSupport(nx,ny)
     -- test adjacent points to find edge most perpendicular to normal
     local v = verts[index]
     local i0 = index - 1 >= 1 and index - 1 or #verts
