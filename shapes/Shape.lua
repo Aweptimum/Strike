@@ -4,6 +4,7 @@ local Object = Libs.classic
 ---@class Shape
 ---@field public centroid Point
 ---@field public area number
+---@field public radius number
 local Shape = Object:extend()
 
 Shape.type = 'shape'
@@ -23,10 +24,11 @@ function Shape:getAreaCentroid()
     return self.area, self.centroid
 end
 
-function Shape:getBbox()
+function Shape:getRadius()
+	return self.radius
 end
 
-function Shape:getRadius()
+function Shape:getBbox()
 end
 
 function Shape:project()
