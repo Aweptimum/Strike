@@ -10,7 +10,7 @@ function t.tprint (tbl, height, indent)
 		local formatting = string.rep("  ", indent) .. tostring(k) .. ": "
 		if type(v) == "table" then
 			print(formatting, indent*8, 16*height)
-			tprint(v, height+1, indent+1)
+			t.tprint(v, height+1, indent+1)
 		elseif type(v) == 'function' then
 			print(formatting .. "function", indent*8, 16*height)
 		elseif type(v) == 'boolean' then
