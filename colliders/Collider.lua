@@ -120,6 +120,14 @@ function Collider:getRadius()
     return self.radius
 end
 
+function Collider:getVertexCount()
+    local total = 0
+    for i, shape in self:ipairs() do
+        total = total + shape:getVertexCount()
+    end
+    return total
+end
+
 ---Collider constructor; takes variadic list of Shapes/Colliders
 ---@vararg Shape
 ---@param shape Shape | Collider
