@@ -1,7 +1,6 @@
-local S = require (string.gsub(..., '.ccd','.Strike' ))
+local S   = require (string.gsub(..., '.ccd','.Strike' ))
 local MTV = _Require_relative(..., 'classes.MTV')
-local Vec		= _Require_relative( ... , 'lib.DeWallua.vector-light')
-local tbl = Libs.tbl
+local Vec = _Require_relative( ... , 'lib.DeWallua.vector-light')
 
 local SAT = S.AT
 local slop = 0.000001
@@ -27,11 +26,9 @@ function ccdState:sweep(t)
 end
 
 function ccdState:seen(dx,dy)
-    --print(tostring(self.cache))
     for i, vec in ipairs(self.cache) do
         if math.abs(Vec.det(vec.x,vec.y, dx,dy)) < 0.0001 then return true end
     end
-    --print('added to cache')
     table.insert(self.cache, {x=dx,y=dy})
     return false
 end
@@ -40,9 +37,6 @@ function ccdState:init_axis(t)
     self:sweep(t)
     local from, mtv = SAT(self.sweep1.body, self.sweep2.body)
     self.axis = mtv
-    local v = Vec.str(Vec.normalize(mtv.x,mtv.y))
-    --print('init axis: '..v)
-    --print('at t: '..tostring(t))
     return from, mtv
 end
 
@@ -76,22 +70,21 @@ end
 local function time_of_impact(sweep1, sweep2)
     local state = ccdState(sweep1, sweep2, 0)
     local shape1, shape2 = sweep1.body, sweep2.body
-    local totalradius = shape1:getRadius() + shape2:getRadius()
-    local target = math.max(slop, totalradius)
-    target = slop
-    --print('target: '..target)
-    local tolerance = 0.25 * slop
+    --local totalradius = shape1:getRadius() + shape2:getRadius()
+    --local target = math.max(slop, totalradius)
+    local target = slop
+    local tolerance = 0.5
 
     local t1, t2 = 0, 1
     local max_itrs = 20
     local iter = 0
+    local push_back_ters = sweep1.body:getVertexCount() + sweep2.body:getVertexCount()
     -- The outer loop progressively attempts to compute new separating axes.
     for i = iter, max_itrs do
         state:sweep(t1)
         -- Get separating axis (if 'from' is a number then it's an MTV)
         local from, mtv = state:init_axis(t1)
-        state:seen(mtv.x,mtv.y)
-        --tbl.tprint(state.cache)
+
         --If the shapes are overlapped, we give up on continuous collision.
         if from then
             --print('overlapped')
@@ -109,9 +102,8 @@ local function time_of_impact(sweep1, sweep2)
         --Compute the TOI on the separating axis. We do this by successively
         --resolving the deepest point. This loop is bounded by the number of vertices.
         local done = false
-        local push_back_ters = 0
         t2 = 1
-        while true do
+        for i = 1, push_back_ters do
             -- find the deepest points at t2, store their indices
             local s2 = state:find_min_separation(t2)
             -- Is the final configuration separated?
@@ -172,17 +164,8 @@ local function time_of_impact(sweep1, sweep2)
             end
         end
     end
-    return 'failure'
+    -- failure
+    return false
 end
 
-local function TOI(sweep1, sweep2)
-    local t = time_of_impact(sweep1, sweep2)
-    if type(t) == 'number' then
-        --sweep2:apply(t)
-        --sweep1:apply(t)
-    end
-    --print('t: '..tostring(t))
-    return t
-end
-
-return TOI
+return time_of_impact
