@@ -1,5 +1,5 @@
 local tbl = Libs.tbl
-local Vec = _Require_relative(..., 'lib.DeWallua.vector-light')
+local Vec = _Require_relative(..., 'lib.DeWallua.vector-light', 1)
 local push, pop = table.insert, table.remove
 -- My port of this: https://dyn4j.org/2011/11/contact-points-using-clipping/#cpg-clip
 
