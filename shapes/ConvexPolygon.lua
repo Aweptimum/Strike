@@ -183,6 +183,10 @@ function ConvexPolygon:calcRadius()
 	return self.radius
 end
 
+function ConvexPolygon:getVertexCount()
+    return #self.vertices
+end
+
 ---Get polygon bounding box
 ---@return number x, number y, number dx, number dy minimum x/y, width, and height
 function ConvexPolygon:getBbox()
