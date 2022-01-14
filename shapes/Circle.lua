@@ -31,6 +31,10 @@ function Circle:calcArea()
     return self
 end
 
+function Circle:getVertexCount()
+    return 1
+end
+
 ---comment
 ---@return number x minimum x
 ---@return number y minimum y

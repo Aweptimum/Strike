@@ -159,6 +159,10 @@ function ConvexPolygon:new(x,y, ...)
 	assert(not self_intersecting(self.vertices), 'Ordered points still self-intersecting')
 end
 
+function ConvexPolygon:getVertexCount()
+    return #self.vertices
+end
+
 --- Need this to test if a shape is completely inside
 ---@param point Point
 function ConvexPolygon:containsPoint(point)
