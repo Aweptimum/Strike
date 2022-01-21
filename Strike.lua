@@ -53,13 +53,6 @@ local function striking(collider1, collider2)
 			end
 		end
 	end
-	if from == 1 then
-		max_mtv:setCollider(collider1)
-		max_mtv:setCollided(collider2)
-	elseif from == 2 then
-		max_mtv:setCollider(collider2)
-		max_mtv:setCollided(collider1)
-	end
 	return max_mtv:mag() ~= 0 and from, max_mtv or false
 end
 

@@ -5,9 +5,18 @@ local Object = Libs.classic
 ---@field public centroid Point
 ---@field public area number
 ---@field public radius number
+---@field public parent nil|Shape|Collider
 local Shape = Object:extend()
 
 Shape.type = 'shape'
+
+function Shape:getRoot()
+	local s = self
+	while s.parent do
+		s = s.parent
+	end
+	return s
+end
 
 ---@return number area
 function Shape:getArea()
