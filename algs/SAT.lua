@@ -25,7 +25,11 @@ local function project(shape1, shape2)
 		-- Test for bounding overlap
 		if not ( shape1_max_dot > shape2_min_dot and shape2_max_dot > shape1_min_dot ) then
 			-- Separating Axis, return
-			return false, MTV:fetch(dx, dy)
+            local mtv = MTV:fetch(dx, dy)
+            mtv:setColliderShape(shape1)
+            mtv:setEdgeIndex(edge_index)
+            mtv:setCollidedShape(shape2)
+			return false, mtv
 		else
 			-- Find the overlap (minimum difference of bounds), which is equal to the magnitude of the MTV
 			overlap = min(shape1_max_dot-shape2_min_dot, shape2_max_dot-shape1_min_dot)
