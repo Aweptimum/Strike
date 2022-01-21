@@ -22,6 +22,7 @@ Collider.shapes = {}
 ---@param shape Shape
 function Collider:add(shape, ...)
     if not shape then return end
+    shape.parent = self
     push(self.shapes, shape)
     self:add(...)
 end
