@@ -100,6 +100,10 @@ function Collider:getVertexCount()
     return total
 end
 
+function Collider:getRadius()
+    return self.radius
+end
+
 ---Collider constructor; takes variadic list of Shapes/Colliders
 ---@vararg Shape
 ---@param shape Shape | Collider
