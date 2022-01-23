@@ -10,6 +10,8 @@ local Shape = Object:extend()
 
 Shape.type = 'shape'
 
+---Get Shape's root container
+---@return Collider | nil
 function Shape:getRoot()
 	local s = self
 	while s.parent do
