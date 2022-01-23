@@ -59,14 +59,16 @@ end
 ---Translate both colliders (contained in MTV) equally away from each other
 ---@param mtv MTV
 local function settle(mtv)
-	mtv.collider:translate( Vec.mul(-.5, mtv.x, mtv.y))
-	mtv.collided:translate( Vec.mul(0.5, mtv.x, mtv.y))
+	local collider, collided = mtv.colliderShape:getRoot(), mtv.collidedShape:getRoot()
+	collider:translate( Vec.mul(-.5, mtv.x, mtv.y))
+	collided:translate( Vec.mul(0.5, mtv.x, mtv.y))
 end
 
 ---Translate mtv.collided by full mtv (good for edge collision)
 ---@param mtv MTV
 local function shove(mtv)
-	mtv.collided:translate( mtv.x, mtv.y )
+	local collided = mtv.collidedShape:getRoot()
+	collided:translate( mtv.x, mtv.y )
 end
 
 ---Draw an mtv w/ LOVE
