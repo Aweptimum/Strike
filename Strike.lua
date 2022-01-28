@@ -42,18 +42,18 @@ end
 ---@return number | boolean
 ---@return MTV | nil
 local function striking(collider1, collider2)
-	local max_mtv, c = MTV:fetch(0, 0), 0
-	local from, mtv
+	local collision, max_mtv = false, MTV(0, 0)
+	local c, mtv
 	for _, shape1 in collider1:ipairs() do
 		for _, shape2 in collider2:ipairs() do
 			c, mtv = SAT(shape1, shape2)
 			if c and mtv:mag() > max_mtv:mag() then
-				from = c
 				max_mtv = mtv
+				collision = true
 			end
 		end
 	end
-	return max_mtv:mag() ~= 0 and from, max_mtv or false
+	return collision and max_mtv or not true
 end
 
 ---Translate both colliders (contained in MTV) equally away from each other
