@@ -32,6 +32,12 @@ function MTV:mag()
 	return Vec.len(self.x, self.y)
 end
 
+---Get MTV magnitude squared
+---@return number
+function MTV:mag2()
+	return Vec.len2(self.x, self.y)
+end
+
 ---Set the mtv's reference
 ---@param collider Collider
 function MTV:setCollider(collider)

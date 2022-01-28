@@ -63,7 +63,7 @@ local function SAT(shape1, shape2)
 		return false, mtv2
 	end
 	-- Else, return the min
-	local mintv = mtv1:mag() < mtv2:mag() and mtv1 or mtv2
+	local mintv = mtv1:mag2() < mtv2:mag2() and mtv1 or mtv2
 	return true, mintv
 end
 

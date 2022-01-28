@@ -49,7 +49,7 @@ local function striking(collider1, collider2)
 		for shape2 in collider2:sshapes() do
 			--local shape2 = state2.shape
 			c, mtv = SAT(shape1, shape2)
-			if c and mtv:mag() > max_mtv:mag() then
+			if c and mtv:mag2() > max_mtv:mag2() then
 				max_mtv = mtv
 				collision = true
 			end
