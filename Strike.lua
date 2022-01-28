@@ -47,7 +47,7 @@ local function striking(collider1, collider2)
 	for _, shape1 in collider1:ipairs() do
 		for _, shape2 in collider2:ipairs() do
 			c, mtv = SAT(shape1, shape2)
-			if c and mtv:mag() > max_mtv:mag() then
+			if c and mtv:mag2() > max_mtv:mag2() then
 				max_mtv = mtv
 				collision = true
 			end
