@@ -43,11 +43,11 @@ end
 ---@return MTV | nil
 local function striking(collider1, collider2)
 	local collision, max_mtv = false, MTV(0, 0)
-	local c, mtv
+	local mtv
 	for _, shape1 in collider1:ipairs() do
 		for _, shape2 in collider2:ipairs() do
-			c, mtv = SAT(shape1, shape2)
-			if c and mtv:mag2() > max_mtv:mag2() then
+			mtv = SAT(shape1, shape2)
+			if not mtv.separating and mtv:mag2() > max_mtv:mag2() then
 				max_mtv = mtv
 				collision = true
 			end
