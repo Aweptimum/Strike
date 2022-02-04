@@ -25,11 +25,8 @@ local function project(shape1, shape2)
 		-- Test for bounding overlap
 		if not ( shape1_max_dot > shape2_min_dot and shape2_max_dot > shape1_min_dot ) then
 			-- Separating Axis, return
-            local mtv = MTV:fetch(dx, dy)
-            mtv:setColliderShape(shape1)
-            mtv:setEdgeIndex(edge_index)
-            mtv:setCollidedShape(shape2)
-			return false, mtv
+            local mtv = MTV:fetch(dx, dy, shape1, shape2, true)
+            return mtv
 		else
 			-- Find the overlap (minimum difference of bounds), which is equal to the magnitude of the MTV
 			overlap = min(shape1_max_dot-shape2_min_dot, shape2_max_dot-shape1_min_dot)
@@ -45,26 +42,24 @@ local function project(shape1, shape2)
 	local ccx, ccy = shape2.centroid.x - shape1.centroid.x, shape2.centroid.y - shape1.centroid.y
 	local s = sign( Vec.dot(mtv_dx, mtv_dy, ccx, ccy) )
 	-- Welp. We made it here. So they're colliding, I guess. Hope it's consensual :(
-	local mtv = MTV:fetch( Vec.mul(s*minimum, mtv_dx, mtv_dy) )
-	mtv:setColliderShape(shape1)
-	mtv:setEdgeIndex(edge_index)
-	mtv:setCollidedShape(shape2)
-	return true, mtv
+	local mx, my = Vec.mul(s*minimum, mtv_dx, mtv_dy)
+	local mtv = MTV:fetch(mx, my, shape1, shape2, false)
+	return mtv
 end
 
 local function SAT(shape1, shape2)
-	local overlap, mtv1, mtv2
-	overlap, mtv1 = project(shape1, shape2)
-	if not overlap then -- don't bother calculating mtv2
-		return false, mtv1
+	local mtv1, mtv2
+	mtv1 = project(shape1, shape2)
+	if mtv1.separating then -- don't bother calculating mtv2
+		return mtv1
 	end
-	overlap, mtv2 = project(shape2, shape1)
-	if not overlap then
-		return false, mtv2
+	mtv2 = project(shape2, shape1)
+	if mtv2.separating then
+		return mtv2
 	end
 	-- Else, return the min
 	local mintv = mtv1:mag2() < mtv2:mag2() and mtv1 or mtv2
-	return true, mintv
+	return mintv
 end
 
 return SAT

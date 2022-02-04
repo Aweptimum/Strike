@@ -10,6 +10,7 @@ local Pool = _Require_relative( ..., 'Pool')
 ---@field collided Collider the collider this MTV is oriented to
 ---@field collidedShape Shape the shape this MTV is oriented to
 ---@field colliderShape Shape the shape this MTV is oriented from
+---@field separating boolean true = separating axis, false = overlapping axis
 local MTV = Object:extend():implement(Pool)
 
 ---MTV ctor
@@ -17,10 +18,11 @@ local MTV = Object:extend():implement(Pool)
 ---@param dy number magnitude of y-component
 ---@param rshape Collider mtv oriented from
 ---@param dshape Collider mtv oriented towards
-function MTV:new(dx, dy, rshape, dshape)
+function MTV:new(dx, dy, rshape, dshape, separating)
 	self.x, self.y = dx or 0, dy or 0
 	self.colliderShape = rshape
 	self.collidedShape = dshape
+	self.separating = separating or not true
 	self.edgeIndex = 0
 end
 
