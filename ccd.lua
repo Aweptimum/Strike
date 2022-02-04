@@ -35,9 +35,9 @@ end
 
 function ccdState:init_axis(t)
     self:sweep(t)
-    local from, mtv = SAT(self.sweep1.body, self.sweep2.body)
+    local mtv = SAT(self.sweep1.body, self.sweep2.body)
     self.axis = mtv
-    return from, mtv
+    return mtv
 end
 
 function ccdState:evaluate_axis(t)
@@ -83,10 +83,10 @@ local function time_of_impact(sweep1, sweep2)
     for i = iter, max_itrs do
         state:sweep(t1)
         -- Get separating axis (if 'from' is a number then it's an MTV)
-        local from, mtv = state:init_axis(t1)
+        local mtv = state:init_axis(t1)
 
         --If the shapes are overlapped, we give up on continuous collision.
-        if from then
+        if not mtv.separating then
             --print('overlapped')
             return 0
         end
