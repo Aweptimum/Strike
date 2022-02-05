@@ -79,6 +79,7 @@ There are a few more methods, specifically:
 ```lua
 shape:copy(x,y, angle_rads) -- (returns a copy, go figure) w/ centroid located at `x, y` and the specified angle.
 shape:ipairs( ?shape2 )	    -- Edge iterator. shape2 only necessary for Circles, which need another shape to get a useful edge
+shape:vecs( ?shape2 )	    -- Vector iterator. shape2 only necessary for Circles, which need another shape to get a useful edge
 ```
 ## Colliders
 Accessed via `S.trikers`, Colliders are grab-bags of geometry that are used for collision detection. They can be composed of Shapes, but may also contain other Colliders (and their shapes). The only requirement is that *every shape* in the Collider is convex. As with Shapes, available Colliders are defined in the `/colliders` directory and auto-loaded in. You can define custom collider definitions for particular collections of geometry that you're fond of. Just look at the included `Capsule` definition for a simple example. The included collider objects are listed below.
