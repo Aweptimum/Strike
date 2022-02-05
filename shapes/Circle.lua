@@ -79,6 +79,34 @@ function Circle:ipairs(shape)
     return iter_edges, state, nil
 end
 
+local function iter_vecs(state)
+    local endx, endy
+	state.i = state.i + 1
+    local c = state.self.centroid
+    local shape = state.shape
+    local sc = shape.centroid
+	if state.i <= 1 then
+        if shape.name == 'circle' then
+            endx, endy = sc.x, sc.y
+        else
+            local mp = get_closest_point(shape, c)
+            endx, endy = mp.x, mp.y
+        end
+        local normx, normy = Vec.perpendicular(Vec.sub(endx,endy, c.x,c.y))
+        return state.i, {x = normx, y = normy}
+    end
+end
+
+---Iterate over edge vectors
+---@param shape Shape
+---@return function
+---@return number i
+---@return Vector vec
+function Circle:vecs(shape)
+    local state = {self=self, shape=shape, i=0}
+    return iter_vecs, state, nil
+end
+
 ---Translate by displacement vector
 ---@param dx number
 ---@param dy number
