@@ -433,9 +433,6 @@ Very little in this library was done in the best way from the start, and it's be
 * **Broad-Phase Data Structures**\
 	There's more than one way to do it ¯\\\_(ツ)\_/¯\
 	Strike's geometry objects are really just factories - pipe their output into your structure of choice.
-* **Continuous Collision Detection**\
-	For good CCD, it's best to handle it in a physics implementation that would wrap around Strike. Mostly because having access to velocity and rotation vectors allows
-	for interpolationg between timesteps. Right now, `dt` is absent from this library.
 
 ## TODO
 - [ ] Clean up (require structure is awful, might need to eschew vector-light)
