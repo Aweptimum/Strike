@@ -251,6 +251,23 @@ function ConvexPolygon:ipairs()
     return iter_edges, self, 0
 end
 
+local function iter_vecs(shape, i)
+	i = i + 1
+	local v = shape.vertices
+	if i <= #v then
+		local j = i < #v and i+1 or 1
+		return i, {x = v[j].x - v[i].x, y = v[j].y - v[i].y}
+	end
+end
+
+---Iterate over edge vectors
+---@return function
+---@return ConvexPolygon
+---@return number
+function ConvexPolygon:vecs()
+    return iter_vecs, self, 0
+end
+
 ---Translate by displacement vector
 ---@param dx number
 ---@param dy number

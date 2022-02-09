@@ -39,8 +39,7 @@ end
 ---Check if two colliders are intersecting
 ---@param collider1 Collider
 ---@param collider2 Collider
----@return number | boolean
----@return MTV | nil
+---@return MTV | boolean
 local function striking(collider1, collider2)
 	local collision, max_mtv = false, MTV(0, 0)
 	local c, mtv

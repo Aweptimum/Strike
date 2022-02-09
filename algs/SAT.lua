@@ -14,9 +14,9 @@ local function project(shape1, shape2)
 	local overlap, dx, dy
 	local shape1_min_dot, shape1_max_dot, shape2_min_dot, shape2_max_dot
 	-- loop through shape1 geometry
-	for i, edge in shape1:ipairs(shape2) do
+	for i, vec in shape1:vecs(shape2) do
 		-- get the normal
-		dx, dy = Vec.normalize( Vec.sub(edge[3],edge[4], edge[1], edge[2]) )
+		dx, dy = Vec.normalize( vec.x, vec.y )
 		dx, dy = dy, -dx
 		-- Project both shapes 1 and 2 onto this normal to get their shadows
 		shape1_min_dot, shape1_max_dot = shape1:project(dx, dy)

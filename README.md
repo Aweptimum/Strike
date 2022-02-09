@@ -79,6 +79,7 @@ There are a few more methods, specifically:
 ```lua
 shape:copy(x,y, angle_rads) -- (returns a copy, go figure) w/ centroid located at `x, y` and the specified angle.
 shape:ipairs( ?shape2 )	    -- Edge iterator. shape2 only necessary for Circles, which need another shape to get a useful edge
+shape:vecs( ?shape2 )	    -- Vector iterator. shape2 only necessary for Circles, which need another shape to get a useful edge
 ```
 ## Colliders
 Accessed via `S.trikers`, Colliders are grab-bags of geometry that are used for collision detection. They can be composed of Shapes, but may also contain other Colliders (and their shapes). The only requirement is that *every shape* in the Collider is convex. As with Shapes, available Colliders are defined in the `/colliders` directory and auto-loaded in. You can define custom collider definitions for particular collections of geometry that you're fond of. Just look at the included `Capsule` definition for a simple example. The included collider objects are listed below.
@@ -220,7 +221,7 @@ end
 ## MTV's
 Minimum Translating Vectors are an object that represent the penetration depth between two colliders. It sits under the `classes/` directory if you wish to use it. Here's the constructor:
 ```lua
-MTV(dx, dy, collider, collided)
+MTV(dx, dy, colliderShape, collidedShape)
 ```
 Where `dx,dy` are the vector components and `collider/collided` are each a Collider for reference.
 There are other fields that are not currently set from the constructor. An example of the contained fields is below:
@@ -232,7 +233,8 @@ MTV = {
     collided = <reference-to-collider>,
     colliderShape = <reference-to-collider-shape>,
     collidedShape = <reference-to-collided-shape>,
-    edgeIndex = colliderShape-edge-index
+    edgeIndex = colliderShape-edge-index,
+    separating = boolean
 }
 ```
 The vector components are accessed via `mtv.x` and `mtv.y`. The `collider` field represents the collider that the mtv is oriented *from*. If you were to draw the mtv from the centroid of the collider object, it would point out of the shape, towards the collider it is currently intersecting. The `collided` field is a reference to that intersected collider, the one that the mtv would be pointing *towards*. This information is necessary to know the orientation of the mtv and for settling/resolving collisions; they can directly be operated on from the references in the mtv.
@@ -254,7 +256,7 @@ MTV:setCollided(collider)
 
 MTV:setCollidedShape(shape)
 ```
-The one practical instance method of interest might be `MTV:mag()` - it returns the magnitude of the separating vector.
+The one practical instance method of interest might be `MTV:mag()/mag2` - it returns the magnitude/magnitude-squared of the separating vector.
 
 ### Object Pooling
 The `MTV` object implements the `Pool` mixin in [`classes/Pool.lua`](https://github.com/Aweptimum/Strike/blob/main/classes/Pool.lua). The following instance methods can be used to interact with the pool:
@@ -288,9 +290,9 @@ Pool:stow( obj, ... )   -- Stow variable # of instances in Class pool
 ### Broad Phase
 Has both circle-circle and aabb-aabb intersection test functions - `S.ircle(collider1, collider2)` and `S.aabb(collider1, collider2)` respectively. Both return true on interesction, else false.
 ### Narrow Phase (SAT)
-Calling `S.triking(collider1, collider2)` will check for collisions between the two given colliders and return a boolean (true/false) that signifies a collision, followed by a corresponding, second value (MTV/nil).
+Calling `S.triking(collider1, collider2)` will check for collisions between the two given colliders and return an MTV (there is a collision) or false (no collision). 
 
-The underlying SAT algorithm for two convex shapes is exposed through `S.AT(shape1, shape2)`, and it similarly returns an overlap boolean `number/false` and an `MTV`. When `number`, the number corresponds to the shape the MTV references (1/2) and the MTV is the vector of minimum separation. When `false`, the MTV is just a vector representing the axis of separation, a normal of one of the shape's edges. It's entirely possible to build your physics around Shapes + S.AT instead of using Colliders + S.triking if you don't need composite shapes or groups of geometry.
+The underlying SAT algorithm for two convex shapes is exposed through `S.AT(shape1, shape2)`, and it similarly returns an `MTV`, but whether there is a collision or not. The MTV's boolean `separating` field can be examined. true = separating (no collision), false = overlapping (collision).  It's entirely possible to build your physics around Shapes + S.AT instead of using Colliders + S.triking if you don't need composite shapes or groups of geometry.
 
 It's important to note that geometries contained in the same Collider do not collide with each other. This is relevant for how Strike unintentionally gets around [Ghost Collisions](#ghosting)
 ### Resolution
@@ -431,9 +433,6 @@ Very little in this library was done in the best way from the start, and it's be
 * **Broad-Phase Data Structures**\
 	There's more than one way to do it ¯\\\_(ツ)\_/¯\
 	Strike's geometry objects are really just factories - pipe their output into your structure of choice.
-* **Continuous Collision Detection**\
-	For good CCD, it's best to handle it in a physics implementation that would wrap around Strike. Mostly because having access to velocity and rotation vectors allows
-	for interpolationg between timesteps. Right now, `dt` is absent from this library.
 
 ## TODO
 - [ ] Clean up (require structure is awful, might need to eschew vector-light)
