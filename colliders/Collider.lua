@@ -57,7 +57,7 @@ function Collider:elems(outer_iter)
                     iter, outer_iter = outer_iter, nil
                 elseif shape.type == 'collider' then
                     --print(shape.type)
-                    iter = shape:sshapes(iter)
+                    iter = shape:elems(iter)
                 else
                     return shape
                 end
