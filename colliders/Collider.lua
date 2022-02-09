@@ -42,6 +42,28 @@ function Collider:ipairs()
     return coroutine.wrap( function() shapes(self) end )
 end
 
+function Collider:elems(outer_iter)
+    local index = 0
+    local function iter()
+        index = index + 1
+        return self.shapes[index]
+    end
+    return
+        function()
+            while iter do
+                local shape = iter()
+                if shape == nil then
+                    iter, outer_iter = outer_iter, nil
+                elseif shape.type == 'collider' then
+                    --print(shape.type)
+                    iter = shape:sshapes(iter)
+                else
+                    return shape
+                end
+            end
+        end
+end
+
 ---Calculate area
 ---@return number area
 function Collider:calcArea()
