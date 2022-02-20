@@ -1,6 +1,6 @@
-local S   = require (string.gsub(..., '.ccd','.Strike' ))
-local MTV = _Require_relative(..., 'classes.MTV')
-local Vec = _Require_relative( ... , 'lib.DeWallua.vector-light')
+local S   = require (string.gsub(..., 'algs.ccd','.Strike' ))
+local MTV = require (string.gsub(..., 'algs.ccd','classes.mtv' ))
+local Vec = require (string.gsub(..., 'algs.ccd','lib.DeWallua.vector-light'))
 
 local SAT = S.AT
 local slop = 0.000001
