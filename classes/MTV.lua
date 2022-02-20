@@ -16,8 +16,8 @@ local MTV = Object:extend():implement(Pool)
 ---MTV ctor
 ---@param dx number magnitude of x-component
 ---@param dy number magnitude of y-component
----@param rshape Collider mtv oriented from
----@param dshape Collider mtv oriented towards
+---@param rshape Shape mtv oriented from
+---@param dshape Shape mtv oriented towards
 function MTV:new(dx, dy, rshape, dshape, separating)
 	self.x, self.y = dx or 0, dy or 0
 	self.colliderShape = rshape
