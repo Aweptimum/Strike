@@ -38,6 +38,11 @@ function MTV:mag2()
 	return Vec.len2(self.x, self.y)
 end
 
+function MTV:scale(s)
+	self.x, self.y = s*self.x, s*self.y
+	return self
+end
+
 ---Set the mtv's reference
 ---@param collider Collider
 function MTV:setCollider(collider)
