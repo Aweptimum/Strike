@@ -78,4 +78,12 @@ function MTV:setCollidedShape(shape)
 	return self
 end
 
+---Set separation flag to true/false
+---@param bool boolean
+---@return MTV self
+function MTV:setSeparating(bool)
+	self.separating = bool
+	return self
+end
+
 return MTV
