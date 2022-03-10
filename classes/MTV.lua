@@ -42,30 +42,35 @@ end
 ---@param collider Collider
 function MTV:setCollider(collider)
 	self.collider = collider
+	return self
 end
 
 ---Set the mtv's reference *shape*
 ---@param shape Shape
 function MTV:setColliderShape(shape)
 	self.colliderShape = shape
+	return self
 end
 
 ---Get edge at index
 ---@param index number index of colliderShape's edge that generated mtv
 function MTV:setEdgeIndex(index)
 	self.edgeIndex = index
+	return self
 end
 
 ---Set mtv's hit collider
 ---@param collider Collider
 function MTV:setCollided(collider)
 	self.collided = collider
+	return self
 end
 
 ---Set mtv's hit collider's *shape*
 ---@param shape Shape
 function MTV:setCollidedShape(shape)
 	self.collidedShape = shape
+	return self
 end
 
 return MTV
