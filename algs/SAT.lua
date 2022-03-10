@@ -36,7 +36,7 @@ end
 
 -- SAT
 local function project(shape1, shape2)
-	local mtv = MTV:fetch(inf,inf)
+	local mtv = MTV(inf,inf)
 	-- Test cache
 	local v = acache:get({shape1, shape2})
 	if v then
