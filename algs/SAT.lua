@@ -63,8 +63,7 @@ local function project(shape1, shape2)
 	-- Flip it?
 	local ccx, ccy = shape2.centroid.x - shape1.centroid.x, shape2.centroid.y - shape1.centroid.y
 	local s = sign( Vec.dot(mtv.x, mtv.y, ccx, ccy) )
-	mtv.x, mtv.y = Vec.mul(s, mtv.x, mtv.y)
-	mtv:new(mtv.x, mtv.y, shape1, shape2, false)
+	mtv:scale(s):setCollider(shape1):setCollided(shape2):setSeparating(false)
 	return mtv
 end
 
