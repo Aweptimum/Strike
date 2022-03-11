@@ -1,4 +1,5 @@
 local Vec = _Require_relative( ... , 'lib.DeWallua.vector-light', 1)
+local Cache = _Require_relative(..., 'classes.Cache',1)
 local MTV = _Require_relative(..., 'classes.MTV',1)
 local min = math.min
 local inf = math.huge
@@ -8,42 +9,61 @@ local function sign(number)
     return number > 0 and 1 or (number == 0 and 0 or -1)
 end
 
+-- Cache:
+local acache = Cache()
+
+local function test_axis(shape1, shape2, dx,dy, mtv)
+	local shape1_min_dot, shape1_max_dot = shape1:project(dx,dy)
+	local shape2_min_dot, shape2_max_dot = shape2:project(dx,dy)
+	-- We've now reduced it to ranges intersecting on a number line,
+	-- Test for bounding overlap
+	if not ( shape1_max_dot > shape2_min_dot and shape2_max_dot > shape1_min_dot ) then
+		-- Separating Axis, return
+		mtv:new(dx, dy, shape1, shape2, true)
+		-- Add to cache
+		acache:set({shape1, shape2}, mtv)
+	else
+		-- Find the overlap (minimum difference of bounds), which is equal to the magnitude of the MTV
+		local overlap = min(shape1_max_dot-shape2_min_dot, shape2_max_dot-shape1_min_dot)
+		if overlap*overlap < mtv:mag2() then
+			-- Set our MTV to the smol vector
+			mtv.x, mtv.y = Vec.mul(overlap, dx, dy)
+		end
+	end
+	return mtv
+end
+
+
 -- SAT
 local function project(shape1, shape2)
-	local minimum, mtv_dx, mtv_dy, edge_index = inf, 0, 0, 0
-	local overlap, dx, dy
-	local shape1_min_dot, shape1_max_dot, shape2_min_dot, shape2_max_dot
+	local mtv = MTV(inf,inf)
+	-- Test cache
+	local v = acache:get({shape1, shape2})
+	if v then
+		mtv = test_axis(shape1, shape2, v.x,v.y, mtv)
+		if mtv.separating then
+			return mtv
+		end
+	end
+	-- Cached axis failed :(
+	local dx, dy
+	mtv:new(inf,inf)
+
 	-- loop through shape1 geometry
 	for i, vec in shape1:vecs(shape2) do
 		-- get the normal
 		dx, dy = Vec.normalize( vec.x, vec.y )
 		dx, dy = dy, -dx
-		-- Project both shapes 1 and 2 onto this normal to get their shadows
-		shape1_min_dot, shape1_max_dot = shape1:project(dx, dy)
-		shape2_min_dot, shape2_max_dot = shape2:project(dx, dy)
-		-- We've now reduced it to ranges intersecting on a number line,
-		-- Test for bounding overlap
-		if not ( shape1_max_dot > shape2_min_dot and shape2_max_dot > shape1_min_dot ) then
-			-- Separating Axis, return
-            local mtv = MTV:fetch(dx, dy, shape1, shape2, true)
-            return mtv
-		else
-			-- Find the overlap (minimum difference of bounds), which is equal to the magnitude of the MTV
-			overlap = min(shape1_max_dot-shape2_min_dot, shape2_max_dot-shape1_min_dot)
-			if overlap < minimum then
-				-- Set our MTV to the smol vector
-				minimum = overlap
-				mtv_dx, mtv_dy = dx, dy
-				edge_index = i
-			end
+		mtv = test_axis(shape1,shape2,dx,dy,mtv)
+		if mtv.separating then
+			return mtv
 		end
 	end
+	-- Welp. We made it here. So they're colliding, I guess. Hope it's consensual :(
 	-- Flip it?
 	local ccx, ccy = shape2.centroid.x - shape1.centroid.x, shape2.centroid.y - shape1.centroid.y
-	local s = sign( Vec.dot(mtv_dx, mtv_dy, ccx, ccy) )
-	-- Welp. We made it here. So they're colliding, I guess. Hope it's consensual :(
-	local mx, my = Vec.mul(s*minimum, mtv_dx, mtv_dy)
-	local mtv = MTV:fetch(mx, my, shape1, shape2, false)
+	local s = sign( Vec.dot(mtv.x, mtv.y, ccx, ccy) )
+	mtv:scale(s):setColliderShape(shape1):setCollidedShape(shape2):setSeparating(false)
 	return mtv
 end
 
