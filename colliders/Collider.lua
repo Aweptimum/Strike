@@ -56,7 +56,7 @@ function Collider:elems(outer_iter)
                     iter, outer_iter = outer_iter, nil
                 elseif shape.type == 'collider' then
                     --print(shape.type)
-                    iter = shape:sshapes(iter)
+                    iter = shape:elems(iter)
                 else
                     return shape
                 end
@@ -68,7 +68,7 @@ end
 ---@return number area
 function Collider:calcArea()
     self.area = 0
-    for _, shape in self:ipairs() do
+    for shape in self:elems() do
         self.area = self.area + shape.area
     end
     return self.area
@@ -79,7 +79,7 @@ end
 function Collider:calcCentroid()
     self.centroid.x, self.centroid.y = 0,0
     local area = 0
-    for _, shape in self:ipairs() do
+    for shape in self:elems() do
         area = area + shape.area
         self.centroid.x = self.centroid.x + shape.centroid.x * shape.area
         self.centroid.y = self.centroid.y + shape.centroid.y * shape.area
@@ -94,7 +94,7 @@ end
 function Collider:calcAreaCentroid()
     self.centroid.x, self.centroid.y = 0,0
     self.area = 0
-    for _, shape in self:ipairs() do
+    for shape in self:elems() do
         self.area = self.area + shape.area
         self.centroid.x = self.centroid.x + shape.centroid.x * shape.area
         self.centroid.y = self.centroid.y + shape.centroid.y * shape.area
@@ -108,7 +108,7 @@ end
 function Collider:calcRadius()
     self.radius = 0
     local cx,cy = self.centroid.x, self.centroid.y
-    for _, shape in self:ipairs() do
+    for shape in self:elems() do
         local r = Vec.len(cx - shape.centroid.x, cy - shape.centroid.y) + shape.radius
         self.radius = self.radius > r and self.radius or r
     end
@@ -163,7 +163,7 @@ end
 ---@param dy number
 ---@return Collider self
 function Collider:translate(dx, dy)
-    for _, shape in self:ipairs() do
+    for shape in self:elems() do
         shape:translate(dx, dy)
     end
     self.centroid.x, self.centroid.y = self.centroid.x + dx, self.centroid.y + dy
@@ -187,7 +187,7 @@ end
 function Collider:rotate(angle, refx, refy)
     angle = angle or 0
     refx, refy = refx or self.centroid.x, refy or self.centroid.y
-    for _, shape in self:ipairs() do
+    for shape in self:elems() do
         -- Rotate about ref wrt the collider; per shape would rotate each in-place
         shape:rotate(angle, refx, refy)
     end
@@ -213,7 +213,7 @@ end
 ---@return Collider self
 function Collider:scale(sf, refx, refy)
     refx, refy = refx or self.centroid.x, refy or self.centroid.y
-    for _, shape in self:ipairs() do
+    for shape in self:elems() do
         shape:scale(sf, refx, refy)
     end
 	self.centroid.x, self.centroid.y = Vec.add(refx, refy, Vec.mul(sf, self.centroid.x-refx, self.centroid.y - refy))
@@ -229,7 +229,7 @@ end
 ---@return number minimum, number maximumum smallest, largest projection
 function Collider:project(nx, ny)
     local minp, maxp = math.huge, -math.huge
-    for _, shape in self:ipairs() do
+    for shape in self:elems() do
         local smin, smax = shape:project(nx, ny)
         minp = smin < minp and smin or minp
         maxp = smax > maxp and smax or maxp
@@ -244,7 +244,7 @@ end
 ---@param ny number normalized y component
 ---@return boolean hit
 function Collider:rayIntersects(x,y, nx,ny)
-    for _, shape in self:ipairs() do
+    for shape in self:elems() do
         if shape:rayIntersects(x,y, nx,ny) then return true end
     end
     return false
@@ -258,7 +258,7 @@ end
 ---@return Shape[] | nil intersections
 function Collider:rayIntersections(x,y, nx,ny)
     local ts = {}
-    for _, shape in self:ipairs() do
+    for shape in self:elems() do
         ts[shape] = shape:rayIntersections(x,y, nx,ny)
     end
     return next(ts) and ts or nil
@@ -311,7 +311,7 @@ end
 ---@param mode string fill/line/rainbow
 function Collider:draw(mode)
     mode = mode or 'line'
-    for _, shape in self:ipairs() do
+    for shape in self:elems() do
         if mode == 'rainbow' then love.graphics.setColor(love.math.random(), love.math.random(), love.math.random()) end
         shape:draw(mode)
         love.graphics.points(shape.centroid.x, shape.centroid.y)
