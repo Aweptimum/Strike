@@ -300,6 +300,11 @@ function ConvexPolygon:rotate(angle, refx, refy)
 	return self
 end
 
+--- scale helper function
+local function scale_p(x,y, sf,rx,ry)
+	return Vec.add(rx, ry, Vec.mul(sf, x-rx, y - ry))
+end
+
 ---Scale polygon
 ---@param sf number scale factor
 ---@param refx number reference x-coordinate
@@ -307,16 +312,17 @@ end
 ---@return ConvexPolygon self
 function ConvexPolygon:scale(sf, refx, refy)
 	-- Default to centroid as ref-point
-    refx = refx or self.centroid.x
-	refy = refy or self.centroid.y
+	local c = self.centroid
+    refx = refx or c.x
+	refy = refy or c.y
 	-- Push each vertex out from the ref point by scale-factor
     for i = 1, #self.vertices do
         local v = self.vertices[i]
-        v.x, v.y = Vec.add(refx, refy, Vec.mul(sf, v.x-refx, v.y - refy))
+        v.x, v.y = scale_p(v.x,v.y, sf,refx,refy)
     end
-	self.centroid.x, self.centroid.y = Vec.add(refx, refy, Vec.mul(sf, self.centroid.x-refx, self.centroid.y - refy))
+	c.x, c.y = scale_p(c.x, c.y, sf, refx, refy)
     -- Recalculate area, and radius
-    self:calcArea()
+    self.area = self.area * sf * sf
     self.radius = self.radius * sf
 	return self
 end
