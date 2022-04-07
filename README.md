@@ -430,9 +430,6 @@ Very little in this library was done in the best way from the start, and it's be
 * **Bit-Masking/Layering**\
 	I want to add it, but this is where Lua falls down a bit. Between Lua 5.1/5.2, LuaJIT, and Lua 5.3+, there's too much compatibility to consider.\
 	Best left to the user to implement it
-* **Broad-Phase Data Structures**\
-	There's more than one way to do it ¯\\\_(ツ)\_/¯\
-	Strike's geometry objects are really just factories - pipe their output into your structure of choice.
 
 ## TODO
 - [ ] Clean up (require structure is awful, might need to eschew vector-light)
