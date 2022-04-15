@@ -1,79 +1,7 @@
 local Object = Libs.classic
-local Pool = _Require_relative( ..., 'Pool')
-local abs, min, max, floor, sqrt = math.abs, math.min, math.max, math.floor, math.sqrt
-local push = table.insert
-
----@class Box
-local Box = Object:extend():implement(Pool)
-
-function Box:new(x,y,w,h)
-    if type(x) == 'table' and x.getBbox then self:new(x:getBbox()) return end
-    self[1] = x or 0
-    self[2] = y or 0
-    self[3] = w or 0
-    self[4] = h or 0
-end
-
-function Box:getBbox()
-    return self[1], self[2], self[3], self[4]
-end
-
-function Box:overlaps(other)
-    return self[3] > other[1] and self[1] < other[3] and self[4] > other[2] and self[2] < other[4]
-end
-
-function Box:rayIntersects(x1,y1, x2,y2)
-    local invx, invy = 1/(x2-x1), 1/(y2-y1)
-    local tx1 = (self[1] - x1)*invx;
-    local tx2 = (self[1]+self[3] - x1)*invx;
-
-    local tmin = min(tx1, tx2)
-    local tmax = max(tx1, tx2)
-
-    local ty1 = (self[2] - y1)*invy
-    local ty2 = (self[2]+self[4]- y1)*invy
-
-    tmin = max(tmin, min(ty1, ty2))
-    tmax = min(tmax, max(ty1, ty2))
-
-    return tmax >= tmin
-end
-
----@class Cell
-local Cell = Object:extend()
-
-function Cell:new(body, ...)
-    if not body then return end
-    push(self, body)
-    self:new(...)
-end
-
-function Cell:has(body)
-    for i = 1, #self do
-        if self[i] == body then
-            return i
-        end
-    end
-    return false
-end
-
-function Cell:add(body, ...)
-    if not body then return self end
-    if not self:has(body) then
-        push(self, body)
-    end
-    self:add(...)
-end
-
-function Cell:remove(body, i)
-    if not body then return self end
-    i = i or self:has(body)
-    if i then
-        self[i], self[#self] = self[#self], nil
-        return true
-    end
-    return false
-end
+local Box = _Require_relative(..., 'Box')
+local Cell = _Require_relative(..., 'Cell')
+local abs, floor, sqrt = math.abs, math.floor, math.sqrt
 
 ---@class Space
 ---@field cellsize number
@@ -181,7 +109,6 @@ function Space:add(body, x,y,w,h)
     x,y,w,h = box[1], box[2], box[3], box[4]
     local ix, iy = self:toCell(x,y)
     local jx, jy = self:toCell(x+w,y+h)
-    print('coords: '..ix..', '..iy..'-'..jx..', '..jy)
     for cx = ix, jx do
         for cy = iy, jy do
             self:addToCell(cx,cy, body)
