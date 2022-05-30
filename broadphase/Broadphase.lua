@@ -173,6 +173,46 @@ end
 -- Query functions
 
 
+---Applies a function that takes a cell as its first argument + varargs
+---@param x number
+---@param y number
+---@param w number
+---@param h number
+---@param fn function(key, ...)
+---@varag ... args
+function Space:eachInBox(x,y,w,h, fn, ...)
+    local ix, iy = self:toCell(x,y)
+    local jx, jy = self:toCell(x+w,y+h)
+    for cx = ix, jx do
+        for cy = iy, jy do
+            local cell = self:getCell(cx,cy)
+            if cell then
+                fn(cell, ...)
+            end
+        end
+    end
+end
+
+function Space:eachOverlappingInCell(cx,cy, body, seen, fn, ...)
+    local c = self:getCell(cx,cy)
+    if not c then return end
+    local box = self.bodies[body]
+    for i, other in ipairs(c) do
+        if not seen[other] then
+            local obox = self.bodies[other]
+            if box:overlaps(obox) then
+                fn(other, ...)
+            end
+        end
+    end
+end
+
+function Space:eachOverlappingBody(body, fn, ...)
+    local seen = {body}
+    local box = self.bodies[body]
+    self:eachInBox(box, self.eachOverlappingInCell, body, seen, fn, ...)
+end
+
 -- Fast-Voxel Traversal
 --https://github.com/OneLoneCoder/olcPixelGameEngine/blob/12f634007c617e0fc3c7b8c5991f5310ea1b22b0/Videos/OneLoneCoder_PGE_RayCastDDA.cpp#L95
 local function len(x,y)
