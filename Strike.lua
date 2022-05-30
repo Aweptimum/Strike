@@ -1,5 +1,6 @@
 local Vec		= _Require_relative( ... , 'lib.DeWallua.vector-light')
 local Shapes 	= _Require_relative( ... , 'shapes')
+local Space 	= _Require_relative( ... , 'broadphase.Broadphase')
 local Colliders	= _Require_relative( ... , 'colliders')
 local Collider	= _Require_relative( ... , 'colliders.Collider')
 ---@type MTV
@@ -7,6 +8,20 @@ local MTV = _Require_relative(..., 'classes.MTV')
 
 local contact = _Require_relative(..., 'algs.contact')
 local SAT = _Require_relative(..., 'algs.SAT')
+
+-- Strike table becomes a class
+-- local space = S.pace(128)
+-- local rect = space:Rectangle(x,y,w,h)
+-- local concave = space:Concave(x,y, ...)
+-- local grp1 = space:group(rect)
+
+for key, shape in pairs(Shapes) do
+	Space[key] = function (self, ...)
+		local s = shape(...)
+		self:add(s)
+		return s
+	end
+end
 
 -- [[--- Broadphase Functions ---]] --
 
@@ -113,7 +128,7 @@ end
 -- [[---------------------]] Strike API Table [[---------------------]] --
 -- Strike table
 local S = {}
-
+S.pace = Space
 -- Add shapes
 S.hapes = Shapes
 
