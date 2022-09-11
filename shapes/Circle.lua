@@ -44,33 +44,33 @@ end
 
 -- We can't actually iterate over circle geometry, but we can return a single edge
 -- from the circle centroid to closest point of test shape
-local function get_closest_point(shape, p)
+local function get_closest_point(shape, x,y)
     local dist, min_dist, min_p
     for i, v in ipairs(shape.vertices) do
-        dist = Vec.dist2(p.x,p.y, v.x,v.y)
+        dist = Vec.dist2(x,y, v.x,v.y)
         if not min_dist or dist < min_dist then
             min_dist = dist
             min_p = v
         end
     end
-    return min_p
+    return min_p.x, min_p.y
 end
 
 local function iter_edges(state)
     local endx, endy
 	state.i = state.i + 1
-    local c = state.self.centroid
+    local cx, cy = state.self:getCentroid()
     local shape = state.shape
-    local sc = shape.centroid
+    local sx, sy = shape:getCentroid()
 	if state.i <= 1 then
         if shape.name == 'circle' then
-            endx, endy = sc.x, sc.y
+            endx, endy = sx, sy
         else
-            local mp = get_closest_point(shape, c)
+            local mp = get_closest_point(shape, cx, cy)
             endx, endy = mp.x, mp.y
         end
-        local normx, normy = Vec.perpendicular(Vec.sub(endx,endy, c.x,c.y))
-        return state.i, {c.x,c.y, c.x+normx,c.y+normy}
+        local normx, normy = Vec.perpendicular(Vec.sub(endx,endy, cx,cy))
+        return state.i, {cx, cy, cx+normx, cy+normy}
     end
 end
 
@@ -82,17 +82,16 @@ end
 local function iter_vecs(state)
     local endx, endy
 	state.i = state.i + 1
-    local c = state.self.centroid
+    local cx, cy = state.self:getCentroid()
     local shape = state.shape
-    local sc = shape.centroid
+    local sx, sy = shape:getCentroid()
 	if state.i <= 1 then
         if shape.name == 'circle' then
-            endx, endy = sc.x, sc.y
+            endx, endy = sx, sy
         else
-            local mp = get_closest_point(shape, c)
-            endx, endy = mp.x, mp.y
+            endx, endy = get_closest_point(shape, cx, cy)
         end
-        local normx, normy = Vec.perpendicular(Vec.sub(endx,endy, c.x,c.y))
+        local normx, normy = Vec.perpendicular(Vec.sub(endx,endy, cx,cy))
         return state.i, {x = normx, y = normy}
     end
 end
@@ -118,12 +117,14 @@ end
 
 ---Rotate by specified radians
 ---@param angle number radians
----@param refx number reference x-coordinate
----@param refy number reference y-coordinate
+---@param x number reference x-coordinate
+---@param y number reference y-coordinate
 ---@return Circle self
-function Circle:rotate(angle, refx, refy)
+function Circle:rotate(angle, x, y)
+    x = x or 0
+    y = y or 0
     local c = self.centroid
-    c.x, c.y = Vec.add(refx, refy, Vec.rotate(angle, c.x-refx, c.y - refy))
+    c.x, c.y = Vec.add(x, y, Vec.rotate(angle, c.x-x, c.y - y))
 	return self
 end
 
