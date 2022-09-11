@@ -101,11 +101,11 @@ end
 ---@param mtv MTV
 local function show_proj(mtv)
 	for _, shape in mtv.collided:ipairs() do
-		local c = shape.centroid
+		local cx, cy = shape:getCentroid()
 		local nmx, nmy = Vec.normalize(mtv.x, mtv.y)
 		local smin, smax = shape:project(nmx, nmy)
 		love.graphics.setColor(.5,.5,.1)
-	   	love.graphics.line(c.x+nmx*smin, c.y+nmy*smin, c.x+nmx*smax, c.y+nmy*smax)
+	   	love.graphics.line(cx + nmx*smin, cy + nmy*smin, cx + nmx*smax, cy + nmy*smax)
 		love.graphics.setColor(1,1,1)
     end
 end

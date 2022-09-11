@@ -25,9 +25,10 @@ function Shape:getArea()
     return self.area
 end
 
----@return Point self.centroid
+---@return number x
+---@return number y
 function Shape:getCentroid()
-    return self.centroid
+    return self.centroid.x, self.centroid.y
 end
 
 ---@return number area, table centroid
