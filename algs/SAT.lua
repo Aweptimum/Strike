@@ -15,9 +15,9 @@ end
 ---@param shape2 Shape
 ---@return integer sign
 local function reference_frame(mtv, shape1, shape2)
-	local c1 = shape1:getCentroid()
-	local c2 = shape2:getCentroid()
-	local ccx, ccy = c2.x - c1.x, c2.y - c1.y
+	local c1x, c1y = shape1:getCentroid()
+	local c2x, c2y = shape2:getCentroid()
+	local ccx, ccy = c2x - c1x, c2y - c1y
 	return sign( Vec.dot(mtv.x, mtv.y, ccx, ccy) )
 end
 
