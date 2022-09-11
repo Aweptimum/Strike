@@ -80,9 +80,10 @@ function Collider:calcCentroid()
     self.centroid.x, self.centroid.y = 0,0
     local area = 0
     for shape in self:elems() do
+        local sx, sy = shape:getCentroid()
         area = area + shape.area
-        self.centroid.x = self.centroid.x + shape.centroid.x * shape.area
-        self.centroid.y = self.centroid.y + shape.centroid.y * shape.area
+        self.centroid.x = self.centroid.x + sx * shape.area
+        self.centroid.y = self.centroid.y + sy * shape.area
     end
     self.centroid.x, self.centroid.y = self.centroid.x/area, self.centroid.y/area
     return self.centroid
@@ -95,9 +96,10 @@ function Collider:calcAreaCentroid()
     self.centroid.x, self.centroid.y = 0,0
     self.area = 0
     for shape in self:elems() do
+        local sx, sy = shape:getCentroid()
         self.area = self.area + shape.area
-        self.centroid.x = self.centroid.x + shape.centroid.x * shape.area
-        self.centroid.y = self.centroid.y + shape.centroid.y * shape.area
+        self.centroid.x = self.centroid.x + sx * shape.area
+        self.centroid.y = self.centroid.y + sy * shape.area
     end
     self.centroid.x, self.centroid.y = self.centroid.x/self.area, self.centroid.y/self.area
     return self.area, self.centroid
@@ -109,7 +111,8 @@ function Collider:calcRadius()
     self.radius = 0
     local cx,cy = self.centroid.x, self.centroid.y
     for shape in self:elems() do
-        local r = Vec.len(cx - shape.centroid.x, cy - shape.centroid.y) + shape.radius
+        local sx, sy = shape:getCentroid()
+        local r = Vec.len(cx - sx, cy - sy) + shape.radius
         self.radius = self.radius > r and self.radius or r
     end
     return self.radius
@@ -314,8 +317,9 @@ function Collider:draw(mode)
     for shape in self:elems() do
         if mode == 'rainbow' then love.graphics.setColor(love.math.random(), love.math.random(), love.math.random()) end
         shape:draw(mode)
-        love.graphics.points(shape.centroid.x, shape.centroid.y)
-        love.graphics.print(_,shape.centroid.x, shape.centroid.y)
+        local sx, sy = shape:getCentroid()
+        love.graphics.points(sx, sy)
+        love.graphics.print(_, sx, sy)
     end
 end
 
