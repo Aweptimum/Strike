@@ -27,10 +27,10 @@ function Circle:new(x, y, radius, angle)
 end
 
 ---Calculate area
----@return number area
+---@return Shape self
 function Circle:calcArea()
     self.area = pi*self.radius^2
-    return self.area
+    return self
 end
 
 ---comment
