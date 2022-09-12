@@ -65,17 +65,17 @@ function Collider:elems(outer_iter)
 end
 
 ---Calculate area
----@return number area
+---@return Collider self
 function Collider:calcArea()
     self.area = 0
     for shape in self:elems() do
         self.area = self.area + shape.area
     end
-    return self.area
+    return self
 end
 
 ---Calculate centroid
----@return Point
+---@return Collider self
 function Collider:calcCentroid()
     self.centroid.x, self.centroid.y = 0,0
     local area = 0
@@ -86,12 +86,11 @@ function Collider:calcCentroid()
         self.centroid.y = self.centroid.y + sy * shape.area
     end
     self.centroid.x, self.centroid.y = self.centroid.x/area, self.centroid.y/area
-    return self.centroid
+    return self
 end
 
 ---Calculate area & centroid
----@return number
----@return Point
+---@return Collider self
 function Collider:calcAreaCentroid()
     self.centroid.x, self.centroid.y = 0,0
     self.area = 0
@@ -102,11 +101,11 @@ function Collider:calcAreaCentroid()
         self.centroid.y = self.centroid.y + sy * shape.area
     end
     self.centroid.x, self.centroid.y = self.centroid.x/self.area, self.centroid.y/self.area
-    return self.area, self.centroid
+    return self
 end
 
 ---Calc radius by finding shape with: largest sum of centroidal difference + radius
----@return number radius
+---@return Collider self
 function Collider:calcRadius()
     self.radius = 0
     local cx,cy = self.centroid.x, self.centroid.y
@@ -115,7 +114,7 @@ function Collider:calcRadius()
         local r = Vec.len(cx - sx, cy - sy) + shape.radius
         self.radius = self.radius > r and self.radius or r
     end
-    return self.radius
+    return self
 end
 
 function Collider:getRadius()

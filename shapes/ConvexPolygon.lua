@@ -125,7 +125,7 @@ local function order_points_ccw(vertices)
 end
 
 ---Calculate polygon area using shoelace algorithm
----@return number area
+---@return Shape self
 function ConvexPolygon:calcArea()
 	local vertices = self.vertices
 	-- Initialize p and q so we can wrap around in the loop
@@ -143,12 +143,11 @@ function ConvexPolygon:calcArea()
 	end
 
 	self.area = area * 0.5
-	return self.area
+	return self
 end
 
 ---Calculate centroid and area of the polygon at the _same_ time
----@return number area
----@return table centroid
+---@return Shape self
 function ConvexPolygon:calcAreaCentroid()
 	local vertices = self.vertices
 	-- Initialize p and q so we can wrap around in the loop
@@ -169,18 +168,18 @@ function ConvexPolygon:calcAreaCentroid()
 	self.area = self.area * 0.5
 	self.centroid.x	= self.centroid.x / (6*self.area);
     self.centroid.y	= self.centroid.y / (6*self.area);
-	return self.area, self.centroid
+	return self
 end
 
 ---Calculate polygon radius
----@return number radius
+---@return Shape self
 function ConvexPolygon:calcRadius()
 	local vertices, radius = self.vertices, 0
 	for i = 1,#vertices do
 		radius = max(radius, Vec.dist(vertices[i].x,vertices[i].y, self.centroid.x, self.centroid.y))
 	end
 	self.radius = radius
-	return self.radius
+	return self
 end
 
 ---Get polygon bounding box
