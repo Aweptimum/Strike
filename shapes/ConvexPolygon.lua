@@ -2,10 +2,10 @@ local abs, min, max, atan2 	= math.abs, math.min, math.max, math.atan2
 local push = table.insert
 local tbl = Libs.tbl
 local Vec = _Require_relative(..., 'lib.DeWallua.vector-light',1)
-local Shape = _Require_relative(...,"Shape")
+local VertexShape = _Require_relative(...,"VertexShape")
 
 ---@class ConvexPolygon : Shape
-ConvexPolygon = Shape:extend()
+ConvexPolygon = VertexShape:extend()
 ConvexPolygon.name = 'convex'
 
 -- Recursive function that returns a list of {x=#,y=#} coordinates given a list of procedural, ccw coordinate pairs
