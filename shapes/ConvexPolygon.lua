@@ -29,6 +29,10 @@ local function is_ccw(p, q, r)
 	return Vec.det(q.x-p.x, q.y-p.y,  r.x-p.x, r.y-p.y) >= 0
 end
 
+local function is_ccw_scalar(px,py, qx,qy, rx,ry)
+	return Vec.det(qx-px, qy-py,  rx-px, ry-py) >= 0
+end
+
 -- Remove vertices that are collinear
 local function trim_collinear(vertices)
 	local trimmed = {}
@@ -127,18 +131,20 @@ end
 ---Calculate polygon area using shoelace algorithm
 ---@return Shape self
 function ConvexPolygon:calcArea()
-	local vertices = self.vertices
+	local len = #self.vertices
 	-- Initialize p and q so we can wrap around in the loop
-	local p, q = vertices[#vertices], vertices[1]
-	-- a is the signed area of the triangle formed by the two legs of p.x-q.x and p.y-q.y - it is our weighting
-	local a = Vec.det(p.x,p.y, q.x,q.y)
+	local px, py = self:getVertex(len)
+	local qx, qy = self:getVertex(1)
+	-- a is the signed area of the triangle formed by the two legs of px - qx and py - qy - it is our weighting
+	local a = Vec.det(px,py, qx,qy)
 	-- signed_area is the total signed area of all triangles
 	local area = a
 
-	for i = 2, #vertices do
+	for i = 2, len do
 		-- Now assign p to q, q to next
-		p, q = q, vertices[i]
-		a = Vec.det(p.x,p.y, q.x,q.y)
+		px,py = qx,qy
+		qx,qy = self:getVertex(i)
+		a = Vec.det(px,py, qx,qy)
 		area = area + a
 	end
 
@@ -149,34 +155,40 @@ end
 ---Calculate centroid and area of the polygon at the _same_ time
 ---@return Shape self
 function ConvexPolygon:calcAreaCentroid()
-	local vertices = self.vertices
+	local len = #self.vertices
 	-- Initialize p and q so we can wrap around in the loop
-	local p, q = vertices[#vertices], vertices[1]
-	-- a is the area of the triangle formed by the two legs of p.x-q.x and p.y-q.y - it is our weighting
-	local a = Vec.det(p.x,p.y, q.x,q.y)
+	local px, py = self:getVertex(len)
+	local qx, qy = self:getVertex(1)
+	-- a is the signed area of the triangle formed by the two legs of px - qx and py - qy - it is our weighting
+	local a = Vec.det(px,py, qx,qy)
 	-- area is the total area of all triangles
 	self.area = a
-	self.centroid = {x = (p.x+q.x)*a, y = (p.y+q.y)*a}
+	local cx, cy = (px+qx)*a, (py+qy)*a
 
-	for i = 2, #vertices do
-		-- Now cycle p to q, q to next vertex
-		p, q = q, vertices[i]
-		a = Vec.det(p.x,p.y, q.x,q.y)
-		self.centroid.x, self.centroid.y = self.centroid.x + (p.x+q.x)*a, self.centroid.y + (p.y+q.y)*a
+	for i = 2, len do
+		-- Now assign p to q, q to next
+		px,py = qx,qy
+		qx,qy = self:getVertex(i)
+		a = Vec.det(px,py, qx,qy)
+		cx, cy = cx + (px+qx)*a, cy + (py+qy)*a
 		self.area = self.area + a
 	end
 	self.area = self.area * 0.5
-	self.centroid.x	= self.centroid.x / (6*self.area);
-    self.centroid.y	= self.centroid.y / (6*self.area);
+	self:translateTo(
+		cx / (6*self.area),
+		cy / (6*self.area)
+	)
 	return self
 end
 
 ---Calculate polygon radius
 ---@return Shape self
 function ConvexPolygon:calcRadius()
+	local cx, cy = self:getCentroid()
 	local vertices, radius = self.vertices, 0
 	for i = 1,#vertices do
-		radius = max(radius, Vec.dist(vertices[i].x,vertices[i].y, self.centroid.x, self.centroid.y))
+		local vx, vy = self:getVertex(i)
+		radius = max(radius, Vec.dist(vx,vy, cx,cy))
 	end
 	self.radius = radius
 	return self
@@ -185,10 +197,11 @@ end
 ---Get polygon bounding box
 ---@return number x, number y, number dx, number dy minimum x/y, width, and height
 function ConvexPolygon:getBbox()
-	local min_x, max_x, min_y, max_y = self.vertices[1].x,self.vertices[1].x, self.vertices[1].y, self.vertices[1].y
+	local min_x, min_y = self:getVertex(1)
+	local max_x, max_y = min_x, min_y
 	local x, y--, bbox
-	for __, vertex in ipairs(self.vertices) do
-		x, y = vertex.x, vertex.y
+	for i = 1, #self.vertices do
+		x, y = self:getVertex(i)
 		if x < min_x then min_x = x end
 		if x > max_x then max_x = x end
 		if y < min_y then min_y = y end
@@ -241,10 +254,11 @@ end
 
 local function iter_edges(shape, i)
 	i = i + 1
-	local v = shape.vertices
-	if i <= #v then
-		local j = i < #v and i+1 or 1
-		return i, {v[i].x, v[i].y, v[j].x, v[j].y}
+	local len, ix, iy = #shape.vertices, shape:getVertex(i)
+	if i <= len then
+		local j = i < len and i+1 or 1
+		local jx, jy = shape:getVertex(j)
+		return i, {ix, iy, jx, jy}
 	end
 end
 
@@ -256,12 +270,18 @@ function ConvexPolygon:ipairs()
     return iter_edges, self, 0
 end
 
+---comment
+---@param shape ConvexPolygon
+---@param i number
+---@return integer
+---@return table
 local function iter_vecs(shape, i)
 	i = i + 1
-	local v = shape.vertices
-	if i <= #v then
-		local j = i < #v and i+1 or 1
-		return i, {x = v[j].x - v[i].x, y = v[j].y - v[i].y}
+	local len, ix, iy = #shape.vertices, shape:getVertex(i)
+	if i <= len then
+		local j = i < len and i+1 or 1
+		local jx, jy = shape:getVertex(j)
+		return i, {x = jx - ix, y = jy - iy}
 	end
 end
 
@@ -345,13 +365,13 @@ function ConvexPolygon:project(nx,ny)
 	local proj_x, proj_y
 	local p, min_dot, max_dot
 	-- Project each point onto vector <nx, ny>
-	proj_x, proj_y = vertices[1].x, vertices[1].y
+	proj_x, proj_y = self:getVertex(1)
 	-- Init our min/max dot products (Can't init to random value)
 	min_dot = Vec.dot(proj_x,proj_y, nx,ny)
 	max_dot = min_dot
 	-- Create new projection vectors, dot-prod them with the input vector, and return the min/max
 	for i = 2, #vertices do
-		proj_x, proj_y = vertices[i].x , vertices[i].y
+		proj_x, proj_y = self:getVertex(i)
 		p = Vec.dot(proj_x,proj_y, nx,ny)
 		if p < min_dot then min_dot = p elseif p > max_dot then max_dot = p end
 	end
@@ -360,28 +380,31 @@ end
 
 ---Get an edge by index
 ---@param i number
----@return table {x1,y1, x2,y2}
+---@return table|false res edge of form {x1,y1, x2,y2} or false if index out of range
 function ConvexPolygon:getEdge(i)
 	if i > #self.vertices then return false end
 	local verts = self.vertices
 	local j = i < #verts and i+1 or 1
-	local p1, p2 = verts[i], verts[j]
-	return {p1.x, p1.y, p2.x, p2.y}
+	local p1x, p1y = self:getVertex(i)
+	local p2x, p2y = self:getVertex(j)
+	return {p1x, p1y, p2x, p2y}
 end
 
 --- Need this to test if a shape is completely inside
 ---@param point Point
 function ConvexPolygon:containsPoint(point)
-	local vertices = self.vertices
+	local len = #self.vertices
 	local winding = 0
-	local p, q = vertices[#vertices], vertices[1]
-	for i = 1, #vertices do
-		if p.y < point.y then
-			if q.y > point.y and is_ccw(p,q, point) then
+	local px, py = self:getVertex(len)
+	local qx, qy = self:getVertex(1)
+	local rx, ry = point.x, point.y
+	for i = 1, len do
+		if py < point.y then
+			if qy > point.y and is_ccw_scalar(px,py, qx,qy, rx,ry) then
 				winding = winding + 1
 			end
 		else
-			if q.y < point.y and not is_ccw(p,q, point) then
+			if qy < point.y and not is_ccw_scalar(px,py, qx,qy, rx,ry) then
 				winding = winding - 1
 			end
 		end
@@ -442,7 +465,8 @@ local function get_incident_edge(poly1, poly2)
     -- Iterate over poly_1's vertices, add x/y coords as keys to pmap
     local v1 = poly1.vertices
     for i = 1, #v1 do
-		local key = v1[i].x..'-'..v1[i].y
+		local v1x, v1y = poly1:getVertex(i)
+		local key = v1x..'-'..v1y
         p_map[key] = i
     end
     -- Now look through poly_2's vertices and see if there's a match
@@ -450,8 +474,9 @@ local function get_incident_edge(poly1, poly2)
     local i = #v2
     for j = 1, #v2 do
         -- Set p and q to reference poly_2's vertices at i and j
-        local p, q = v2[i], v2[j]
-		local kp, kq = p.x..'-'..p.y, q.x..'-'..q.y
+        local px, py = poly2:getVertex(i)
+		local qx, qy = poly2:getVertex(j)
+		local kp, kq = px..'-'..py, qx..'-'..qy
         -- Access p_map based on line p-q's two coordinates
         if p_map[kp] and p_map[kq] then
             -- Return the indices of the edge in both polygons
@@ -481,15 +506,17 @@ local function merge_convex_incident(poly1, poly2)
 	for i = 1, #v1 do
 		-- Skip the vertex if it's part of the poly_2's half of the incident edge
 		if i ~= j_1 then
-			push(union, v1[i].x)
-			push(union, v1[i].y)
+			local x,y = poly1:getVertex(i)
+			push(union, x)
+			push(union, y)
 		end
 	end
 	-- Do the same for poly2
 	for i = 1, #v2 do
 		if i ~= i_2 then
-			push(union, v2[i].x)
-			push(union, v2[i].y)
+			local x,y = poly2:getVertex(i)
+			push(union, x)
+			push(union, y)
 		end
 	end
 	local new_verts = to_vertices({},unpack(union))
@@ -502,8 +529,9 @@ ConvexPolygon.merge = merge_convex_incident
 ---Contact Functions
 function ConvexPolygon:getSupport(nx,ny)
     local maxd, index = -math.huge , 1
-    for i, point in ipairs(self.vertices) do
-        local projection = Vec.dot(point.x,point.y, nx,ny)
+    for i = 1, #self.vertices do
+		local px,py = self:getVertex(i)
+        local projection = Vec.dot(px,py, nx,ny)
         if projection > maxd then
             maxd = projection
             index = i
@@ -522,17 +550,17 @@ function ConvexPolygon:getFeature(nx,ny)
     -- get farthest point in direction of normal
     local index = self:getSupport(nx,ny)
     -- test adjacent points to find edge most perpendicular to normal
-    local v = verts[index]
+    local vx, vy = self:getVertex(index)
     local i0 = index - 1 >= 1 and index - 1 or #verts
     local i1 = index + 1 <= #verts and index + 1 or 1
-    local v0 = verts[i0]
-    local v1 = verts[i1]
-    local gx,gy = Vec.normalize( Vec.sub(v.x,v.y, v0.x,v0.y) )
-    local hx,hy = Vec.normalize( Vec.sub(v.x,v.y, v1.x,v1.y) )
+    local v0x, v0y = self:getVertex(i0)
+    local v1x, v1y = self:getVertex(i1)
+    local gx,gy = Vec.normalize( Vec.sub(vx,vy, v0x,v0y) )
+    local hx,hy = Vec.normalize( Vec.sub(vx,vy, v1x,v1y) )
     if math.abs(Vec.dot(gx,gy, nx,ny)) <= math.abs(Vec.dot(hx,hy, nx,ny)) then
-        return {x=v.x,y=v.y}, {{x=v0.x,y=v0.y}, {x=v.x,y=v.y}}
+        return {x=vx,y=vy}, {{x=v0x,y=v0y}, {x=vx,y=vy}}
     else
-        return {x=v.x,y=v.y}, {{x=v.x,y=v.y}, {x=v1.x,y=v1.y}}
+        return {x=vx,y=vy}, {{x=vx,y=vy}, {x=v1x,y=v1y}}
     end
 end
 
@@ -542,7 +570,9 @@ if love and love.graphics then
 	function ConvexPolygon:draw(mode)
 		-- default fill to "line"
 		mode = mode or "line"
-		love.graphics.polygon(mode, self:_get_verts())
+		for i, edge in self:ipairs() do
+			love.graphics.line(unpack(edge))
+		end
 	end
 end
 
