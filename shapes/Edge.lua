@@ -1,8 +1,8 @@
 local Vec = _Require_relative(..., 'lib.DeWallua.vector-light',1)
-local Polygon = _Require_relative(..., 'ConvexPolygon')
+local VertexShape = _Require_relative(..., 'VertexShape')
 
 ---@class Edge : Shape
-local Edge = Polygon:extend()
+local Edge = VertexShape:extend()
 Edge.name = 'edge'
 
 ---"Calculate" edge area
