@@ -229,6 +229,16 @@ function ConvexPolygon:new(x,y, ...)
 	self:calcRadius()
 end
 
+---Get a vertex by its offset
+---@param i number
+---@return number|false v.x or false if beyond range
+---@return number|false v.y
+function ConvexPolygon:getVertex(i)
+	if i > #self.vertices then return false, false end
+	local v = self.vertices[i]
+	return v.x, v.y
+end
+
 local function iter_edges(shape, i)
 	i = i + 1
 	local v = shape.vertices
