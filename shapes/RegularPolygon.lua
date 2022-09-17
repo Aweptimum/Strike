@@ -29,9 +29,9 @@ function RegularPolygon:new(x, y, n, radius, angle)
 
     -- Calculate the points
     for i = n, 1, -1 do -- i = 1, n calculates vertices in clockwise order, so go backwards
-        x = ( sin( i / n * 2 * pi - self.angle) * radius) + x
-        y = ( cos( i / n * 2 * pi - self.angle) * radius) + y
-        vertices[#vertices+1] = {x = x, y = y}
+        local vx = ( sin( i / n * 2 * pi - self.angle) * radius) + x
+        local vy = ( cos( i / n * 2 * pi - self.angle) * radius) + y
+        vertices[#vertices+1] = {x = vx, y = vy}
     end
 
     -- Set fields
