@@ -2,10 +2,10 @@ local abs, min, max, atan2 	= math.abs, math.min, math.max, math.atan2
 local push = table.insert
 local tbl = Libs.tbl
 local Vec = _Require_relative(..., 'lib.DeWallua.vector-light',1)
-local Shape = _Require_relative(...,"Shape")
+local VertexShape = _Require_relative(...,"VertexShape")
 
 ---@class ConvexPolygon : Shape
-ConvexPolygon = Shape:extend()
+ConvexPolygon = VertexShape:extend()
 ConvexPolygon.name = 'convex'
 
 -- Recursive function that returns a list of {x=#,y=#} coordinates given a list of procedural, ccw coordinate pairs
@@ -240,16 +240,6 @@ function ConvexPolygon:new(x,y, ...)
 	self.angle = 0
 	self:calcAreaCentroid()
 	self:calcRadius()
-end
-
----Get a vertex by its offset
----@param i number
----@return number|false v.x or false if beyond range
----@return number|false v.y
-function ConvexPolygon:getVertex(i)
-	if i > #self.vertices then return false, false end
-	local v = self.vertices[i]
-	return v.x, v.y
 end
 
 local function iter_edges(shape, i)
