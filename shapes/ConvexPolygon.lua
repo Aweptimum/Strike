@@ -458,7 +458,8 @@ end
 -- So long as the new polygon is also convex
 ---@param poly1 ConvexPolygon
 ---@param poly2 ConvexPolygon
----@return ConvexPolygon | boolean
+---@throws error if the union is not convex
+---@return ConvexPolygon
 local function merge_convex_incident(poly1, poly2)
 	if not poly2.vertices then return false end
     -- Find an incident edge between the two polygons
@@ -483,9 +484,7 @@ local function merge_convex_incident(poly1, poly2)
 			push(union, v2[i].y)
 		end
 	end
-	local new_verts = to_vertices({},unpack(union))
-	order_points_ccw(new_verts)
-	return is_convex(new_verts) and ConvexPolygon(unpack(union)) or not true
+	return ConvexPolygon(union)
 end
 
 ConvexPolygon.merge = merge_convex_incident
