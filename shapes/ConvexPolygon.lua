@@ -174,10 +174,10 @@ function ConvexPolygon:calcAreaCentroid()
 		self.area = self.area + a
 	end
 	self.area = self.area * 0.5
-	self:translateTo(
-		cx / (6*self.area),
-		cy / (6*self.area)
-	)
+	self.centroid = {
+		x = cx / (6*self.area),
+		y = cy / (6*self.area)
+	}
 	return self
 end
 
