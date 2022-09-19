@@ -8,17 +8,6 @@ local VertexShape = _Require_relative(...,"VertexShape")
 ConvexPolygon = VertexShape:extend()
 ConvexPolygon.name = 'convex'
 
--- Recursive function that returns a list of {x=#,y=#} coordinates given a list of procedural, ccw coordinate pairs
-local function to_verts(vertices, x, y, ...)
-    if not (x and y) then return vertices end
-	vertices[#vertices + 1] = {x = x, y = y} -- , dx = 0, dy = 0}   -- set vertex
-	return to_verts(vertices, ...)
-end
-
-local function to_vertices(vertices, x, ...)
-	return type(x) == 'table'and to_verts(vertices, unpack(x)) or to_verts(vertices, x,...)
-end
-
 -- Test if 3 points are collinear (do they not make a triangle?)
 local function is_collinear(a, b, c)
 	return abs(Vec.det(a.x-c.x, a.y-c.y, b.x-c.x,b.y-c.y)) <= 1e-32
@@ -227,7 +216,7 @@ end
 ---@param x number
 ---@param y number
 function ConvexPolygon:new(x,y, ...)
-    self.vertices = to_vertices({}, x,y, ...)
+    ConvexPolygon.super.new(self, x,y, ...)
 	assert(#self.vertices >= 3, "Need at least 3 non collinear points to build polygon (got "..#self.vertices..")")
 	if not is_convex(self.vertices) then
 		assert(order_points_ccw(self.vertices), 'Points cannot be ordered into a convex shape')
