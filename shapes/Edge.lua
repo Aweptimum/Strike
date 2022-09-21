@@ -41,10 +41,7 @@ end
 ---@param y2 number y coordinate of second point
 function Edge:new(x1,y1, x2,y2)
 
-	self.vertices = {
-		{x = x1, y = y1},
-		{x = x2, y = y2}
-	}
+	Edge.super.new(self, x1,y1, x2,y2)
 
 	self.centroid = {
 		x = (x1 + x2) / 2,
