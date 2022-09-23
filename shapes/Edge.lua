@@ -1,37 +1,37 @@
 local Vec = _Require_relative(..., 'lib.DeWallua.vector-light',1)
 local VertexShape = _Require_relative(..., 'VertexShape')
 
----@class Edge : Shape
+---@class Edge : VertexShape
 local Edge = VertexShape:extend()
 Edge.name = 'edge'
 
 ---"Calculate" edge area
----@return number area
+---@return Edge self
 function Edge:calcArea()
 	self.area = 1
-	return self.area
+	return self
 end
 
 ---Calculate midpoint of edge
----@return Point centroid
+---@return Edge self
 function Edge:calcCentroid()
 	self.centroid.x = (self.vertices[1].x+self.vertices[2].x) / 2
 	self.centroid.y = (self.vertices[1].y+self.vertices[2].y) / 2
-	return self.centroid
+	return self
 end
 
----Calculate both area and centroid
----@return number area
----@return Point centroid
+---Calculate both area and centroidreturn Edge self
 function Edge:calcAreaCentroid()
-	return self:calcArea(), self:calcCentroid()
+	self:calcArea()
+	self:calcCentroid()
+	return self
 end
 
 ---Calculate radius of circumscribed circle
----@return number radius
+---@return Edge self
 function Edge:calcRadius()
 	self.radius = 0.5 * Vec.len(Vec.sub(self.vertices[1].x, self.vertices[1].y, self.vertices[2].x, self.vertices[2].y) )
-	return self.radius
+	return self
 end
 
 ---comment
