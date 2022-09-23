@@ -6,27 +6,24 @@ Rect = Polygon:extend()
 
 Rect.name = 'rect'
 
----Rect cotr
+---Rect ctor
 ---@param x number x position (center)
 ---@param y number y position (center)
 ---@param dx number width
----@param dy number height
----@param angle number radian offset
+---@param dy ?number height defaults to dx
+---@param angle ?number radian offset defaults to 0
 function Rect:new(x, y, dx, dy, angle)
-	if not ( dx and dy ) then return false end
-	local x_offset, y_offset = x or 0, y or 0
+	assert(dx, 'Rectangle constructor missing width/height')
+	dy = dy or dx
     self.dx, self.dy = dx, dy
 	self.angle = angle or 0
 	local hx, hy = dx/2, dy/2 -- halfsize
-	self.vertices = {
-		{x = x_offset - hx, y = y_offset - hy},
-		{x = x_offset + hx, y = y_offset - hy},
-		{x = x_offset + hx, y = y_offset + hy},
-		{x = x_offset - hx, y = y_offset + hy}
-	}
-	self.centroid  	= {x = x_offset, y = y_offset}
-	self.area 		= dx*dy
-	self.radius		= Vec.len(hx, hy)
+	Rect.super.new(self,
+		x - hx, y - hy,
+		x + hx, y - hy,
+		x + hx, y + hy,
+		x - hx, y + hy
+	)
 	self:rotate(self.angle)
 end
 

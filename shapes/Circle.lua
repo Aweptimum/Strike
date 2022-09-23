@@ -13,14 +13,14 @@ Circle.name = 'circle'
 ---@param y number y coordinate
 ---@param radius number
 ---@param angle number angle offset
----@return boolean
 function Circle:new(x, y, radius, angle)
 	if not ( radius ) then return false end
-	local x_offset = x or 0
-	local y_offset = y or 0
+    Circle.super.new(self)
+	x = x or 0
+	y = y or 0
 	-- Put everything into circle table and then return it
 	self.convex   = true                          -- boolean
-    self.centroid = {x = x_offset, y = y_offset}  -- {x, y} coordinate pair
+    self.centroid = {x = x, y = y}  -- {x, y} coordinate pair
     self.radius   = radius				        -- radius of circumscribed circle
     self.area     = pi*radius^2				    -- absolute/unsigned area of polygon
     self.angle    = angle or 0
