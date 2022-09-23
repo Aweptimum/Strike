@@ -16,43 +16,34 @@ Ellipse.name = 'ellipse'
 ---@param angle number radian offset
 function Ellipse:new(x, y, a, b, n, angle)
 	if not ( a or b ) then return false end -- We need both to make an ellipse!
-	-- Default to a ratio of major/minor axes = # of n per quadrant - multiply by 4 to get total n
-	local segs = n or max( floor(a/b)*4, 8)
-	-- Set ellipse coords
-	local x_offset 	= x or 0
-	local y_offset 	= y or 0
-	-- Set angle offset
+	x = x or 0
+	y = y or 0
 	angle = angle or 0
+	n = n or max(8, floor(a/b)*4) -- a/b = n per quadrant -> multiply by 4 to get total n
 
 	-- Init vertices list
 	local vertices = {}
 
 	-- Init delta-angle between vertices lying on ellipse hull
-	local d_rads = 2*pi / segs
+	local d_rads = 2*pi / n
 	-- For # of segs, compute vertex coordinates using
 	-- parametric eqns for an ellipse:
 	-- 		x = a * cos(theta)
 	-- 		y = b * sin(theta)
 	-- where a is the major axis and b is the minor axis
-	local a_offset = angle - d_rads
-	for i = 1, segs do
+	local a_offset = d_rads
+	for i = 1, n do
 		-- Increment our angle offset
 		a_offset = a_offset + d_rads
 		-- Add to vertices list
-		vertices[i] = {
-			x = x_offset + a * cos(a_offset),
-			y = y_offset + b * sin(a_offset)
-		}
+		table.insert(vertices, x + a * cos(a_offset))
+		table.insert(vertices, y + b * sin(a_offset))
 	end
-	-- Put everything into poly table and then return it
-    self.a, self.b  = a, b
-    self.n   		= n
-	self.vertices   = vertices			            -- list of {x,y} coords
-	self.convex     = true   					    -- boolean
-	self.centroid   = {x = x_offset, y = y_offset}	-- {x, y} coordinate pair
-	self.radius		= a							    -- radius of circumscribed circle
-	self.area		= pi*a*b						-- absolute/unsigned area of approx ellipse
-    self.angle      = angle
+
+	-- Set ellipse vars
+    self.a, self.b, self.n = a, b, n
+	Ellipse.super.new(self, vertices)
+	self:rotate(angle) -- set angle here because convex constructor defaults to 0
 end
 
 ---Return ctor args
