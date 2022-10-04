@@ -1,6 +1,6 @@
 local Shape = _Require_relative(..., "Shape")
 local Vec = _Require_relative(..., 'lib.DeWallua.vector-light',1)
-local abs = math.abs
+local abs, max = math.abs, math.max
 local push = table.insert
 
 ---@class VertexShape : Shape
@@ -18,6 +18,82 @@ end
 local function to_vertices(x, ...)
 	return type(x) == 'table'and to_verts({}, unpack(x)) or to_verts({}, x,...)
 end
+---comment
+---@param shape Shape
+local function center_shape(shape)
+	local cx, cy = shape:getCentroid()
+	for i, v in ipairs(shape.vertices) do
+		v.x, v.y = v.x - cx, v.y - cy
+	end
+end
+
+---Calculate polygon area using shoelace algorithm
+---@return Shape self
+function VertexShape:calcArea()
+	local len = #self.vertices
+	-- Initialize p and q so we can wrap around in the loop
+	local px, py = self:getVertex(len)
+	local qx, qy = self:getVertex(1)
+	-- a is the signed area of the triangle formed by the two legs of p.x-q.x and p.y-q.y - it is our weighting
+	local a = Vec.det(px,py, qx,qy)
+	-- signed_area is the total signed area of all triangles
+	local area = a
+
+	for i = 2, len do
+		-- Now assign p to q, q to next
+		px,py = qx,qy
+		qx,qy = self:getVertex(i)
+		a = Vec.det(px,py, qx,qy)
+		area = area + a
+	end
+
+	self.area = area * 0.5
+	return self
+end
+
+---Calculate centroid and area of the polygon at the _same_ time
+---@return Shape self
+function VertexShape:calcAreaCentroid()
+	local len = #self.vertices
+	-- Initialize p and q so we can wrap around in the loop
+	local px, py = self:getVertex(len)
+	local qx, qy = self:getVertex(1)
+	-- a is the signed area of the triangle formed by the two legs of p.x-q.x and p.y-q.y - it is our weighting
+	local a = Vec.det(px,py, qx,qy)
+	-- area is the total area of all triangles
+	self.area = a
+	local cx, cy = (px+qx)*a, (py+qy)*a
+
+	for i = 2, len do
+		-- Now assign p to q, q to next
+		px,py = qx,qy
+		qx,qy = self:getVertex(i)
+		a = Vec.det(px,py, qx,qy)
+		cx, cy = cx + (px+qx)*a, cy + (py+qy)*a
+		self.area = self.area + a
+	end
+	self.area = self.area * 0.5
+	self:translateTo(
+		cx / (6*self.area),
+		cy / (6*self.area)
+	)
+	-- Center the shape on the origin
+	center_shape(self)
+	return self
+end
+
+---Calculate polygon radius
+---@return Shape self
+function VertexShape:calcRadius()
+	local cx, cy = self:getCentroid()
+	local vertices, radius = self.vertices, 0
+	for i = 1,#vertices do
+		local vx, vy = self:getVertex(i)
+		radius = max(radius, Vec.dist(vx,vy, cx,cy))
+	end
+	self.radius = radius
+	return self
+end
 
 -- Create new Polygon object
 ---@vararg number x,y tuples
@@ -27,6 +103,10 @@ function VertexShape:new(x,y, ...)
     VertexShape.super.new(self)
 	self.centroid = {x=0, y=0}
 	self.vertices = to_vertices(x,y, ...)
+	self.area = 0
+	self.radius = 0
+	self:calcAreaCentroid()
+	self:calcRadius()
 end
 
 ---Get a vertex by its offset
@@ -36,7 +116,7 @@ end
 function VertexShape:getVertex(i)
 	if i > #self.vertices then return false, false end
 	local v = self.vertices[i]
-	return v.x, v.y
+	return self.transform:transform(v.x, v.y)
 end
 
 ---Get an edge by index
@@ -71,69 +151,6 @@ function VertexShape:project(nx,ny)
 		if p < min_dot then min_dot = p elseif p > max_dot then max_dot = p end
 	end
 	return min_dot, max_dot
-end
-
----Translate by displacement vector
----@param dx number
----@param dy number
----@return VertexShape self
-function VertexShape:translate(dx, dy)
-	-- Translate each vertex by dx, dy
-	local vertices = self.vertices
-    for i = 1, #vertices do
-        vertices[i].x = vertices[i].x + dx
-        vertices[i].y = vertices[i].y + dy
-    end
-	-- Translate centroid
-	self.centroid.x = self.centroid.x + dx
-	self.centroid.y = self.centroid.y + dy
-    return self
-end
-
----Rotate by specified radians
----@param angle number radians
----@param refx number reference x-coordinate
----@param refy number reference y-coordinate
----@return VertexShape self
-function VertexShape:rotate(angle, refx, refy)
-	-- Default to centroid as ref-point
-    refx = refx or self.centroid.x
-	refy = refy or self.centroid.y
-	-- Rotate each vertex about ref-point
-    for i = 1, #self.vertices do
-        local v = self.vertices[i]
-        v.x, v.y = Vec.add(refx, refy, Vec.rotate(angle, v.x-refx, v.y - refy))
-    end
-	self.centroid.x, self.centroid.y = Vec.add(refx, refy, Vec.rotate(angle, self.centroid.x-refx, self.centroid.y-refy))
-	self.angle = self.angle + angle
-	return self
-end
-
---- scale helper function
-local function scale_p(x,y, sf,rx,ry)
-	return Vec.add(rx, ry, Vec.mul(sf, x-rx, y - ry))
-end
-
----Scale polygon
----@param sf number scale factor
----@param refx number reference x-coordinate
----@param refy number reference y-coordinate
----@return VertexShape self
-function VertexShape:scale(sf, refx, refy)
-	-- Default to centroid as ref-point
-	local c = self.centroid
-    refx = refx or c.x
-	refy = refy or c.y
-	-- Push each vertex out from the ref point by scale-factor
-    for i = 1, #self.vertices do
-        local v = self.vertices[i]
-        v.x, v.y = scale_p(v.x,v.y, sf,refx,refy)
-    end
-	c.x, c.y = scale_p(c.x, c.y, sf, refx, refy)
-    -- Recalculate area, and radius
-    self.area = self.area * sf * sf
-    self.radius = self.radius * sf
-	return self
 end
 
 local function iter_edges(shape, i)
