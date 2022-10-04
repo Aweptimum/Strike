@@ -39,7 +39,8 @@ end
 ---@return number dx width
 ---@return number dy height
 function Circle:getBbox()
-    return self.centroid.x - self.radius, self.centroid.y - self.radius, self.radius, self.radius
+    local cx, cy = self:getCentroid()
+    return cx - self.radius, cy - self.radius, self.radius, self.radius
 end
 
 -- We can't actually iterate over circle geometry, but we can return a single edge
@@ -142,19 +143,22 @@ end
 ---@param ny number normalized y-component
 ---@return number minimum, number maximumum smallest, largest projection
 function Circle:project(nx, ny)
-    local proj = Vec.dot(self.centroid.x, self.centroid.y, nx, ny)
+    local cx, cy = self:getCentroid()
+    local proj = Vec.dot(cx, cy, nx, ny)
     return proj - self.radius, proj + self.radius
 end
 
 function Circle:getEdge(i)
-    local c, r = self.centroid, self.radius
-    return i == 1 and {c.x, c.y, c.x + r, c.y + r} or false
+    local cx, cy = self:getCentroid()
+    local r = self.radius
+    return i == 1 and {cx, cy, cx + r, cy + r} or false
 end
 
 ---Test if point inside circle
 ---@param point Point
 function Circle:containsPoint(point)
-    return Vec.len2(Vec.sub(point.x,point.y, self.centroid.x, self.centroid.y)) <= self.radius*self.radius
+    local cx, cy = self:getCentroid()
+    return Vec.len2(Vec.sub(point.x,point.y, cx, cy)) <= self.radius*self.radius
 end
 
 ---Test of normalized ray hits circle
@@ -183,7 +187,8 @@ function Circle:rayIntersections(x,y, dx,dy, ts)
     if not self:rayIntersects(x,y, dx,dy) then return nil end
     ts = ts or {}
     dx, dy = Vec.normalize(dx, dy)
-    local lx, ly = Vec.sub(self.centroid.x, self.centroid.y, x, y)
+    local cx, cy = self:getCentroid()
+    local lx, ly = Vec.sub(cx, cy, x, y)
     local h = Vec.dot(lx,ly, dx, dy)
     local d = Vec.len(Vec.reject(lx,ly, dx,dy))
     local r = math.sqrt(self.radius*self.radius - d*d)
@@ -198,7 +203,9 @@ end
 ---@return number y
 ---@return number radius
 function Circle:unpack()
-    return self.centroid.x, self.centroid.y, self.radius
+    local cx, cy = self:getCentroid()
+    local r = self:getRadius()
+    return cx, cy, r
 end
 
 function Circle:merge()
@@ -210,8 +217,9 @@ end
 ---@param ny number normalized y dir
 ---@return table Max-Point
 function Circle:getSupport(nx,ny)
+    local cx, cy = self:getCentroid()
     local px,py = Vec.mul(self.radius, nx,ny)
-    return {x=self.centroid.x+px, y= self.centroid.y+py}
+    return {x = cx+px, y = cy+py}
 end
 
 ---Get the point involved in a collision
