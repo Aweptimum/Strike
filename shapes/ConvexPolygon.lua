@@ -117,72 +117,6 @@ local function order_points_ccw(vertices)
     return good_sort and true, table.sort(vertices, sort_ccw) or not true
 end
 
----Calculate polygon area using shoelace algorithm
----@return Shape self
-function ConvexPolygon:calcArea()
-	local len = #self.vertices
-	-- Initialize p and q so we can wrap around in the loop
-	local px, py = self:getVertex(len)
-	local qx, qy = self:getVertex(1)
-	-- a is the signed area of the triangle formed by the two legs of px - qx and py - qy - it is our weighting
-	local a = Vec.det(px,py, qx,qy)
-	-- signed_area is the total signed area of all triangles
-	local area = a
-
-	for i = 2, len do
-		-- Now assign p to q, q to next
-		px,py = qx,qy
-		qx,qy = self:getVertex(i)
-		a = Vec.det(px,py, qx,qy)
-		area = area + a
-	end
-
-	self.area = area * 0.5
-	return self
-end
-
----Calculate centroid and area of the polygon at the _same_ time
----@return Shape self
-function ConvexPolygon:calcAreaCentroid()
-	local len = #self.vertices
-	-- Initialize p and q so we can wrap around in the loop
-	local px, py = self:getVertex(len)
-	local qx, qy = self:getVertex(1)
-	-- a is the signed area of the triangle formed by the two legs of px - qx and py - qy - it is our weighting
-	local a = Vec.det(px,py, qx,qy)
-	-- area is the total area of all triangles
-	self.area = a
-	local cx, cy = (px+qx)*a, (py+qy)*a
-
-	for i = 2, len do
-		-- Now assign p to q, q to next
-		px,py = qx,qy
-		qx,qy = self:getVertex(i)
-		a = Vec.det(px,py, qx,qy)
-		cx, cy = cx + (px+qx)*a, cy + (py+qy)*a
-		self.area = self.area + a
-	end
-	self.area = self.area * 0.5
-	self.centroid = {
-		x = cx / (6*self.area),
-		y = cy / (6*self.area)
-	}
-	return self
-end
-
----Calculate polygon radius
----@return Shape self
-function ConvexPolygon:calcRadius()
-	local cx, cy = self:getCentroid()
-	local vertices, radius = self.vertices, 0
-	for i = 1,#vertices do
-		local vx, vy = self:getVertex(i)
-		radius = max(radius, Vec.dist(vx,vy, cx,cy))
-	end
-	self.radius = radius
-	return self
-end
-
 ---Get polygon bounding box
 ---@return number x, number y, number dx, number dy minimum x/y, width, and height
 function ConvexPolygon:getBbox()
@@ -223,12 +157,6 @@ function ConvexPolygon:new(x,y, ...)
 	end
 	trim_collinear(self.vertices)
 	assert(not self_intersecting(self.vertices), 'Ordered points still self-intersecting')
-	self.centroid = {x=0,y=0}
-	self.area = 0
-	self.radius = 0
-	self.angle = 0
-	self:calcAreaCentroid()
-	self:calcRadius()
 end
 
 --- Need this to test if a shape is completely inside
