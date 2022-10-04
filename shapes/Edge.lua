@@ -15,8 +15,10 @@ end
 ---Calculate midpoint of edge
 ---@return Edge self
 function Edge:calcCentroid()
-	self.centroid.x = (self.vertices[1].x+self.vertices[2].x) / 2
-	self.centroid.y = (self.vertices[1].y+self.vertices[2].y) / 2
+	local x1, y1 = self:getVertex(1)
+	local x2, y2 = self:getVertex(2)
+	self.centroid.x = (x1+x2) / 2
+	self.centroid.y = (y1+y2) / 2
 	return self
 end
 
@@ -30,7 +32,9 @@ end
 ---Calculate radius of circumscribed circle
 ---@return Edge self
 function Edge:calcRadius()
-	self.radius = 0.5 * Vec.len(Vec.sub(self.vertices[1].x, self.vertices[1].y, self.vertices[2].x, self.vertices[2].y) )
+	local x1, y1 = self:getVertex(1)
+	local x2, y2 = self:getVertex(2)
+	self.radius = 0.5 * Vec.len(Vec.sub(x1, y1, x2, y2) )
 	return self
 end
 
@@ -60,7 +64,9 @@ local function edge_iter(shape, i)
 	local v = shape.vertices
 	if i < #v then
 		local j = i < #v and i+1
-		return i, {v[i].x, v[i].y, v[j].x, v[j].y}
+		local ix, iy = shape:getVertex(i)
+		local jx, jy = shape:getVertex(j)
+		return i, {ix, iy, jx, jy}
 	end
 end
 
@@ -78,7 +84,9 @@ end
 ---@return number x2
 ---@return number y2
 function Edge:unpack()
-    return self.vertices[1].x, self.vertices[1].y, self.vertices[2].x, self.vertices[2].y
+	local x1, y1 = self:getVertex(1)
+	local x2, y2 = self:getVertex(2)
+    return x1, y1, x2, y2
 end
 
 if love and love.graphics then
@@ -86,7 +94,7 @@ if love and love.graphics then
 	function Edge:draw()
 		love.graphics.line(self:unpack())
 		love.graphics.setColor(0,1,1)
-		love.graphics.points(self.centroid.x, self.centroid.y)
+		love.graphics.points(self:getCentroid())
 		love.graphics.setColor(1,1,1)
 	end
 end
