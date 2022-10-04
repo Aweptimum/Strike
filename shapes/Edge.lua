@@ -44,18 +44,9 @@ end
 ---@param x2 number x coordinate of second point
 ---@param y2 number y coordinate of second point
 function Edge:new(x1,y1, x2,y2)
-
 	Edge.super.new(self, x1,y1, x2,y2)
-
-	self.centroid = {
-		x = (x1 + x2) / 2,
-		y = (y1 + y2) / 2
-	}
-	self.radius = 0.5 * Vec.len(Vec.sub(x1,y1, x2,y2))
-	self.area = 1
 	self.norm = 0
 	self.angle = 0
-	self:calcAreaCentroid()
 end
 
 -- Only iterate once

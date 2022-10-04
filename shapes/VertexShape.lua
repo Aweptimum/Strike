@@ -1,6 +1,6 @@
 local Shape = _Require_relative(..., "Shape")
 local Vec = _Require_relative(..., 'lib.DeWallua.vector-light',1)
-local abs = math.abs
+local abs, max = math.abs, math.max
 local push = table.insert
 
 ---@class VertexShape : Shape
@@ -18,6 +18,82 @@ end
 local function to_vertices(x, ...)
 	return type(x) == 'table'and to_verts({}, unpack(x)) or to_verts({}, x,...)
 end
+---comment
+---@param shape Shape
+local function center_shape(shape)
+	local cx, cy = shape:getCentroid()
+	for i, v in ipairs(shape.vertices) do
+		v.x, v.y = v.x - cx, v.y - cy
+	end
+end
+
+---Calculate polygon area using shoelace algorithm
+---@return Shape self
+function VertexShape:calcArea()
+	local len = #self.vertices
+	-- Initialize p and q so we can wrap around in the loop
+	local px, py = self:getVertex(len)
+	local qx, qy = self:getVertex(1)
+	-- a is the signed area of the triangle formed by the two legs of p.x-q.x and p.y-q.y - it is our weighting
+	local a = Vec.det(px,py, qx,qy)
+	-- signed_area is the total signed area of all triangles
+	local area = a
+
+	for i = 2, len do
+		-- Now assign p to q, q to next
+		px,py = qx,qy
+		qx,qy = self:getVertex(i)
+		a = Vec.det(px,py, qx,qy)
+		area = area + a
+	end
+
+	self.area = area * 0.5
+	return self
+end
+
+---Calculate centroid and area of the polygon at the _same_ time
+---@return Shape self
+function VertexShape:calcAreaCentroid()
+	local len = #self.vertices
+	-- Initialize p and q so we can wrap around in the loop
+	local px, py = self:getVertex(len)
+	local qx, qy = self:getVertex(1)
+	-- a is the signed area of the triangle formed by the two legs of p.x-q.x and p.y-q.y - it is our weighting
+	local a = Vec.det(px,py, qx,qy)
+	-- area is the total area of all triangles
+	self.area = a
+	local cx, cy = (px+qx)*a, (py+qy)*a
+
+	for i = 2, len do
+		-- Now assign p to q, q to next
+		px,py = qx,qy
+		qx,qy = self:getVertex(i)
+		a = Vec.det(px,py, qx,qy)
+		cx, cy = cx + (px+qx)*a, cy + (py+qy)*a
+		self.area = self.area + a
+	end
+	self.area = self.area * 0.5
+	self:translateTo(
+		cx / (6*self.area),
+		cy / (6*self.area)
+	)
+	-- Center the shape on the origin
+	center_shape(self)
+	return self
+end
+
+---Calculate polygon radius
+---@return Shape self
+function VertexShape:calcRadius()
+	local cx, cy = self:getCentroid()
+	local vertices, radius = self.vertices, 0
+	for i = 1,#vertices do
+		local vx, vy = self:getVertex(i)
+		radius = max(radius, Vec.dist(vx,vy, cx,cy))
+	end
+	self.radius = radius
+	return self
+end
 
 -- Create new Polygon object
 ---@vararg number x,y tuples
@@ -27,6 +103,10 @@ function VertexShape:new(x,y, ...)
     VertexShape.super.new(self)
 	self.centroid = {x=0, y=0}
 	self.vertices = to_vertices(x,y, ...)
+	self.area = 0
+	self.radius = 0
+	self:calcAreaCentroid()
+	self:calcRadius()
 end
 
 ---Get a vertex by its offset
