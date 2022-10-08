@@ -1,8 +1,8 @@
 local Vec = _Require_relative(..., 'lib.DeWallua.vector-light',1)
-local Polygon = _Require_relative(..., 'ConvexPolygon')
+local ConvexPolygon = _Require_relative(..., 'ConvexPolygon')
 
 ---@class Rectangle : ConvexPolygon
-Rect = Polygon:extend()
+Rect = ConvexPolygon:extend()
 
 Rect.name = 'rect'
 
