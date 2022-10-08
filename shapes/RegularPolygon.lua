@@ -1,9 +1,9 @@
-local Polygon = _Require_relative(..., 'ConvexPolygon')
+local ConvexPolygon = _Require_relative(..., 'ConvexPolygon')
 
 local pi, cos, sin, tan = math.pi, math.cos, math.sin, math.tan
 
 ---@class RegularPolygon : ConvexPolygon
-local RegularPolygon = Polygon:extend()
+local RegularPolygon = ConvexPolygon:extend()
 
 RegularPolygon.name = 'RegularPolygon'
 

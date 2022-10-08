@@ -17,11 +17,9 @@ Libs = scandir('lib')
 for _, filename in ipairs(Libs) do
     local ext = filename:match("^.+(%..+)$")
     local name = ext == '.lua' and filename:gsub('.lua', '') or filename
-    print('lib name: '..name)
     Libs[name] = require( table.concat({..., 'lib',name},".") )
 end
 
 local Strike = require( table.concat({..., 'Strike'},".") )
-
 
 return Strike
