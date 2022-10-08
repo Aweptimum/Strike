@@ -77,6 +77,7 @@ function VertexShape:calcAreaCentroid()
 		cx / (6*self.area),
 		cy / (6*self.area)
 	)
+	print('calc centroid: '..(cx/(6*self.area))..', '..(cy/(6*self.area)))
 	-- Center the shape on the origin
 	center_shape(self)
 	return self
