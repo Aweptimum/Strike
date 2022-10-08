@@ -17,8 +17,13 @@ end
 function Edge:calcCentroid()
 	local x1, y1 = self:getVertex(1)
 	local x2, y2 = self:getVertex(2)
-	self.centroid.x = (x1+x2) / 2
-	self.centroid.y = (y1+y2) / 2
+	local cx, cy = (x1+x2) / 2, (y1+y2) / 2
+
+	self:translateTo(cx,cy)
+
+	for i, v in ipairs(self.vertices) do
+		v.x, v.y = v.x - cx, v.y - cy
+	end
 	return self
 end
 
