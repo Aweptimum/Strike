@@ -307,7 +307,7 @@ To make this explicit, a check for whether the MTV is headed *into* a Collider's
 You can create shape definitions in the `/shapes` directory of Strike that will be loaded into `S.hapes`. There are a few rules to follow:
 1. The shape must be convex
 2. At least define `:new` and `:unpack`
-3. *All* necessary properties need to be initialized inside `:new`. If not, you'll get weird behavior as instantiated shapes will populate the object's attributes (I know from experience)
+3. Create a vertex list and feed it to the super constructor
 
 And you should generally be fine.
 
@@ -323,35 +323,33 @@ local Polygon = _Require_relative(..., 'ConvexPolygon')
 
 local Rect = Polygon:extend()
 ```
-Then, we define a constructor:
+Then, we define a constructor. All we need to do is create a list of points to feed to the `ConvexPolygon` constructor and it'll handle the rest. Even if your points are fed in ccw, `ConvexPolygon:new` will sort it properly for you. For rotation/scaling, you can call `:rotate` or `scale` to handle that. Anything else is up to you.
 ```lua
-function Rect:new((x_pos, y_pos, dx, dy, angle_rads)
-    if not ( dx and dy ) then return false end
-    local x_offset, y_offset = x_pos or 0, y_pos or 0
+function Rect:new(x, y, dx, dy, angle)
+	assert(dx, 'Rectangle constructor missing width/height')
+	dy = dy or dx
     self.dx, self.dy = dx, dy
-    self.angle = angle_rads or 0
-    local hx, hy = dx/2, dy/2 -- halfsize
-    self.vertices = {
-		{x = x_offset - hx, y = y_offset - hy},
-		{x = x_offset + hx, y = y_offset - hy},
-		{x = x_offset + hx, y = y_offset + hy},
-		{x = x_offset - hx, y = y_offset + hy}
-	}
-    self.centroid   = {x = x_offset, y = y_offset}
-    self.area       = dx*dy
-    self.radius     = Vec.len(hx, hy)
-    self:rotate(self.angle)
+	self.angle = angle or 0
+	local hx, hy = dx/2, dy/2 -- halfsize
+	Rect.super.new(self,
+		x - hx, y - hy,
+		x + hx, y - hy,
+		x + hx, y + hy,
+		x - hx, y + hy
+	)
+    -- Remember to rotate the shape!
+	self:rotate(self.angle)
 end
 ```
-I know it looks a bit dense, but the important takeaway is that we are initializing all the same properties of ConvexPolygon, just in a different way.
 You might notice that the attributes in the constructor that are no longer needed are actually stored (dx, dy). This is so that we can unpack those values if need-be, such as copying arguments into a constructor call. For that, we define `unpack`:
 ```lua
 function Rect:unpack()
-	return self.centroid.x, self.centroid.y, self.dx, self.dy, self.angle
+    local cx, cy = self:getCentroid(x,y) 
+	return cx, cy, self.dx, self.dy, self.angle
 end
 ```
 And the last thing we need to do is return our object for when it's required by Strike:
-```
+```lua
 return Rect
 ```
 
