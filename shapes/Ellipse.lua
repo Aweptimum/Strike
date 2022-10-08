@@ -53,7 +53,8 @@ end
 ---@return number b
 ---@return number n
 function Ellipse:unpack()
-    return self.centroid.x, self.centroid.y, self.a, self.b, self.n
+	local cx, cy = self:getCentroid()
+    return cx, cy, self.a, self.b, self.n
 end
 
 if love and love.graphics then
