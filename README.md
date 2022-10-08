@@ -181,6 +181,7 @@ collider:consolidate() 		-- will merge incident convex polygons together, makes 
 ```
 
 ### Collider Iterating
+There's the expensive `:ipairs()` method which uses a coroutine
 ```lua
 for parent_collider, shape, shape_index in collider:ipairs() do
 	-- stuff
@@ -189,6 +190,13 @@ end
 `Collider:ipairs()` is a flattened-list iterator that will return *all* Shapes, nested or not, contained within the 'root' Collider it's called from.
 `parent_collider` is the collider that contains `shape`, and `shape_index` is the index of `shape` within `parent_collider.shapes`.\
 If you wanted to remove a shape from a Collider that met some condition, calling `parent_collider:remove( shape_index )` would do it.
+
+And the cheaper `:elems()` method that returns only leaf nodes and does not use a coroutine
+```lua
+for shape in collider:elems() do
+    -- stuff
+end
+```
 
 ## Ray Intersection
 There are two ray intersection functions: `rayIntersects` and `rayIntersections`. Both have the same arguments: a ray origin and a normalized vector. The current implementation also assumes infinite length. They are defined both at the `Shapes` level and at the `Collider` level.
