@@ -266,34 +266,6 @@ MTV:setCollidedShape(shape)
 ```
 The one practical instance method of interest might be `MTV:mag()/mag2` - it returns the magnitude/magnitude-squared of the separating vector.
 
-### Object Pooling
-The `MTV` object implements the `Pool` mixin in [`classes/Pool.lua`](https://github.com/Aweptimum/Strike/blob/main/classes/Pool.lua). The following instance methods can be used to interact with the pool:
-```lua
-MTV:fetch(dx, dy, collider, collided)
-MTV:stow()
-```
-`fetch()` sets a previously initialized MTV to the given arguments and returns it from the pool. Its arguments are identical to the `MTV()` constructor as it uses `:new` to init the object
-`stow()` inserts the MTV instance into the object pool
-There is a default limit of 128 for any pool. The MTV pool size can be changed using Strike's `S.etPoolSize(size)` method or requiring the `MTV` object and calling `MTV:setPoolSize(size)`. Multiples of 2 are best because of lua-hash-table-resizing-stuff. The size can be acquired via `S.eePoolSize()/MTV:getPoolSize()`
-
-### Implementing Pooling
-If you both want to embrace `classic` in your own project and pool an ubiquitous object in your code, here's an example:
-```lua
-Object = Libs.classic
-Pool = require 'module-path.Strike.classes.Pool`
-
-local myObject = Object:extend():implement(Pool)
-```
-Your `myObject` object now has access to these methods and fields:
-```lua
-Pool.pool               -- Class's object pool
-Pool.size               -- Pool size limit
-Pool:getPoolSize()      -- Get the size of the object pool
-Pool:setPoolSize(size)  -- Set size of object pool (returns self)
-Pool:fetch( ... )       -- Fetch a pooled instance and init to given args (should match class constructor)
-Pool:stow( obj, ... )   -- Stow variable # of instances in Class pool
-```
-
 ## Collision
 ### Broad Phase
 Has both circle-circle and aabb-aabb intersection test functions - `S.ircle(collider1, collider2)` and `S.aabb(collider1, collider2)` respectively. Both return true on interesction, else false.
