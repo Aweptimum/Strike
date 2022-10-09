@@ -49,7 +49,8 @@ end
 ---@return number radius
 ---@return number angle
 function RegularPolygon:unpack()
-    return self.centroid.x, self.centroid.y, self.n, self.radius, self.angle
+    local cx, cy = self:getCentroid()
+    return cx, cy, self.n, self.radius, self.angle
 end
 
 function RegularPolygon:_get_verts()

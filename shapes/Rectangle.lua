@@ -34,7 +34,8 @@ end
 ---@return number dy
 ---@return number angle
 function Rect:unpack()
-	return self.centroid.x, self.centroid.y, self.dx, self.dy, self.angle
+	local cx, cy = self:getCentroid()
+	return cx, cy, self.dx, self.dy, self.angle
 end
 
 return Rect

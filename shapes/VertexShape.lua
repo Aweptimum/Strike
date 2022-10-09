@@ -102,7 +102,6 @@ end
 ---@param y number
 function VertexShape:new(x,y, ...)
     VertexShape.super.new(self)
-	self.centroid = {x=0, y=0}
 	self.vertices = to_vertices(x,y, ...)
 	self.area = 0
 	self.radius = 0
@@ -152,69 +151,6 @@ function VertexShape:project(nx,ny)
 		if p < min_dot then min_dot = p elseif p > max_dot then max_dot = p end
 	end
 	return min_dot, max_dot
-end
-
----Translate by displacement vector
----@param dx number
----@param dy number
----@return VertexShape self
-function VertexShape:translate(dx, dy)
-	-- Translate each vertex by dx, dy
-	local vertices = self.vertices
-    for i = 1, #vertices do
-        vertices[i].x = vertices[i].x + dx
-        vertices[i].y = vertices[i].y + dy
-    end
-	-- Translate centroid
-	self.centroid.x = self.centroid.x + dx
-	self.centroid.y = self.centroid.y + dy
-    return self
-end
-
----Rotate by specified radians
----@param angle number radians
----@param refx number reference x-coordinate
----@param refy number reference y-coordinate
----@return VertexShape self
-function VertexShape:rotate(angle, refx, refy)
-	-- Default to centroid as ref-point
-    refx = refx or self.centroid.x
-	refy = refy or self.centroid.y
-	-- Rotate each vertex about ref-point
-    for i = 1, #self.vertices do
-        local v = self.vertices[i]
-        v.x, v.y = Vec.add(refx, refy, Vec.rotate(angle, v.x-refx, v.y - refy))
-    end
-	self.centroid.x, self.centroid.y = Vec.add(refx, refy, Vec.rotate(angle, self.centroid.x-refx, self.centroid.y-refy))
-	self.angle = self.angle + angle
-	return self
-end
-
---- scale helper function
-local function scale_p(x,y, sf,rx,ry)
-	return Vec.add(rx, ry, Vec.mul(sf, x-rx, y - ry))
-end
-
----Scale polygon
----@param sf number scale factor
----@param refx number reference x-coordinate
----@param refy number reference y-coordinate
----@return VertexShape self
-function VertexShape:scale(sf, refx, refy)
-	-- Default to centroid as ref-point
-	local c = self.centroid
-    refx = refx or c.x
-	refy = refy or c.y
-	-- Push each vertex out from the ref point by scale-factor
-    for i = 1, #self.vertices do
-        local v = self.vertices[i]
-        v.x, v.y = scale_p(v.x,v.y, sf,refx,refy)
-    end
-	c.x, c.y = scale_p(c.x, c.y, sf, refx, refy)
-    -- Recalculate area, and radius
-    self.area = self.area * sf * sf
-    self.radius = self.radius * sf
-	return self
 end
 
 local function iter_edges(shape, i)

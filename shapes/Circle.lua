@@ -20,7 +20,6 @@ function Circle:new(x, y, radius, angle)
 	y = y or 0
 	-- Put everything into circle table and then return it
 	self.convex   = true                          -- boolean
-    self.centroid = {x = x, y = y}  -- {x, y} coordinate pair
     self.radius   = radius				        -- radius of circumscribed circle
     self.area     = pi*radius^2				    -- absolute/unsigned area of polygon
     self.angle    = angle or 0
@@ -105,37 +104,6 @@ end
 function Circle:vecs(shape)
     local state = {self=self, shape=shape, i=0}
     return iter_vecs, state, nil
-end
-
----Translate by displacement vector
----@param dx number
----@param dy number
----@return Circle self
-function Circle:translate(dx, dy)
-    self.centroid.x, self.centroid.y = self.centroid.x + dx, self.centroid.y + dy
-	return self
-end
-
----Rotate by specified radians
----@param angle number radians
----@param x number reference x-coordinate
----@param y number reference y-coordinate
----@return Circle self
-function Circle:rotate(angle, x, y)
-    x = x or 0
-    y = y or 0
-    local c = self.centroid
-    c.x, c.y = Vec.add(x, y, Vec.rotate(angle, c.x-x, c.y - y))
-	return self
-end
-
----Scale circle
----@param sf number scale factor
----@return Circle self
-function Circle:scale(sf)
-    self.radius = self.radius * sf
-    self:calcArea()
-	return self
 end
 
 ---Project circle along normalized vector
