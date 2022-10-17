@@ -1,7 +1,5 @@
 local Object = Libs.classic
 local cos, sin = math.cos, math.sin
----@type Pool
---local Pool = _Require_relative( ..., 'Pool')
 
 ---@class Transform : Object, Pool
 ---@field x number
@@ -9,9 +7,17 @@ local cos, sin = math.cos, math.sin
 ---@field cosa number cos term of a 2x2 rotation matrix
 ---@field sina number sin term of a 2x2 rotation matrix
 ---@field s number scale factor
-local Transform = Object:extend()--:implement(Pool)
+local Transform = Object:extend()
 
+---Constructor
+---@param x number x coordinate
+---@param y number y coordinate
+---@param ca number cos component of angle
+---@param sa number sin component of angle
+---@param s number scale factor
 function Transform:new(x, y, ca, sa, s)
+    ca = ca or 1
+    sa = sa or 0
     self.x = x or 0
     self.y = y or 0
     -- normalize rotation components
@@ -21,6 +27,12 @@ function Transform:new(x, y, ca, sa, s)
     self.s = s or 1
 end
 
+---Static constructor method
+---@param x number x coordinate
+---@param y number y coordinate
+---@param a number angle radians
+---@param s number scale factor
+---@return Transform
 function Transform.fromAngle(x, y, a, s)
     local cosa = a and cos(a) or 1
     local sina = a and sin(a) or 0
