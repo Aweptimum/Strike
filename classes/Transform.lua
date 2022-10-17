@@ -14,8 +14,10 @@ local Transform = Object:extend()--:implement(Pool)
 function Transform:new(x, y, ca, sa, s)
     self.x = x or 0
     self.y = y or 0
-    self.cosa = ca or 1
-    self.sina = sa or 0
+    -- normalize rotation components
+    local m = (ca*ca + sa*sa)^0.5
+    self.cosa = ca/m
+    self.sina = sa/m
     self.s = s or 1
 end
 
@@ -45,10 +47,6 @@ function Transform:getTranslation()
     return self.x, self.y
 end
 
-local function clamp(x, min, max)
-    return x < min and min or (x > max and max or x)
-end
-
 ---Calculates the cos and sin terms of the product of 2 2x2 rotation matrices
 ---
 ---Multiplying a 2x2 matrix that has terms (cosa,sina) with one that has (cosb,sinb)
@@ -59,10 +57,17 @@ end
 ---@param ry ?number reference y coordinate defaults to centroid
 ---@return Transform
 function Transform:rotate(ca, sa, rx, ry)
+    ca = ca or 1
+    sa = sa or 0
     rx = rx or self.x
     ry = ry or self.y
-    local cosa = clamp( ca*self.cosa - sa*self.sina , -1, 1)
-    local sina = clamp( sa*self.cosa + ca*self.sina , -1, 1)
+    -- normalize rotation components
+    local m = (ca*ca + sa*sa)^0.5
+    ca = ca/m
+    sa = sa/m
+
+    local cosa = ca * self.cosa - sa * self.sina
+    local sina = sa * self.cosa + ca * self.sina
 
     self.cosa, self.sina = cosa, sina
 
@@ -90,10 +95,16 @@ end
 ---@param ry ?number reference y coordinate defaults to centroid
 ---@return Transform
 function Transform:rotateTo(ca, sa, rx, ry)
+    ca = ca or 1
+    sa = sa or 0
     rx = rx or self.x
     ry = ry or self.y
-    self.cosa = ca
-    self.sina = sa
+    -- normalize rotation components
+    local m = (ca*ca + sa*sa)^0.5
+    ca = ca/m
+    sa = sa/m
+
+    self.cosa, self.sina = ca, sa
 
     -- rotate the translaton about the ref point
     local dx, dy = self.x - rx, self.y - ry
