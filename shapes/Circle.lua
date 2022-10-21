@@ -45,15 +45,17 @@ end
 -- We can't actually iterate over circle geometry, but we can return a single edge
 -- from the circle centroid to closest point of test shape
 local function get_closest_point(shape, x,y)
-    local dist, min_dist, min_p
-    for i, v in ipairs(shape.vertices) do
-        dist = Vec.dist2(x,y, v.x,v.y)
+    local dist, min_dist, min_x, min_y
+    local len = #shape.vertices
+    for i = 1, len do
+        local vx, vy = shape:getVertex(i)
+        dist = Vec.dist2(x,y, vx,vy)
         if not min_dist or dist < min_dist then
             min_dist = dist
-            min_p = v
+            min_x, min_y = vx, vy
         end
     end
-    return min_p.x, min_p.y
+    return min_x, min_y
 end
 
 local function iter_edges(state)
@@ -66,8 +68,8 @@ local function iter_edges(state)
         if shape.name == 'circle' then
             endx, endy = sx, sy
         else
-            local mp = get_closest_point(shape, cx, cy)
-            endx, endy = mp.x, mp.y
+            local mpx, mpy = get_closest_point(shape, cx, cy)
+            endx, endy = mpx, mpy
         end
         local normx, normy = Vec.perpendicular(Vec.sub(endx,endy, cx,cy))
         return state.i, {cx, cy, cx+normx, cy+normy}
