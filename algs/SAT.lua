@@ -67,6 +67,7 @@ local function project(shape1, shape2)
 		dx, dy = Vec.normalize( vec.x, vec.y )
 		dx, dy = dy, -dx
 		mtv = test_axis(shape1,shape2,dx,dy,mtv)
+		mtv:setEdgeIndex(i)
 		if mtv.separating then
 			return mtv
 		end

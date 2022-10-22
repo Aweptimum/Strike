@@ -23,7 +23,7 @@ function MTV:new(dx, dy, rshape, dshape, separating)
 	self.colliderShape = rshape
 	self.collidedShape = dshape
 	self.separating = separating or not true
-	self.edgeIndex = 0
+	self.edgeIndex = 1
 end
 
 ---Get MTV magnitude
