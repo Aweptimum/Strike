@@ -116,7 +116,7 @@ end
 function VertexShape:getVertex(i)
 	if i > #self.vertices then return false, false end
 	local v = self.vertices[i]
-	return v.x, v.y
+	return self.transform:transform(v.x, v.y)
 end
 
 ---Get an edge by index
