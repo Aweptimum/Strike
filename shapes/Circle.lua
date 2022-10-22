@@ -16,13 +16,12 @@ Circle.name = 'circle'
 function Circle:new(x, y, radius, angle)
 	if not ( radius ) then return false end
     Circle.super.new(self)
-	x = x or 0
-	y = y or 0
 	-- Put everything into circle table and then return it
-	self.convex   = true                          -- boolean
-    self.radius   = radius				        -- radius of circumscribed circle
-    self.area     = pi*radius^2				    -- absolute/unsigned area of polygon
+	self.convex   = true        -- boolean
+    self.radius   = radius		-- radius of circumscribed circle
+    self.area     = pi*radius^2	-- absolute/unsigned area of polygon
     self.angle    = angle or 0
+    self:translateTo(x,y)
 end
 
 ---Calculate area
