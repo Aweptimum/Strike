@@ -77,7 +77,7 @@ function VertexShape:calcAreaCentroid()
 		cx / (6*self.area),
 		cy / (6*self.area)
 	)
-	print('calc centroid: '..(cx/(6*self.area))..', '..(cy/(6*self.area)))
+
 	-- Center the shape on the origin
 	center_shape(self)
 	return self
@@ -120,10 +120,10 @@ function VertexShape:getVertex(i)
 end
 
 ---Get an edge by index
----@param i number
----@return table|false res edge of form {x1,y1, x2,y2} or false if index out of range
+---@param i number index
+---@return table|nil edge of form {x1,y1, x2,y2} or nil if index out of range
 function VertexShape:getEdge(i)
-	if i > #self.vertices then return false end
+	if i > #self.vertices or i < 1 then return nil end
 	local verts = self.vertices
 	local j = i < #verts and i+1 or 1
 	local p1x, p1y = self:getVertex(i)

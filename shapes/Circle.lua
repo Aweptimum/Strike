@@ -117,10 +117,13 @@ function Circle:project(nx, ny)
     return proj - self.radius, proj + self.radius
 end
 
+---Get an edge given an index, returns the vertex at i and the vertex at i+1
+---@param i number edge index (has to be 1)
+---@return table|nil edge of form {x1,y1, x2,y2} or nil if index beyond bounds
 function Circle:getEdge(i)
     local cx, cy = self:getCentroid()
     local r = self.radius
-    return i == 1 and {cx, cy, cx + r, cy + r} or false
+    return i == 1 and {cx, cy, cx + r, cy + r} or nil
 end
 
 ---Test if point inside circle
