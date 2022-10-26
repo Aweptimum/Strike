@@ -58,6 +58,10 @@ shape:getEdge(i)
 ```
 Given an index, returns the corresponding numbered edge. Returns `nil` if OOB
 ```lua
+shape:getVertex(i)
+```
+Given an index, returns the corresponding numbered edge. Returns `nil` if OOB
+```lua
 shape:project(nx, ny)
 ```
 Given two normalized vector components, returns the minimum and maximum values of the shape's projection onto the vector
