@@ -44,6 +44,8 @@ shape:scale(sf, refx, refy)	  -- scales by factor `sf` with respect to a referen
 ```
 
 ### Querying Shapes
+Under the hood, Strike's `Shape` class uses a Transform object, so directly accessing coordinates won't give expected values. Relevant getters return transformed coordinates, such as `getVertex`, so definitely use them.
+
 ```lua
 shape:getArea()		-- Returns the area of the shape
 shape:getCentroid()	-- Returns the centroid of the shape as a table {x = x, y = y}
