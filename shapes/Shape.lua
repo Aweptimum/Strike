@@ -67,6 +67,13 @@ end
 function Shape:getBbox()
 end
 
+---Get vertex at index, except circles don't have any :p
+---@param i number
+---@return nil
+function Shape:getVertex(i)
+    return nil
+end
+
 function Shape:project()
 end
 
