@@ -9,6 +9,18 @@ local function sign(number)
     return number > 0 and 1 or (number == 0 and 0 or -1)
 end
 
+---Calculate if the mtv is along or against the reference frame
+---@param mtv MTV
+---@param shape1 Shape
+---@param shape2 Shape
+---@return integer sign
+local function reference_frame(mtv, shape1, shape2)
+	local c1x, c1y = shape1:getCentroid()
+	local c2x, c2y = shape2:getCentroid()
+	local ccx, ccy = c2x - c1x, c2y - c1y
+	return sign( Vec.dot(mtv.x, mtv.y, ccx, ccy) )
+end
+
 -- Cache:
 local acache = Cache()
 
@@ -55,14 +67,14 @@ local function project(shape1, shape2)
 		dx, dy = Vec.normalize( vec.x, vec.y )
 		dx, dy = dy, -dx
 		mtv = test_axis(shape1,shape2,dx,dy,mtv)
+		mtv:setEdgeIndex(i)
 		if mtv.separating then
 			return mtv
 		end
 	end
 	-- Welp. We made it here. So they're colliding, I guess. Hope it's consensual :(
 	-- Flip it?
-	local ccx, ccy = shape2.centroid.x - shape1.centroid.x, shape2.centroid.y - shape1.centroid.y
-	local s = sign( Vec.dot(mtv.x, mtv.y, ccx, ccy) )
+	local s = reference_frame(mtv, shape1, shape2)
 	mtv:scale(s):setColliderShape(shape1):setCollidedShape(shape2):setSeparating(false)
 	return mtv
 end

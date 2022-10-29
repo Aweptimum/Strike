@@ -17,7 +17,6 @@ else
         directory = get_script_path() .. directory .. "."
         local i, t, popen = 0, {}, io.popen
         for filename in popen('dir "'..directory..'" /b'):lines() do
-            --print(filename)
             i = i + 1
             t[i] = filename
         end

@@ -13,24 +13,22 @@ Circle.name = 'circle'
 ---@param y number y coordinate
 ---@param radius number
 ---@param angle number angle offset
----@return boolean
 function Circle:new(x, y, radius, angle)
 	if not ( radius ) then return false end
-	local x_offset = x or 0
-	local y_offset = y or 0
+    Circle.super.new(self)
 	-- Put everything into circle table and then return it
-	self.convex   = true                          -- boolean
-    self.centroid = {x = x_offset, y = y_offset}  -- {x, y} coordinate pair
-    self.radius   = radius				        -- radius of circumscribed circle
-    self.area     = pi*radius^2				    -- absolute/unsigned area of polygon
+	self.convex   = true        -- boolean
+    self.radius   = radius		-- radius of circumscribed circle
+    self.area     = pi*radius^2	-- absolute/unsigned area of polygon
     self.angle    = angle or 0
+    self:translateTo(x,y)
 end
 
 ---Calculate area
----@return number area
+---@return Shape self
 function Circle:calcArea()
     self.area = pi*self.radius^2
-    return self.area
+    return self
 end
 
 ---comment
@@ -39,38 +37,41 @@ end
 ---@return number dx width
 ---@return number dy height
 function Circle:getBbox()
-    return self.centroid.x - self.radius, self.centroid.y - self.radius, self.radius, self.radius
+    local cx, cy = self:getCentroid()
+    return cx - self.radius, cy - self.radius, self.radius, self.radius
 end
 
 -- We can't actually iterate over circle geometry, but we can return a single edge
 -- from the circle centroid to closest point of test shape
-local function get_closest_point(shape, p)
-    local dist, min_dist, min_p
-    for i, v in ipairs(shape.vertices) do
-        dist = Vec.dist2(p.x,p.y, v.x,v.y)
+local function get_closest_point(shape, x,y)
+    local dist, min_dist, min_x, min_y
+    local len = #shape.vertices
+    for i = 1, len do
+        local vx, vy = shape:getVertex(i)
+        dist = Vec.dist2(x,y, vx,vy)
         if not min_dist or dist < min_dist then
             min_dist = dist
-            min_p = v
+            min_x, min_y = vx, vy
         end
     end
-    return min_p
+    return min_x, min_y
 end
 
 local function iter_edges(state)
     local endx, endy
 	state.i = state.i + 1
-    local c = state.self.centroid
+    local cx, cy = state.self:getCentroid()
     local shape = state.shape
-    local sc = shape.centroid
+    local sx, sy = shape:getCentroid()
 	if state.i <= 1 then
         if shape.name == 'circle' then
-            endx, endy = sc.x, sc.y
+            endx, endy = sx, sy
         else
-            local mp = get_closest_point(shape, c)
-            endx, endy = mp.x, mp.y
+            local mpx, mpy = get_closest_point(shape, cx, cy)
+            endx, endy = mpx, mpy
         end
-        local normx, normy = Vec.perpendicular(Vec.sub(endx,endy, c.x,c.y))
-        return state.i, {c.x,c.y, c.x+normx,c.y+normy}
+        local normx, normy = Vec.perpendicular(Vec.sub(endx,endy, cx,cy))
+        return state.i, {cx, cy, cx+normx, cy+normy}
     end
 end
 
@@ -82,17 +83,16 @@ end
 local function iter_vecs(state)
     local endx, endy
 	state.i = state.i + 1
-    local c = state.self.centroid
+    local cx, cy = state.self:getCentroid()
     local shape = state.shape
-    local sc = shape.centroid
+    local sx, sy = shape:getCentroid()
 	if state.i <= 1 then
         if shape.name == 'circle' then
-            endx, endy = sc.x, sc.y
+            endx, endy = sx, sy
         else
-            local mp = get_closest_point(shape, c)
-            endx, endy = mp.x, mp.y
+            endx, endy = get_closest_point(shape, cx, cy)
         end
-        local normx, normy = Vec.perpendicular(Vec.sub(endx,endy, c.x,c.y))
+        local normx, normy = Vec.perpendicular(Vec.sub(endx,endy, cx,cy))
         return state.i, {x = normx, y = normy}
     end
 end
@@ -107,53 +107,30 @@ function Circle:vecs(shape)
     return iter_vecs, state, nil
 end
 
----Translate by displacement vector
----@param dx number
----@param dy number
----@return Circle self
-function Circle:translate(dx, dy)
-    self.centroid.x, self.centroid.y = self.centroid.x + dx, self.centroid.y + dy
-	return self
-end
-
----Rotate by specified radians
----@param angle number radians
----@param refx number reference x-coordinate
----@param refy number reference y-coordinate
----@return Circle self
-function Circle:rotate(angle, refx, refy)
-    local c = self.centroid
-    c.x, c.y = Vec.add(refx, refy, Vec.rotate(angle, c.x-refx, c.y - refy))
-	return self
-end
-
----Scale circle
----@param sf number scale factor
----@return Circle self
-function Circle:scale(sf)
-    self.radius = self.radius * sf
-    self:calcArea()
-	return self
-end
-
 ---Project circle along normalized vector
 ---@param nx number normalized x-component
 ---@param ny number normalized y-component
 ---@return number minimum, number maximumum smallest, largest projection
 function Circle:project(nx, ny)
-    local proj = Vec.dot(self.centroid.x, self.centroid.y, nx, ny)
+    local cx, cy = self:getCentroid()
+    local proj = Vec.dot(cx, cy, nx, ny)
     return proj - self.radius, proj + self.radius
 end
 
+---Get an edge given an index, returns the vertex at i and the vertex at i+1
+---@param i number edge index (has to be 1)
+---@return table|nil edge of form {x1,y1, x2,y2} or nil if index beyond bounds
 function Circle:getEdge(i)
-    local c, r = self.centroid, self.radius
-    return i == 1 and {c.x, c.y, c.x + r, c.y + r} or false
+    local cx, cy = self:getCentroid()
+    local r = self.radius
+    return i == 1 and {cx, cy, cx + r, cy + r} or nil
 end
 
 ---Test if point inside circle
 ---@param point Point
 function Circle:containsPoint(point)
-    return Vec.len2(Vec.sub(point.x,point.y, self.centroid.x, self.centroid.y)) <= self.radius*self.radius
+    local cx, cy = self:getCentroid()
+    return Vec.len2(Vec.sub(point.x,point.y, cx, cy)) <= self.radius*self.radius
 end
 
 ---Test of normalized ray hits circle
@@ -182,7 +159,8 @@ function Circle:rayIntersections(x,y, dx,dy, ts)
     if not self:rayIntersects(x,y, dx,dy) then return nil end
     ts = ts or {}
     dx, dy = Vec.normalize(dx, dy)
-    local lx, ly = Vec.sub(self.centroid.x, self.centroid.y, x, y)
+    local cx, cy = self:getCentroid()
+    local lx, ly = Vec.sub(cx, cy, x, y)
     local h = Vec.dot(lx,ly, dx, dy)
     local d = Vec.len(Vec.reject(lx,ly, dx,dy))
     local r = math.sqrt(self.radius*self.radius - d*d)
@@ -197,7 +175,9 @@ end
 ---@return number y
 ---@return number radius
 function Circle:unpack()
-    return self.centroid.x, self.centroid.y, self.radius
+    local cx, cy = self:getCentroid()
+    local r = self:getRadius()
+    return cx, cy, r
 end
 
 function Circle:merge()
@@ -209,8 +189,9 @@ end
 ---@param ny number normalized y dir
 ---@return table Max-Point
 function Circle:getSupport(nx,ny)
+    local cx, cy = self:getCentroid()
     local px,py = Vec.mul(self.radius, nx,ny)
-    return {x=self.centroid.x+px, y= self.centroid.y+py}
+    return {x = cx+px, y = cy+py}
 end
 
 ---Get the point involved in a collision

@@ -1,9 +1,11 @@
-local Polygon = _Require_relative(..., 'ConvexPolygon')
+local ConvexPolygon = _Require_relative(..., 'ConvexPolygon')
 
 local pi, cos, sin, tan = math.pi, math.cos, math.sin, math.tan
 
 ---@class RegularPolygon : ConvexPolygon
-local RegularPolygon = Polygon:extend()
+local RegularPolygon = ConvexPolygon:extend()
+
+RegularPolygon.name = 'RegularPolygon'
 
 ---Calculate area using regular area formula
 ---@return number area
@@ -22,25 +24,22 @@ end
 function RegularPolygon:new(x, y, n, radius, angle)
     -- Initialize our polygon's origin and rotation
     n = n or 3
-    self.angle = angle or 0
-    self.area = 0
-    -- Initalize our dummy point vars to put into the vertices list
-    local vertices = {}
+    angle = angle or 0
 
     -- Calculate the points
-    for i = n, 1, -1 do -- i = 1, n calculates vertices in clockwise order, so go backwards
-        local vx = ( sin( i / n * 2 * pi - self.angle) * radius) + x
-        local vy = ( cos( i / n * 2 * pi - self.angle) * radius) + y
-        vertices[#vertices+1] = {x = vx, y = vy}
+    local vertices = {}
+
+    for i = 1, n do
+        local vx = ( sin(-i / n * 2 * pi) * radius) + x
+        local vy = ( cos(-i / n * 2 * pi) * radius) + y
+        table.insert(vertices, vx)
+        table.insert(vertices, vy)
     end
 
     -- Set fields
     self.n, self.radius = n, radius
-    self.vertices 		= vertices     	    -- list of {x,y} coords
-    self.convex      	= true      		-- boolean
-    self.centroid       = {x = x, y = y}	-- {x, y} coordinate pair
-    -- Calculate the area of our polygon.
-    self:calcArea()
+    RegularPolygon.super.new(self, vertices)
+    self:rotate(angle)
 end
 
 ---Return ctor args
@@ -50,7 +49,8 @@ end
 ---@return number radius
 ---@return number angle
 function RegularPolygon:unpack()
-    return self.centroid.x, self.centroid.y, self.n, self.radius, self.angle
+    local cx, cy = self:getCentroid()
+    return cx, cy, self.n, self.radius, self.angle
 end
 
 function RegularPolygon:_get_verts()

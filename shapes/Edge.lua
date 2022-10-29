@@ -1,37 +1,46 @@
 local Vec = _Require_relative(..., 'lib.DeWallua.vector-light',1)
-local Polygon = _Require_relative(..., 'ConvexPolygon')
+local VertexShape = _Require_relative(..., 'VertexShape')
 
----@class Edge : Shape
-local Edge = Polygon:extend()
+---@class Edge : VertexShape
+local Edge = VertexShape:extend()
 Edge.name = 'edge'
 
 ---"Calculate" edge area
----@return number area
+---@return Edge self
 function Edge:calcArea()
 	self.area = 1
-	return self.area
+	return self
 end
 
 ---Calculate midpoint of edge
----@return Point centroid
+---@return Edge self
 function Edge:calcCentroid()
-	self.centroid.x = (self.vertices[1].x+self.vertices[2].x) / 2
-	self.centroid.y = (self.vertices[1].y+self.vertices[2].y) / 2
-	return self.centroid
+	local x1, y1 = self:getVertex(1)
+	local x2, y2 = self:getVertex(2)
+	local cx, cy = (x1+x2) / 2, (y1+y2) / 2
+
+	self:translateTo(cx,cy)
+
+	for i, v in ipairs(self.vertices) do
+		v.x, v.y = v.x - cx, v.y - cy
+	end
+	return self
 end
 
----Calculate both area and centroid
----@return number area
----@return Point centroid
+---Calculate both area and centroidreturn Edge self
 function Edge:calcAreaCentroid()
-	return self:calcArea(), self:calcCentroid()
+	self:calcArea()
+	self:calcCentroid()
+	return self
 end
 
 ---Calculate radius of circumscribed circle
----@return number radius
+---@return Edge self
 function Edge:calcRadius()
-	self.radius = 0.5 * Vec.len(Vec.sub(self.vertices[1].x, self.vertices[1].y, self.vertices[2].x, self.vertices[2].y) )
-	return self.radius
+	local x1, y1 = self:getVertex(1)
+	local x2, y2 = self:getVertex(2)
+	self.radius = 0.5 * Vec.len(Vec.sub(x1, y1, x2, y2) )
+	return self
 end
 
 ---comment
@@ -40,21 +49,9 @@ end
 ---@param x2 number x coordinate of second point
 ---@param y2 number y coordinate of second point
 function Edge:new(x1,y1, x2,y2)
-
-	self.vertices = {
-		{x = x1, y = y1},
-		{x = x2, y = y2}
-	}
-
-	self.centroid = {
-		x = (x1 + x2) / 2,
-		y = (y1 + y2) / 2
-	}
-	self.radius = 0.5 * Vec.len(Vec.sub(x1,y1, x2,y2))
-	self.area = 1
+	Edge.super.new(self, x1,y1, x2,y2)
 	self.norm = 0
 	self.angle = 0
-	self:calcAreaCentroid()
 end
 
 -- Only iterate once
@@ -63,7 +60,9 @@ local function edge_iter(shape, i)
 	local v = shape.vertices
 	if i < #v then
 		local j = i < #v and i+1
-		return i, {v[i].x, v[i].y, v[j].x, v[j].y}
+		local ix, iy = shape:getVertex(i)
+		local jx, jy = shape:getVertex(j)
+		return i, {ix, iy, jx, jy}
 	end
 end
 
@@ -81,7 +80,9 @@ end
 ---@return number x2
 ---@return number y2
 function Edge:unpack()
-    return self.vertices[1].x, self.vertices[1].y, self.vertices[2].x, self.vertices[2].y
+	local x1, y1 = self:getVertex(1)
+	local x2, y2 = self:getVertex(2)
+    return x1, y1, x2, y2
 end
 
 if love and love.graphics then
@@ -89,7 +90,7 @@ if love and love.graphics then
 	function Edge:draw()
 		love.graphics.line(self:unpack())
 		love.graphics.setColor(0,1,1)
-		love.graphics.points(self.centroid.x, self.centroid.y)
+		love.graphics.points(self:getCentroid())
 		love.graphics.setColor(1,1,1)
 	end
 end

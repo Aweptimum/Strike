@@ -73,10 +73,17 @@ end
 ---Draw an mtv w/ LOVE
 ---@param mtv MTV
 local function show_mtv(mtv)
-	local c = mtv.collider.centroid
+	if mtv.separating then
+		return
+	end
+	local cx, cy = mtv.colliderShape:getCentroid()
+	local ox, oy = mtv.collidedShape:getCentroid()
 	local edge = mtv.colliderShape:getEdge(mtv.edgeIndex)
+	local ex, ey =  (edge[1] + edge[3])/2, (edge[2] + edge[4])/2
+	love.graphics.setColor(.5,.5,1)
+	love.graphics.line(cx, cy, ex+mtv.x, ey+mtv.y)
 	love.graphics.setColor(1,.5,.5)
-	love.graphics.line(c.x, c.y, c.x+mtv.x, c.y+mtv.y)
+	love.graphics.line(cx, cy, ox, oy)
 	love.graphics.setColor(1,0,.5)
 	love.graphics.line(unpack(edge))
 	love.graphics.setColor(1,1,1)
@@ -101,11 +108,11 @@ end
 ---@param mtv MTV
 local function show_proj(mtv)
 	for _, shape in mtv.collided:ipairs() do
-		local c = shape.centroid
+		local cx, cy = shape:getCentroid()
 		local nmx, nmy = Vec.normalize(mtv.x, mtv.y)
 		local smin, smax = shape:project(nmx, nmy)
 		love.graphics.setColor(.5,.5,.1)
-	   	love.graphics.line(c.x+nmx*smin, c.y+nmy*smin, c.x+nmx*smax, c.y+nmy*smax)
+	   	love.graphics.line(cx + nmx*smin, cy + nmy*smin, cx + nmx*smax, cy + nmy*smax)
 		love.graphics.setColor(1,1,1)
     end
 end

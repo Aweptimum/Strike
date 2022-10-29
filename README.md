@@ -44,6 +44,8 @@ shape:scale(sf, refx, refy)	  -- scales by factor `sf` with respect to a referen
 ```
 
 ### Querying Shapes
+Under the hood, Strike's `Shape` class uses a Transform object, so directly accessing coordinates won't give expected values. Relevant getters return transformed coordinates, such as `getVertex`, so definitely use them.
+
 ```lua
 shape:getArea()		-- Returns the area of the shape
 shape:getCentroid()	-- Returns the centroid of the shape as a table {x = x, y = y}
@@ -54,13 +56,17 @@ shape:unpack()		-- Returns the args the shape was constructed with
 ```
 #### More specific query methods:
 ```lua
+shape:getEdge(i)
+```
+Given an index, returns the corresponding numbered edge. Returns `nil` if OOB
+```lua
+shape:getVertex(i)
+```
+Given an index, returns the corresponding numbered edge. Returns `nil` if OOB
+```lua
 shape:project(nx, ny)
 ```
 Given two normalized vector components, returns the minimum and maximum values of the shape's projection onto the vector
-```lua
-shape:getEdge(i)
-```
-Given an index, returns the corresponding numbered edge. Returns `false` if OOB
 ```lua
 shape:containsPoint(point)
 ```
@@ -181,6 +187,7 @@ collider:consolidate() 		-- will merge incident convex polygons together, makes 
 ```
 
 ### Collider Iterating
+There's the expensive `:ipairs()` method which uses a coroutine
 ```lua
 for parent_collider, shape, shape_index in collider:ipairs() do
 	-- stuff
@@ -189,6 +196,13 @@ end
 `Collider:ipairs()` is a flattened-list iterator that will return *all* Shapes, nested or not, contained within the 'root' Collider it's called from.
 `parent_collider` is the collider that contains `shape`, and `shape_index` is the index of `shape` within `parent_collider.shapes`.\
 If you wanted to remove a shape from a Collider that met some condition, calling `parent_collider:remove( shape_index )` would do it.
+
+And the cheaper `:elems()` method that returns only leaf nodes and does not use a coroutine
+```lua
+for shape in collider:elems() do
+    -- stuff
+end
+```
 
 ## Ray Intersection
 There are two ray intersection functions: `rayIntersects` and `rayIntersections`. Both have the same arguments: a ray origin and a normalized vector. The current implementation also assumes infinite length. They are defined both at the `Shapes` level and at the `Collider` level.
@@ -258,34 +272,6 @@ MTV:setCollidedShape(shape)
 ```
 The one practical instance method of interest might be `MTV:mag()/mag2` - it returns the magnitude/magnitude-squared of the separating vector.
 
-### Object Pooling
-The `MTV` object implements the `Pool` mixin in [`classes/Pool.lua`](https://github.com/Aweptimum/Strike/blob/main/classes/Pool.lua). The following instance methods can be used to interact with the pool:
-```lua
-MTV:fetch(dx, dy, collider, collided)
-MTV:stow()
-```
-`fetch()` sets a previously initialized MTV to the given arguments and returns it from the pool. Its arguments are identical to the `MTV()` constructor as it uses `:new` to init the object
-`stow()` inserts the MTV instance into the object pool
-There is a default limit of 128 for any pool. The MTV pool size can be changed using Strike's `S.etPoolSize(size)` method or requiring the `MTV` object and calling `MTV:setPoolSize(size)`. Multiples of 2 are best because of lua-hash-table-resizing-stuff. The size can be acquired via `S.eePoolSize()/MTV:getPoolSize()`
-
-### Implementing Pooling
-If you both want to embrace `classic` in your own project and pool an ubiquitous object in your code, here's an example:
-```lua
-Object = Libs.classic
-Pool = require 'module-path.Strike.classes.Pool`
-
-local myObject = Object:extend():implement(Pool)
-```
-Your `myObject` object now has access to these methods and fields:
-```lua
-Pool.pool               -- Class's object pool
-Pool.size               -- Pool size limit
-Pool:getPoolSize()      -- Get the size of the object pool
-Pool:setPoolSize(size)  -- Set size of object pool (returns self)
-Pool:fetch( ... )       -- Fetch a pooled instance and init to given args (should match class constructor)
-Pool:stow( obj, ... )   -- Stow variable # of instances in Class pool
-```
-
 ## Collision
 ### Broad Phase
 Has both circle-circle and aabb-aabb intersection test functions - `S.ircle(collider1, collider2)` and `S.aabb(collider1, collider2)` respectively. Both return true on interesction, else false.
@@ -327,7 +313,7 @@ To make this explicit, a check for whether the MTV is headed *into* a Collider's
 You can create shape definitions in the `/shapes` directory of Strike that will be loaded into `S.hapes`. There are a few rules to follow:
 1. The shape must be convex
 2. At least define `:new` and `:unpack`
-3. *All* necessary properties need to be initialized inside `:new`. If not, you'll get weird behavior as instantiated shapes will populate the object's attributes (I know from experience)
+3. Create a vertex list and feed it to the super constructor
 
 And you should generally be fine.
 
@@ -343,35 +329,33 @@ local Polygon = _Require_relative(..., 'ConvexPolygon')
 
 local Rect = Polygon:extend()
 ```
-Then, we define a constructor:
+Then, we define a constructor. All we need to do is create a list of points to feed to the `ConvexPolygon` constructor and it'll handle the rest. Even if your points are fed in ccw, `ConvexPolygon:new` will sort it properly for you. For rotation/scaling, you can call `:rotate` or `scale` to handle that. Anything else is up to you.
 ```lua
-function Rect:new((x_pos, y_pos, dx, dy, angle_rads)
-    if not ( dx and dy ) then return false end
-    local x_offset, y_offset = x_pos or 0, y_pos or 0
+function Rect:new(x, y, dx, dy, angle)
+	assert(dx, 'Rectangle constructor missing width/height')
+	dy = dy or dx
     self.dx, self.dy = dx, dy
-    self.angle = angle_rads or 0
-    local hx, hy = dx/2, dy/2 -- halfsize
-    self.vertices = {
-		{x = x_offset - hx, y = y_offset - hy},
-		{x = x_offset + hx, y = y_offset - hy},
-		{x = x_offset + hx, y = y_offset + hy},
-		{x = x_offset - hx, y = y_offset + hy}
-	}
-    self.centroid   = {x = x_offset, y = y_offset}
-    self.area       = dx*dy
-    self.radius     = Vec.len(hx, hy)
-    self:rotate(self.angle)
+	self.angle = angle or 0
+	local hx, hy = dx/2, dy/2 -- halfsize
+	Rect.super.new(self,
+		x - hx, y - hy,
+		x + hx, y - hy,
+		x + hx, y + hy,
+		x - hx, y + hy
+	)
+    -- Remember to rotate the shape!
+	self:rotate(self.angle)
 end
 ```
-I know it looks a bit dense, but the important takeaway is that we are initializing all the same properties of ConvexPolygon, just in a different way.
 You might notice that the attributes in the constructor that are no longer needed are actually stored (dx, dy). This is so that we can unpack those values if need-be, such as copying arguments into a constructor call. For that, we define `unpack`:
 ```lua
 function Rect:unpack()
-	return self.centroid.x, self.centroid.y, self.dx, self.dy, self.angle
+    local cx, cy = self:getCentroid(x,y) 
+	return cx, cy, self.dx, self.dy, self.angle
 end
 ```
 And the last thing we need to do is return our object for when it's required by Strike:
-```
+```lua
 return Rect
 ```
 

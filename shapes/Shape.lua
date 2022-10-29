@@ -1,17 +1,46 @@
 -- "Abstract" base object, provides some generic methods.
 local Object = Libs.classic
+local Transform = _Require_relative(..., 'classes.Transform', 1)
 
----@class Shape
----@field public centroid Point
+---@class Shape : Object
+---@field public transform Transform
 ---@field public area number
 ---@field public radius number
+---@field public vertices Point[]
 ---@field public parent nil|Shape|Collider
 local Shape = Object:extend()
 
+Shape.name = 'shape'
 Shape.type = 'shape'
+Shape.area = 0
+Shape.radius = 0
+Shape.vertices = {}
+Shape.parent = nil
+
+function Shape:new(transform)
+	self.transform = transform or Transform()
+end
+
+function Shape.fromComponents(x,y,ca,sa)
+	return Shape(
+		Transform(x,y,ca,sa)
+	)
+end
+
+---@return Transform
+function Shape:getTransform()
+	return self.transform
+end
+
+---@param transform Transform
+---@return Shape self
+function Shape:setTransform(transform)
+	self.transform = transform
+	return self
+end
 
 ---Get Shape's root container
----@return Collider | nil
+---@return Collider | Shape
 function Shape:getRoot()
 	local s = self
 	while s.parent do
@@ -22,24 +51,27 @@ end
 
 ---@return number area
 function Shape:getArea()
-    return self.area
+    return self.area * self.transform.s * self.transform.s
 end
 
----@return Point self.centroid
+---@return number x
+---@return number y
 function Shape:getCentroid()
-    return self.centroid
-end
-
----@return number area, table centroid
-function Shape:getAreaCentroid()
-    return self.area, self.centroid
+    return self.transform:getTranslation()
 end
 
 function Shape:getRadius()
-	return self.radius
+	return self.radius * self.transform.s
 end
 
 function Shape:getBbox()
+end
+
+---Get vertex at index, except circles don't have any :p
+---@param i number
+---@return nil
+function Shape:getVertex(i)
+    return nil
 end
 
 function Shape:project()
@@ -48,30 +80,60 @@ end
 function Shape:unpack()
 end
 
-function Shape:translate()
+---Rotate by specified radians
+---@param a number radians
+---@param x ?number reference x-coordinate to rotate about
+---@param y ?number reference y-coordinate to rotate about
+---@return Shape self
+function Shape:rotate(a,x,y)
+	self.transform:rotateA(a,x,y)
+	return self
+end
+
+---@param a number
+---@param x number x coordinate to rotate about
+---@param y number y coordinate to rotate about
+---@return Shape self
+function Shape:rotateTo(a, x, y)
+	self.transform:rotateToA(a, x, y)
+	return self
+end
+
+---Scale shape by a factor (multiplies previous factor)
+---@param sf number scale factor
+---@param sx ?number reference x-coordinate
+---@param sy ?number reference y-coordinate
+---@return Shape self
+function Shape:scale(sf, sx, sy)
+	self.transform:scale(sf, sx, sy)
+	return self
+end
+
+---Scale shape by a factor (sets factor)
+---@param sf number scale factor
+---@param sx ?number reference x-coordinate
+---@param sy ?number reference y-coordinate
+---@return Shape self
+function Shape:scaleTo(sf, sx, sy)
+	self.transform:scaleTo(sf, sx, sy)
+	return self
+end
+
+---Translate by displacement vector
+---@param x number
+---@param y number
+---@return Shape self
+function Shape:translate(x,y)
+	self.transform:translate(x,y)
+	return self
 end
 
 ---@param x number
 ---@param y number
 ---@return Shape self
 function Shape:translateTo(x, y)
-	local dx, dy = x - self.centroid.x, y - self.centroid.y
-	return self:translate(dx,dy)
-end
-
-function Shape:rotate()
-end
-
----@param angle_rads number
----@param ref_x number x coordinate to rotate about
----@param ref_y number y coordinate to rotate about
----@return Shape self
-function Shape:rotateTo(angle_rads, ref_x, ref_y)
-	local aoffset = angle_rads - self.angle
-	return self:rotate(aoffset, ref_x, ref_y)
-end
-
-function Shape:scale()
+	self.transform:translateTo(x, y)
+	return self
 end
 
 ---@param x number x coordinate to place copy at
