@@ -57,14 +57,4 @@ function Ellipse:unpack()
     return cx, cy, self.a, self.b, self.n
 end
 
-if love and love.graphics then
-	---Draw Ellipse w/ LOVE
-	---@param mode string fill/line
-	function Ellipse:draw(mode)
-		-- default fill to "line"
-		mode = mode or "line"
-		love.graphics.ellipse(mode, self:unpack())
-	end
-end
-
 return Ellipse
