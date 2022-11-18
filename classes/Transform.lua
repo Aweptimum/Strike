@@ -1,5 +1,5 @@
 local Object = Libs.classic
-local cos, sin = math.cos, math.sin
+local cos, sin, atan2 = math.cos, math.sin, math.atan2
 
 ---@class Transform : Object, Pool
 ---@field x number
@@ -44,6 +44,12 @@ end
 ---@return number sina
 function Transform:getRotation()
     return self.cosa, self.sina
+end
+
+---Return the angle in radians
+---@return number angle
+function Transform:getAngle()
+    return atan2(self.sina, self.cosa)
 end
 
 ---Return the scale factor
