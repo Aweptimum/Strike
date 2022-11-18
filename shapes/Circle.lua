@@ -198,11 +198,18 @@ function Circle:getSupport(nx,ny)
     return {x = cx+px, y = cy+py}
 end
 
+function Circle:getSupportIndex(nx,ny)
+    return nil
+end
+
 ---Get the point involved in a collision
 ---@param nx number normalized x dir
 ---@param ny number normalized y dir
 ---@return table Max-Point
-Circle.getFeature = Circle.getSupport
+function Circle:getFeature(nx, ny)
+    local x, y = self:getSupport(nx,ny)
+    return {x = x, y = y}
+end
 
 if love and love.graphics then
     ---Draw Circle w/ LOVE

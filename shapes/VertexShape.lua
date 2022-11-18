@@ -237,6 +237,10 @@ end
 
 ---Contact Functions
 function VertexShape:getSupport(nx,ny)
+    return self:getVertex(self:getSupportIndex(nx,ny))
+end
+
+function VertexShape:getSupportIndex(nx,ny)
     local maxd, index = -math.huge , 1
     for i = 1, #self.vertices do
 		local px,py = self:getVertex(i)
@@ -257,7 +261,7 @@ end
 function VertexShape:getFeature(nx,ny)
     local verts = self.vertices
     -- get farthest point in direction of normal
-    local index = self:getSupport(nx,ny)
+    local index = self:getSupportIndex(nx,ny)
     -- test adjacent points to find edge most perpendicular to normal
     local vx, vy = self:getVertex(index)
     local i0 = index - 1 >= 1 and index - 1 or #verts
