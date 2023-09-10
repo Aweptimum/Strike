@@ -119,6 +119,20 @@ function VertexShape:getVertex(i)
 	return self.transform:transform(v.x, v.y)
 end
 
+---Get list of vertices
+---@return {x: number, y: number}
+function VertexShape:getVertices()
+	local verts = {}
+
+	for i = 1, #self.vertices do
+		local x, y = self:getVertex(i)
+		local v = {x = x, y = y}
+		table.insert(verts, v)
+	end
+
+	return verts
+end
+
 ---Get an edge by index
 ---@param i number index
 ---@return table|nil edge of form {x1,y1, x2,y2} or nil if index out of range
